@@ -1,0 +1,70 @@
+name: trueprice
+description: "Burası True Price - 중동 여행자를 위한 실시간 물가 정보 및 협상 가이드"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # 상태 관리
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+
+  # 라우팅
+  go_router: ^14.0.0
+
+  # 네트워크
+  dio: ^5.4.3
+
+  # 카메라 / 이미지
+  camera: ^0.10.5+9
+  image_picker: ^1.1.2
+
+  # OCR
+  google_mlkit_text_recognition: ^0.13.0
+
+  # 위치
+  geolocator: ^12.0.0
+  permission_handler: ^11.3.0
+
+  # 지도 (OSM, API 키 불필요)
+  flutter_map: ^7.0.0
+  latlong2: ^0.9.0
+
+  # 차트 (히스토그램)
+  fl_chart: ^0.68.0
+
+  # TTS
+  flutter_tts: ^4.0.2
+
+  # 로컬 저장소
+  shared_preferences: ^2.2.3
+
+  # 이미지 캐시
+  cached_network_image: ^3.3.1
+
+  # UUID (익명 사용자)
+  uuid: ^4.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/data/
+
+  fonts:
+    - family: NotoSansArabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-Regular.ttf

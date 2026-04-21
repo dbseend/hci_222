@@ -1,0 +1,58 @@
+[
+  {
+    "phrase_id": "1",
+    "category": "greeting",
+    "text_kr": "Hello",
+    "text_ar": "مرحبا",
+    "romanized": "Marhaba"
+  },
+  {
+    "phrase_id": "2",
+    "category": "price_ask",
+    "text_kr": "How much is this?",
+    "text_ar": "كم الثمن؟",
+    "romanized": "Kam al-thaman?"
+  },
+  {
+    "phrase_id": "3",
+    "category": "too_expensive",
+    "text_kr": "That's too expensive.",
+    "text_ar": "هذا غالي جداً",
+    "romanized": "Hatha ghali jiddan"
+  },
+  {
+    "phrase_id": "4",
+    "category": "discount",
+    "text_kr": "Please give me a discount.",
+    "text_ar": "خفّض السعر من فضلك",
+    "romanized": "Khaffid al-si'r min fadlak"
+  },
+  {
+    "phrase_id": "5",
+    "category": "final_price",
+    "text_kr": "I'll give it to you at this price.",
+    "text_ar": "سأعطيك بهذا السعر",
+    "romanized": "Sa'utika bi-hatha al-si'r"
+  },
+  {
+    "phrase_id": "6",
+    "category": "no_thanks",
+    "text_kr": "No thanks, I'm fine.",
+    "text_ar": "لا شكراً",
+    "romanized": "La shukran"
+  },
+  {
+    "phrase_id": "7",
+    "category": "good_quality",
+    "text_kr": "The quality looks good.",
+    "text_ar": "الجودة جيدة",
+    "romanized": "Al-jawda jayyida"
+  },
+  {
+    "phrase_id": "8",
+    "category": "buy",
+    "text_kr": "I'll buy this.",
+    "text_ar": "سأشتري هذا",
+    "romanized": "Sa'ashtari hatha"
+  }
+]

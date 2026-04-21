@@ -1,0 +1,2 @@
+-- MVP init schema placeholder
+-- Next: app_users, regions, products, price_observations

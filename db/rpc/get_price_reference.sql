@@ -1,0 +1,2 @@
+-- get_price_reference(product_id, region_id, market_id optional)
+-- Next: weighted_avg, median, mode, min/max, sample_count
