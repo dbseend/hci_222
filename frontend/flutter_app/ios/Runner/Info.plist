@@ -26,6 +26,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>상품과 가격표를 촬영해 가격 비교 분석을 제공하기 위해 카메라 권한이 필요합니다.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>주변 시장 정보와 지역 기반 가격 비교를 제공하기 위해 위치 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>갤러리에서 상품 이미지를 선택해 가격 분석을 진행하기 위해 사진 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>분석 결과 이미지를 저장할 수 있도록 사진 저장 권한이 필요할 수 있습니다.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>아랍어 발음 가이드 기능의 오디오 처리를 위해 마이크 권한이 필요할 수 있습니다.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

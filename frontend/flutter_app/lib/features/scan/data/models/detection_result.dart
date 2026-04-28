@@ -38,7 +38,7 @@ class DetectionResult {
   // TODO(next-dev): Replace with DetectionResult.fromJson(res.data) once the YOLO backend is wired up
   static DetectionResult mock() => const DetectionResult(
         productId: 'p001',
-        productName: 'Grapes',
+        productName: 'Tomate',
         productNameAr: 'عنب',
         confidence: 0.92,
         detectedPrice: 65.0,
