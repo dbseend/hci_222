@@ -6,7 +6,8 @@
 //   /permission  → PermissionScreen
 //   /intro       → IntroScreen
 //   ShellRoute (with AppBottomNavBar):
-//     /scan              → ScanScreen
+//     /home              → HomeScreen
+//     /scan              → ScanMenuScreen
 //     /scan/stats        → PriceStatsScreen   (extra: productName, productId, detectedPrice?)
 //     /scan/input        → PriceInputScreen   (extra: productName, productId)
 //     /scan/analysis     → PriceAnalysisScreen(extra: productName, productId, inputPrice)
@@ -24,7 +25,8 @@ import '../core/widgets/bottom_nav_bar.dart';
 import '../features/onboarding/presentation/screens/splash_screen.dart';
 import '../features/onboarding/presentation/screens/permission_screen.dart';
 import '../features/onboarding/presentation/screens/intro_screen.dart';
-import '../features/scan/presentation/screens/scan_screen.dart';
+import '../features/home/presentation/screens/home_screen.dart';
+import '../features/scan/presentation/screens/scan_menu_screen.dart';
 import '../features/scan/presentation/screens/price_stats_screen.dart';
 import '../features/scan/presentation/screens/price_input_screen.dart';
 import '../features/scan/presentation/screens/price_analysis_screen.dart';
@@ -40,13 +42,13 @@ final router = GoRouter(
     GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
     GoRoute(path: '/permission', builder: (_, _) => const PermissionScreen()),
     GoRoute(path: '/intro', builder: (_, _) => const IntroScreen()),
-
     ShellRoute(
       builder: (context, state, child) => _MainShell(child: child),
       routes: [
+        GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
         GoRoute(
           path: '/scan',
-          builder: (_, _) => const ScanScreen(),
+          builder: (_, _) => const ScanMenuScreen(),
           routes: [
             GoRoute(
               path: 'stats',
@@ -107,9 +109,10 @@ class _MainShell extends StatelessWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    if (location.startsWith('/map')) return 1;
-    if (location.startsWith('/language')) return 2;
-    if (location.startsWith('/community')) return 3;
+    if (location.startsWith('/scan')) return 1;
+    if (location.startsWith('/map')) return 2;
+    if (location.startsWith('/language')) return 3;
+    if (location.startsWith('/community')) return 4;
     return 0;
   }
 

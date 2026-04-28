@@ -1,7 +1,7 @@
 // bottom_nav_bar.dart
 // Purpose: Shared bottom navigation bar used by the main ShellRoute (_MainShell in router.dart).
 //          Highlights the active tab based on the current route and navigates via go_router.
-// Tabs (index → route): 0=/scan, 1=/map, 2=/language, 3=/community
+// Tabs (index → route): 0=/home, 1=/scan, 2=/map, 3=/language, 4=/community
 // Dependencies: AppColors, go_router
 
 import 'package:flutter/material.dart';
@@ -13,7 +13,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   const AppBottomNavBar({super.key, required this.currentIndex});
 
-  static const _routes = ['/scan', '/map', '/language', '/community'];
+  static const _routes = ['/home', '/scan', '/map', '/language', '/community'];
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +26,11 @@ class AppBottomNavBar extends StatelessWidget {
       elevation: 8,
       onTap: (i) => context.go(_routes[i]),
       items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: 'Home',
+        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.camera_alt_outlined),
           activeIcon: Icon(Icons.camera_alt),

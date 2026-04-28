@@ -1,7 +1,7 @@
 // intro_screen.dart
 // Purpose: Three-page onboarding carousel that introduces the app's core features:
-//          scan, price comparison, and negotiation. Last page "Get Started" navigates to /scan.
-// Navigation flow: /intro (from permission) → /scan (on finish or skip)
+//          scan, price comparison, and negotiation. Last page "Get Started" navigates to /home.
+// Navigation flow: /intro (from permission) → /home (on finish or skip)
 // Dependencies: AppColors, go_router
 
 import 'package:flutter/material.dart';
@@ -24,17 +24,20 @@ class _IntroScreenState extends State<IntroScreen> {
     _IntroPage(
       icon: Icons.camera_alt,
       title: 'Scan Products',
-      desc: 'Point your camera at fruits, vegetables,\nor any market item to identify it automatically',
+      desc:
+          'Point your camera at fruits, vegetables,\nor any market item to identify it automatically',
     ),
     _IntroPage(
       icon: Icons.bar_chart,
       title: 'Compare Prices',
-      desc: 'See the average, lowest, and highest prices\nfor your region in a clear histogram',
+      desc:
+          'See the average, lowest, and highest prices\nfor your region in a clear histogram',
     ),
     _IntroPage(
       icon: Icons.handshake,
       title: 'Negotiate with Confidence',
-      desc: 'Understand the fair price at a glance\nand use Arabic phrases to bargain confidently',
+      desc:
+          'Understand the fair price at a glance\nand use Arabic phrases to bargain confidently',
     ),
   ];
 
@@ -45,7 +48,7 @@ class _IntroScreenState extends State<IntroScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/scan');
+      context.go('/home');
     }
   }
 
@@ -65,7 +68,7 @@ class _IntroScreenState extends State<IntroScreen> {
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
-                onPressed: () => context.go('/scan'),
+                onPressed: () => context.go('/home'),
                 child: const Text(
                   'Skip',
                   style: TextStyle(color: AppColors.onSurfaceLight),
@@ -92,7 +95,7 @@ class _IntroScreenState extends State<IntroScreen> {
                   decoration: BoxDecoration(
                     color: _currentPage == i
                         ? AppColors.primary
-                        : AppColors.onSurfaceLight.withOpacity(0.3),
+                        : AppColors.onSurfaceLight.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -138,7 +141,7 @@ class _IntroPage extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 60, color: AppColors.primary),
