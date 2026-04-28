@@ -56,7 +56,7 @@ class _PhraseScreenState extends State<PhraseScreen> {
       appBar: AppBar(title: const Text('Arabic Phrases')),
       body: Column(
         children: [
-          _CategoryChips(),
+          _categoryChips(),
           Expanded(
             child: _phrases.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -71,7 +71,7 @@ class _PhraseScreenState extends State<PhraseScreen> {
     );
   }
 
-  Widget _CategoryChips() {
+  Widget _categoryChips() {
     return SizedBox(
       height: 52,
       child: ListView(
@@ -85,7 +85,7 @@ class _PhraseScreenState extends State<PhraseScreen> {
               label: Text(c.$2),
               selected: selected,
               onSelected: (_) => setState(() => _selectedCategory = c.$1),
-              selectedColor: AppColors.primary.withOpacity(0.2),
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
               checkmarkColor: AppColors.primary,
               labelStyle: TextStyle(
                 color: selected ? AppColors.primary : AppColors.onSurfaceLight,

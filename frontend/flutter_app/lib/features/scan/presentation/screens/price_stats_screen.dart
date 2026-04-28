@@ -256,14 +256,14 @@ class PriceHistogramWidget extends StatelessWidget {
                       ? AppColors.warning
                       : isAvgBucket
                           ? AppColors.primary
-                          : AppColors.primary.withOpacity(0.35),
+                          : AppColors.primary.withValues(alpha: 0.35),
                   width: 22,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(4)),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: isUserBucket,
                     toY: maxY,
-                    color: AppColors.warning.withOpacity(0.08),
+                    color: AppColors.warning.withValues(alpha: 0.08),
                   ),
                 ),
               ],

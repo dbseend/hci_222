@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Flutter/Dart generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# Xcode generated user state
+xcuserdata/
+*.xcuserstate

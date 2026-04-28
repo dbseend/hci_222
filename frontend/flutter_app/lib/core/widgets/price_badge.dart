@@ -54,7 +54,7 @@ class PriceBadge extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: _color.withOpacity(0.15),
+        color: _color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(large ? 16 : 20),
         border: Border.all(color: _color, width: 1.5),
       ),

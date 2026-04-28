@@ -1,5 +1,5 @@
 // permission_screen.dart
-// Purpose: Explains the core iPhone permissions the app needs (camera, location)
+// Purpose: Explains the core iPhone permissions the app needs (camera, photos, location)
 //          and prompts the user to grant them before entering the main app.
 // Navigation flow: /permission (from splash) → /intro
 //                  "Skip" path: shows a warning dialog then also goes to /intro
@@ -39,6 +39,11 @@ class _PermissionScreenState extends State<PermissionScreen> {
       'Location',
       'Required to search nearby markets and compare local prices',
     ),
+    (
+      Icons.photo_library,
+      'Photos',
+      'Required to choose saved product photos when camera scanning is not available',
+    ),
   ];
 
   Future<Map<Permission, PermissionStatus>> _requestDevicePermissions() {
@@ -46,7 +51,11 @@ class _PermissionScreenState extends State<PermissionScreen> {
       return widget.permissionRequester!();
     }
 
-    return [Permission.camera, Permission.locationWhenInUse].request();
+    return [
+      Permission.camera,
+      Permission.locationWhenInUse,
+      Permission.photos,
+    ].request();
   }
 
   Future<void> _handleAllowPressed() async {
@@ -67,9 +76,11 @@ class _PermissionScreenState extends State<PermissionScreen> {
 
     final cameraStatus = statuses[Permission.camera];
     final locationStatus = statuses[Permission.locationWhenInUse];
+    final photosStatus = statuses[Permission.photos];
     final hasBlockedPermission = [
       cameraStatus,
       locationStatus,
+      photosStatus,
     ].any((status) => status?.isPermanentlyDenied ?? false);
 
     if (hasBlockedPermission) {
@@ -165,6 +176,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
     return switch (title) {
       'Camera' => _statuses[Permission.camera],
       'Location' => _statuses[Permission.locationWhenInUse],
+      'Photos' => _statuses[Permission.photos],
       _ => null,
     };
   }

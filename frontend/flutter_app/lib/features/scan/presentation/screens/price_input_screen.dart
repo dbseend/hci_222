@@ -296,7 +296,7 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
                           // Reset quantity to the new unit's minimum step
                           _quantity = u.step;
                         }),
-                        selectedColor: AppColors.primary.withOpacity(0.15),
+                        selectedColor: AppColors.primary.withValues(alpha: 0.15),
                         checkmarkColor: AppColors.primary,
                         labelStyle: TextStyle(
                           color: selected
@@ -322,12 +322,12 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: _hasInput
-                    ? AppColors.primary.withOpacity(0.06)
+                    ? AppColors.primary.withValues(alpha: 0.06)
                     : Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _hasInput
-                      ? AppColors.primary.withOpacity(0.2)
+                      ? AppColors.primary.withValues(alpha: 0.2)
                       : Colors.grey.shade200,
                 ),
               ),

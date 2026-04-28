@@ -105,10 +105,10 @@ class _PriceAnalysisView extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.08),
+              color: statusColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
               border:
-                  Border.all(color: statusColor.withOpacity(0.3), width: 2),
+                  Border.all(color: statusColor.withValues(alpha: 0.3), width: 2),
             ),
             child: Column(
               children: [
