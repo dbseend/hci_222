@@ -1,10 +1,10 @@
 # True Price Flutter App
 
-True Price is an iPhone-first Flutter MVP for travelers who need fast price checks in Egyptian markets. It helps users compare offered prices against regional/crowdsourced baselines and provides simple negotiation support.
+True Price is a Flutter MVP for travelers who need fast price checks in Egyptian markets. It helps users compare offered prices against regional/crowdsourced baselines and provides simple negotiation support.
 
 ## Current MVP Status
 - Runs on mock data for scan detection, price stats, map markers, and community feed.
-- Primary target is a physical iPhone device.
+- Primary target is a physical mobile device (iOS / Android).
 - Onboarding requests camera, location, and photo permissions up front.
 - Home screen lets users choose Scan, Map, Phrases, or Community.
 - Scan is split into two flows:
@@ -54,7 +54,7 @@ Splash
 ## Tech Stack
 | Package | Purpose |
 |---|---|
-| `camera` | Native iPhone camera preview and capture |
+| `camera` | Native mobile camera preview and capture |
 | `image_picker` | Gallery fallback |
 | `permission_handler` | Runtime permissions and settings deep-link |
 | `go_router` | App routes, ShellRoute, nested scan routes |
@@ -153,3 +153,13 @@ flutter clean
 rm -rf ~/Library/Developer/Xcode/DerivedData
 cd ios && pod install
 ```
+
+## Android Notes
+- `AndroidManifest.xml` includes:
+  - `CAMERA`
+  - `ACCESS_FINE_LOCATION`
+  - `ACCESS_COARSE_LOCATION`
+  - `INTERNET`
+  - `READ_MEDIA_IMAGES`
+  - `READ_EXTERNAL_STORAGE` (`maxSdkVersion=32`)
+- Onboarding requires camera permission to proceed. Location/photos can stay optional for limited flow.

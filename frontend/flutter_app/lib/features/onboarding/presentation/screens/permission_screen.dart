@@ -1,5 +1,5 @@
 // permission_screen.dart
-// Purpose: Explains the core iPhone permissions the app needs (camera, photos, location)
+// Purpose: Explains the core app permissions needed on mobile devices
 //          and prompts the user to grant them before entering the main app.
 // Navigation flow: /permission (from splash) → /intro
 //                  "Skip" path: shows a warning dialog then also goes to /intro
@@ -27,7 +27,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
   bool _isRequesting = false;
   Map<Permission, PermissionStatus> _statuses = const {};
 
-  // List of (icon, title, description) tuples for each requested iPhone permission.
+  // List of (icon, title, description) tuples for each requested permission.
   static const _permissions = [
     (
       Icons.camera_alt,
@@ -76,11 +76,11 @@ class _PermissionScreenState extends State<PermissionScreen> {
 
     final cameraStatus = statuses[Permission.camera];
     final locationStatus = statuses[Permission.locationWhenInUse];
-    final photosStatus = statuses[Permission.photos];
+    // Camera and location are critical for MVP flow.
+    // Photos can remain optional (gallery fallback may still work on Android).
     final hasBlockedPermission = [
       cameraStatus,
       locationStatus,
-      photosStatus,
     ].any((status) => status?.isPermanentlyDenied ?? false);
 
     if (hasBlockedPermission) {
@@ -201,7 +201,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'The following iPhone permissions are needed\nfor the best experience',
+                'The following permissions are needed\nfor the best experience',
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.onSurfaceLight,
