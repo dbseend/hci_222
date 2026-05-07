@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency_display.dart';
 import '../../../../core/utils/price_classifier.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/price_badge.dart';
@@ -194,24 +195,32 @@ class _FeedCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${feed.price.toStringAsFixed(0)} EGP',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onSurface,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        CurrencyDisplay.formatEgpWithKrw(feed.price),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'avg. ${CurrencyDisplay.formatEgpWithKrw(feed.avgPrice)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.onSurfaceLight,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '(avg. ${feed.avgPrice.toStringAsFixed(0)} EGP)',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.onSurfaceLight,
-                  ),
-                ),
-                const Spacer(),
                 Text(
                   feed.timeAgo,
                   style: const TextStyle(

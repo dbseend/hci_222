@@ -5,8 +5,10 @@
 
 import 'package:flutter/material.dart';
 import 'app/app.dart';
+import 'core/services/exchange_rate_service.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ExchangeRateService().loadEgpToKrwOnceOnAppLaunch();
   runApp(const TruePriceApp());
 }

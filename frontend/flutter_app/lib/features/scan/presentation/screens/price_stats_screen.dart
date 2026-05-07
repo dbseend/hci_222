@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency_display.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../models/scan_route_data.dart';
 import '../../data/models/region_stats.dart';
@@ -155,6 +156,7 @@ class _PriceStatsView extends StatelessWidget {
               extra: ScanRouteData(
                 productName: displayName,
                 productId: productId,
+                detectedPrice: detectedPrice,
                 capturedImagePath: capturedImagePath,
               ),
             ),
@@ -183,7 +185,7 @@ class _StatsRow extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${value.toStringAsFixed(0)} EGP',
+          CurrencyDisplay.formatEgpWithKrw(value),
           style: TextStyle(
             fontSize: isPrimary ? 24 : 16,
             fontWeight: isPrimary ? FontWeight.bold : FontWeight.w600,
@@ -311,7 +313,7 @@ class PriceHistogramWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                         labelResolver: (_) =>
-                            '${userPrice!.toStringAsFixed(0)} EGP',
+                            CurrencyDisplay.formatEgpWithKrw(userPrice!),
                       ),
                     ),
                   ],

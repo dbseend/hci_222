@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:trueprice/core/utils/currency_display.dart';
 import 'package:trueprice/core/utils/price_classifier.dart';
 import 'package:trueprice/features/market_map/presentation/models/market_location.dart';
 import 'package:trueprice/features/market_map/presentation/utils/market_marker_builder.dart';
@@ -34,6 +35,21 @@ void main() {
 
     test('percentDiff is correct', () {
       expect(PriceClassifier.percentDiff(45, 38), closeTo(18.4, 0.1));
+    });
+  });
+
+  group('CurrencyDisplay', () {
+    setUp(() {
+      CurrencyDisplay.resetRateForTest();
+    });
+
+    test('formats EGP with KRW', () {
+      expect(CurrencyDisplay.formatEgpWithKrw(65), '65 EGP (₩1,820)');
+    });
+
+    test('applies fetched exchange rate', () {
+      CurrencyDisplay.setEgpToKrwRate(30);
+      expect(CurrencyDisplay.formatEgpWithKrw(10), '10 EGP (₩300)');
     });
   });
 
@@ -107,9 +123,7 @@ void main() {
   group('PriceInputScreen units', () {
     testWidgets('does not show bundle/bunch unit option', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: PriceInputScreen(productName: 'Tomato'),
-        ),
+        const MaterialApp(home: PriceInputScreen(productName: 'Tomato')),
       );
 
       expect(find.text('kg'), findsOneWidget);

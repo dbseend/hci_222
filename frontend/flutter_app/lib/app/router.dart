@@ -70,6 +70,8 @@ final router = GoRouter(
                 return PriceInputScreen(
                   productName: e.productName,
                   productId: e.productId,
+                  detectedPrice: e.detectedPrice,
+                  initialInputPrice: e.inputPrice,
                   capturedImagePath: e.capturedImagePath,
                 );
               },
@@ -82,6 +84,7 @@ final router = GoRouter(
                   productName: e.productName,
                   productId: e.productId,
                   inputPrice: e.inputPrice,
+                  detectedPrice: e.detectedPrice,
                   capturedImagePath: e.capturedImagePath,
                 );
               },
@@ -94,6 +97,7 @@ final router = GoRouter(
                   productName: e.productName,
                   productId: e.productId,
                   finalPrice: e.finalPrice,
+                  detectedPrice: e.detectedPrice,
                   capturedImagePath: e.capturedImagePath,
                 );
               },

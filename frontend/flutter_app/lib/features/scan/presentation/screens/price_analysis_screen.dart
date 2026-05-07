@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency_display.dart';
 import '../../../../core/utils/price_classifier.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/price_badge.dart';
@@ -17,6 +18,7 @@ class PriceAnalysisScreen extends StatelessWidget {
   final String productName;
   final String productId;
   final double inputPrice;
+  final double? detectedPrice;
   final String? capturedImagePath;
 
   const PriceAnalysisScreen({
@@ -24,6 +26,7 @@ class PriceAnalysisScreen extends StatelessWidget {
     required this.productName,
     required this.inputPrice,
     this.productId = 'p001',
+    this.detectedPrice,
     this.capturedImagePath,
   });
 
@@ -37,6 +40,7 @@ class PriceAnalysisScreen extends StatelessWidget {
         productName: productName,
         productId: productId,
         inputPrice: inputPrice,
+        detectedPrice: detectedPrice,
         capturedImagePath: capturedImagePath,
       ),
     );
@@ -47,12 +51,14 @@ class _PriceAnalysisView extends StatelessWidget {
   final String productName;
   final String productId;
   final double inputPrice;
+  final double? detectedPrice;
   final String? capturedImagePath;
 
   const _PriceAnalysisView({
     required this.productName,
     required this.productId,
     required this.inputPrice,
+    this.detectedPrice,
     this.capturedImagePath,
   });
 
@@ -63,7 +69,16 @@ class _PriceAnalysisView extends StatelessWidget {
         title: const Text('Price Analysis'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/scan'),
+          onPressed: () => context.go(
+            '/scan/input',
+            extra: ScanRouteData(
+              productName: productName,
+              productId: productId,
+              detectedPrice: detectedPrice,
+              inputPrice: inputPrice,
+              capturedImagePath: capturedImagePath,
+            ),
+          ),
         ),
       ),
       body: BlocBuilder<PriceBloc, PriceState>(
@@ -124,10 +139,18 @@ class _PriceAnalysisView extends StatelessWidget {
                 PriceBadge(status: status, label: message, large: true),
                 const SizedBox(height: 24),
                 Text(
-                  '${inputPrice.toStringAsFixed(0)} EGP',
+                  CurrencyDisplay.formatEgp(inputPrice),
                   style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  CurrencyDisplay.formatKrw(inputPrice),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.onSurfaceLight,
                   ),
                 ),
                 Text(
@@ -189,6 +212,7 @@ class _PriceAnalysisView extends StatelessWidget {
                 extra: ScanRouteData(
                   productName: productName,
                   productId: productId,
+                  detectedPrice: detectedPrice,
                   finalPrice: inputPrice,
                   capturedImagePath: capturedImagePath,
                 ),
@@ -203,6 +227,8 @@ class _PriceAnalysisView extends StatelessWidget {
               extra: ScanRouteData(
                 productName: productName,
                 productId: productId,
+                detectedPrice: detectedPrice,
+                inputPrice: inputPrice,
                 capturedImagePath: capturedImagePath,
               ),
             ),
@@ -251,10 +277,17 @@ class _CompareContent extends StatelessWidget {
                   size: 28,
                 ),
                 Text(
-                  '${diff.abs().toStringAsFixed(0)} EGP',
+                  CurrencyDisplay.formatEgp(diff.abs()),
                   style: TextStyle(
                     color: isHigher ? AppColors.warning : AppColors.safe,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  CurrencyDisplay.formatKrw(diff.abs()),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.onSurfaceLight,
                   ),
                 ),
               ],
@@ -284,11 +317,16 @@ class _StatItem extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${value.toStringAsFixed(0)} EGP',
+          CurrencyDisplay.formatEgp(value),
           style: TextStyle(
             fontSize: bold ? 20 : 18,
             fontWeight: bold ? FontWeight.bold : FontWeight.w600,
           ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          CurrencyDisplay.formatKrw(value),
+          style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceLight),
         ),
       ],
     );
@@ -303,7 +341,7 @@ class _NegotiationContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final targetPrice = (avg * 1.05).toStringAsFixed(0);
+    final targetPrice = avg * 1.05;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +358,7 @@ class _NegotiationContent extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Target: negotiate below $targetPrice EGP',
+          'Target: negotiate below ${CurrencyDisplay.formatEgpWithKrw(targetPrice)}',
           style: const TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 12),

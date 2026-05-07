@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/user_id_service.dart';
+import '../../../../core/utils/currency_display.dart';
+import '../models/scan_route_data.dart';
 import '../bloc/price_bloc.dart';
 import '../bloc/price_event.dart';
 import '../bloc/price_state.dart';
@@ -11,6 +13,7 @@ class FinalPriceScreen extends StatelessWidget {
   final String productName;
   final String productId;
   final double finalPrice;
+  final double? detectedPrice;
   final String? capturedImagePath;
 
   const FinalPriceScreen({
@@ -18,6 +21,7 @@ class FinalPriceScreen extends StatelessWidget {
     required this.productName,
     required this.finalPrice,
     this.productId = 'p001',
+    this.detectedPrice,
     this.capturedImagePath,
   });
 
@@ -29,6 +33,7 @@ class FinalPriceScreen extends StatelessWidget {
         productName: productName,
         productId: productId,
         finalPrice: finalPrice,
+        detectedPrice: detectedPrice,
         capturedImagePath: capturedImagePath,
       ),
     );
@@ -39,12 +44,14 @@ class _FinalPriceView extends StatefulWidget {
   final String productName;
   final String productId;
   final double finalPrice;
+  final double? detectedPrice;
   final String? capturedImagePath;
 
   const _FinalPriceView({
     required this.productName,
     required this.productId,
     required this.finalPrice,
+    this.detectedPrice,
     this.capturedImagePath,
   });
 
@@ -117,7 +124,16 @@ class _FinalPriceViewState extends State<_FinalPriceView>
           title: const Text('Purchase Complete'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/scan'),
+            onPressed: () => context.go(
+              '/scan/analysis',
+              extra: ScanRouteData(
+                productName: widget.productName,
+                productId: widget.productId,
+                detectedPrice: widget.detectedPrice,
+                inputPrice: widget.finalPrice,
+                capturedImagePath: widget.capturedImagePath,
+              ),
+            ),
           ),
         ),
         body: Padding(
@@ -150,10 +166,17 @@ class _FinalPriceViewState extends State<_FinalPriceView>
               ),
               const SizedBox(height: 8),
               Text(
-                '${widget.finalPrice.toStringAsFixed(0)} EGP',
+                CurrencyDisplay.formatEgp(widget.finalPrice),
                 style: const TextStyle(
                   fontSize: 42,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                CurrencyDisplay.formatKrw(widget.finalPrice),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.onSurfaceLight,
                 ),
               ),
               const SizedBox(height: 8),

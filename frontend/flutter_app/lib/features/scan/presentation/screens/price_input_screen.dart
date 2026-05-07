@@ -10,17 +10,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency_display.dart';
 import '../models/scan_route_data.dart';
 
 class PriceInputScreen extends StatefulWidget {
   final String productName;
   final String productId;
+  final double? detectedPrice;
+  final double initialInputPrice;
   final String? capturedImagePath;
 
   const PriceInputScreen({
     super.key,
     required this.productName,
     this.productId = 'p001',
+    this.detectedPrice,
+    this.initialInputPrice = 0,
     this.capturedImagePath,
   });
 
@@ -64,6 +69,17 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
   bool get _hasInput =>
       _useSlider ? _totalPrice > 0 : _priceController.text.isNotEmpty;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialInputPrice > 0) {
+      _priceController.text = widget.initialInputPrice % 1 == 0
+          ? widget.initialInputPrice.toStringAsFixed(0)
+          : widget.initialInputPrice.toStringAsFixed(1);
+      _sliderValue = widget.initialInputPrice.clamp(_sliderMin, _sliderMax);
+    }
+  }
+
   // ── Quantity helpers ─────────────────────────────────────────────
   void _incrementQuantity() {
     setState(() {
@@ -101,6 +117,7 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
             ? widget.productName
             : 'Product',
         productId: widget.productId,
+        detectedPrice: widget.detectedPrice,
         inputPrice: _perUnitPrice, // EGP per kg / per pc
         capturedImagePath: widget.capturedImagePath,
       ),
@@ -127,7 +144,15 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
         title: const Text('Enter Price'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/scan'),
+          onPressed: () => context.go(
+            '/scan/stats',
+            extra: ScanRouteData(
+              productName: displayName,
+              productId: widget.productId,
+              detectedPrice: widget.detectedPrice,
+              capturedImagePath: widget.capturedImagePath,
+            ),
+          ),
         ),
         actions: [
           // Toggle between keyboard and slider input
@@ -230,6 +255,16 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
                 ],
               ),
             ),
+            if (_hasInput) ...[
+              const SizedBox(height: 6),
+              Text(
+                CurrencyDisplay.formatKrw(_totalPrice),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.onSurfaceLight,
+                ),
+              ),
+            ],
 
             // Slider (only shown in slider mode)
             if (_useSlider) ...[
@@ -352,7 +387,10 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
                   ),
                   Text(
                     _hasInput && _quantity > 0
-                        ? '${_perUnitPrice.toStringAsFixed(1)} EGP'
+                        ? CurrencyDisplay.formatEgpWithKrw(
+                            _perUnitPrice,
+                            egpDecimals: 1,
+                          )
                         : '—',
                     style: TextStyle(
                       fontSize: 16,
