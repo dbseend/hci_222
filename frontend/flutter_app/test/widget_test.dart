@@ -8,6 +8,7 @@ import 'package:trueprice/features/market_map/presentation/utils/market_marker_b
 import 'package:trueprice/features/scan/presentation/screens/price_input_screen.dart';
 import 'package:trueprice/features/scan/data/models/region_stats.dart';
 import 'package:trueprice/features/onboarding/presentation/screens/permission_screen.dart';
+import 'package:trueprice/features/scan/presentation/screens/final_price_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
@@ -130,6 +131,25 @@ void main() {
       expect(find.text('pcs'), findsOneWidget);
       expect(find.text('bunch'), findsNothing);
       expect(find.text('bundle'), findsNothing);
+    });
+  });
+
+  group('FinalPriceScreen layout', () {
+    testWidgets('renders on small-height screens without overflow', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(320, 520));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: FinalPriceScreen(productName: 'Grapes', finalPrice: 65),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Purchase complete!'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

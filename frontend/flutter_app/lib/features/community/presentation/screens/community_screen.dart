@@ -14,15 +14,34 @@ import '../../data/models/community_post.dart';
 import '../../data/repositories/community_post_repository.dart';
 
 class CommunityScreen extends StatefulWidget {
-  const CommunityScreen({super.key});
+  final String initialLocationFilter;
+  final String initialItemFilter;
+  final String initialStoreFilter;
+
+  const CommunityScreen({
+    super.key,
+    this.initialLocationFilter = '',
+    this.initialItemFilter = '',
+    this.initialStoreFilter = '',
+  });
 
   @override
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
+  static final RegExp _multiSpaceRegExp = RegExp(r'\s+');
+
   final _repo = CommunityPostRepositoryImpl();
   late Future<List<CommunityPost>> _postsFuture;
+  final _locationController = TextEditingController();
+  final _productController = TextEditingController();
+  final _storeController = TextEditingController();
+  String _locationFilter = '';
+  String _productFilter = '';
+  String _storeFilter = '';
+  bool _filtersExpanded = true;
+  _SortOption _sortOption = _SortOption.newest;
 
   // Mock feed data (Cairo, Egypt — prices in EGP)
   static final _mockFeed = [
@@ -31,6 +50,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       price: 65.0,
       avgPrice: 55.0,
       marketName: 'Khan el-Khalili Market',
+      location: 'Old Cairo',
       timeAgo: '2 min ago',
     ),
     _FeedItem(
@@ -38,6 +58,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       price: 14.0,
       avgPrice: 10.0,
       marketName: 'Ataba Market',
+      location: 'Downtown Cairo',
       timeAgo: '15 min ago',
     ),
     _FeedItem(
@@ -45,6 +66,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       price: 6.0,
       avgPrice: 8.0,
       marketName: 'Imbaba Market',
+      location: 'Imbaba',
       timeAgo: '32 min ago',
     ),
     _FeedItem(
@@ -52,6 +74,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       price: 45.0,
       avgPrice: 30.0,
       marketName: 'Khan el-Khalili Market',
+      location: 'Old Cairo',
       timeAgo: '1 hr ago',
     ),
     _FeedItem(
@@ -59,6 +82,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       price: 18.0,
       avgPrice: 20.0,
       marketName: 'Ataba Market',
+      location: 'Downtown Cairo',
       timeAgo: '2 hr ago',
     ),
   ];
@@ -67,6 +91,23 @@ class _CommunityScreenState extends State<CommunityScreen> {
   void initState() {
     super.initState();
     _postsFuture = _repo.getUserPosts();
+    _locationController.text = widget.initialLocationFilter;
+    _productController.text = widget.initialItemFilter;
+    _storeController.text = widget.initialStoreFilter;
+    _locationFilter = _normalize(widget.initialLocationFilter);
+    _productFilter = _normalize(widget.initialItemFilter);
+    _storeFilter = _normalize(widget.initialStoreFilter);
+    _locationController.addListener(_onFilterChanged);
+    _productController.addListener(_onFilterChanged);
+    _storeController.addListener(_onFilterChanged);
+  }
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    _productController.dispose();
+    _storeController.dispose();
+    super.dispose();
   }
 
   Future<void> _reload() async {
@@ -83,15 +124,69 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return '${diff.inDays} day ago';
   }
 
+  String _normalize(String value) {
+    return value.trim().toLowerCase().replaceAll(_multiSpaceRegExp, ' ');
+  }
+
+  bool _containsIgnoreCase(String text, String query) {
+    if (query.isEmpty) return true;
+    return _normalize(text).contains(_normalize(query));
+  }
+
+  List<_FeedItem> _applyFilters(List<_FeedItem> feed) {
+    return feed.where((item) {
+      return _containsIgnoreCase(item.location, _locationFilter) &&
+          _containsIgnoreCase(item.productName, _productFilter) &&
+          _containsIgnoreCase(item.marketName, _storeFilter);
+    }).toList();
+  }
+
+  List<_FeedItem> _sortFeed(List<_FeedItem> feed) {
+    final sorted = List<_FeedItem>.from(feed);
+    switch (_sortOption) {
+      case _SortOption.newest:
+        return sorted;
+      case _SortOption.priceLowToHigh:
+        sorted.sort((a, b) => a.price.compareTo(b.price));
+        return sorted;
+      case _SortOption.priceHighToLow:
+        sorted.sort((a, b) => b.price.compareTo(a.price));
+        return sorted;
+    }
+  }
+
+  bool get _hasActiveFilter =>
+      _locationFilter.isNotEmpty ||
+      _productFilter.isNotEmpty ||
+      _storeFilter.isNotEmpty;
+
+  void _onFilterChanged() {
+    final nextLocation = _normalize(_locationController.text);
+    final nextProduct = _normalize(_productController.text);
+    final nextStore = _normalize(_storeController.text);
+    if (nextLocation == _locationFilter &&
+        nextProduct == _productFilter &&
+        nextStore == _storeFilter) {
+      return;
+    }
+
+    setState(() {
+      _locationFilter = nextLocation;
+      _productFilter = nextProduct;
+      _storeFilter = nextStore;
+    });
+  }
+
+  void _resetFilters() {
+    _locationController.clear();
+    _productController.clear();
+    _storeController.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Community'),
-        actions: [
-          IconButton(icon: const Icon(Icons.filter_list), onPressed: () {}),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Community')),
       body: FutureBuilder<List<CommunityPost>>(
         future: _postsFuture,
         builder: (context, snapshot) {
@@ -103,20 +198,52 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   price: post.price,
                   avgPrice: post.price,
                   marketName: 'Traveler Report',
+                  location: 'Unknown',
                   timeAgo: _timeAgo(post.createdAt),
                   imagePath: post.imagePath,
                 ),
               )
               .toList();
 
-          final feed = [...userFeed, ..._mockFeed];
+          final filtered = _applyFilters([...userFeed, ..._mockFeed]);
+          final feed = _sortFeed(filtered);
 
           return RefreshIndicator(
             onRefresh: _reload,
-            child: ListView.builder(
+            child: ListView(
               padding: const EdgeInsets.all(16),
-              itemCount: feed.length,
-              itemBuilder: (_, i) => _FeedCard(feed: feed[i]),
+              children: [
+                _InlineFilters(
+                  locationController: _locationController,
+                  itemController: _productController,
+                  storeController: _storeController,
+                  filtersExpanded: _filtersExpanded,
+                  hasActiveFilter: _hasActiveFilter,
+                  sortOption: _sortOption,
+                  resultCount: feed.length,
+                  onToggleExpanded: () {
+                    setState(() {
+                      _filtersExpanded = !_filtersExpanded;
+                    });
+                  },
+                  onSortChanged: (sort) {
+                    setState(() {
+                      _sortOption = sort;
+                    });
+                  },
+                  onReset: _resetFilters,
+                ),
+                const SizedBox(height: 12),
+                if (feed.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 24),
+                    child: Text(
+                      'No posts match the selected filters.',
+                      style: TextStyle(color: AppColors.onSurfaceLight),
+                    ),
+                  ),
+                for (final item in feed) _FeedCard(feed: item),
+              ],
             ),
           );
         },
@@ -176,7 +303,7 @@ class _FeedCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        feed.marketName,
+                        '${feed.marketName} · ${feed.location}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.onSurfaceLight,
@@ -242,6 +369,7 @@ class _FeedItem {
   final double price;
   final double avgPrice;
   final String marketName;
+  final String location;
   final String timeAgo;
   final String? imagePath;
 
@@ -250,7 +378,136 @@ class _FeedItem {
     required this.price,
     required this.avgPrice,
     required this.marketName,
+    required this.location,
     required this.timeAgo,
     this.imagePath,
   });
 }
+
+class _InlineFilters extends StatelessWidget {
+  final TextEditingController locationController;
+  final TextEditingController itemController;
+  final TextEditingController storeController;
+  final bool filtersExpanded;
+  final bool hasActiveFilter;
+  final _SortOption sortOption;
+  final int resultCount;
+  final VoidCallback onToggleExpanded;
+  final ValueChanged<_SortOption> onSortChanged;
+  final VoidCallback onReset;
+
+  const _InlineFilters({
+    required this.locationController,
+    required this.itemController,
+    required this.storeController,
+    required this.filtersExpanded,
+    required this.hasActiveFilter,
+    required this.sortOption,
+    required this.resultCount,
+    required this.onToggleExpanded,
+    required this.onSortChanged,
+    required this.onReset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Filters',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              const Spacer(),
+              Text(
+                '$resultCount results',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.onSurfaceLight,
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: hasActiveFilter ? onReset : null,
+                child: const Text('Reset'),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                onPressed: onToggleExpanded,
+                icon: Icon(
+                  filtersExpanded ? Icons.expand_less : Icons.expand_more,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<_SortOption>(
+            initialValue: sortOption,
+            isDense: true,
+            decoration: const InputDecoration(
+              labelText: 'Sort',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              if (value == null) return;
+              onSortChanged(value);
+            },
+            items: const [
+              DropdownMenuItem(
+                value: _SortOption.newest,
+                child: Text('Newest'),
+              ),
+              DropdownMenuItem(
+                value: _SortOption.priceLowToHigh,
+                child: Text('Price: Low to High'),
+              ),
+              DropdownMenuItem(
+                value: _SortOption.priceHighToLow,
+                child: Text('Price: High to Low'),
+              ),
+            ],
+          ),
+          if (filtersExpanded) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: locationController,
+              decoration: const InputDecoration(
+                isDense: true,
+                labelText: 'Location',
+                hintText: 'e.g. Downtown Cairo',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: itemController,
+              decoration: const InputDecoration(
+                isDense: true,
+                labelText: 'Item',
+                hintText: 'e.g. Tomatoes',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: storeController,
+              decoration: const InputDecoration(
+                isDense: true,
+                labelText: 'Store/Company',
+                hintText: 'e.g. Ataba Market',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+enum _SortOption { newest, priceLowToHigh, priceHighToLow }

@@ -61,6 +61,9 @@ class _FinalPriceView extends StatefulWidget {
 
 class _FinalPriceViewState extends State<_FinalPriceView>
     with SingleTickerProviderStateMixin {
+  static const String _communityDefaultLocation = 'Unknown';
+  static const String _communityDefaultStore = 'Traveler Report';
+
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
   bool _submitted = false;
@@ -100,9 +103,6 @@ class _FinalPriceViewState extends State<_FinalPriceView>
         backgroundColor: AppColors.primary,
       ),
     );
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) context.go('/scan');
-    });
   }
 
   @override
@@ -136,109 +136,149 @@ class _FinalPriceViewState extends State<_FinalPriceView>
             ),
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const Spacer(),
-
-              ScaleTransition(
-                scale: _scaleAnim,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: const BoxDecoration(
-                    color: AppColors.safe,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 60),
-                ),
+        body: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - 48,
               ),
-
-              const SizedBox(height: 32),
-              Text(
-                widget.productName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: AppColors.onSurfaceLight,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                CurrencyDisplay.formatEgp(widget.finalPrice),
-                style: const TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                CurrencyDisplay.formatKrw(widget.finalPrice),
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: AppColors.onSurfaceLight,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text('Purchase complete!', style: TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              const Text(
-                'Automatically posted to Community.',
-                style: TextStyle(fontSize: 13, color: AppColors.onSurfaceLight),
-              ),
-
-              const SizedBox(height: 40),
-
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: const Column(
+              child: IntrinsicHeight(
+                child: Column(
                   children: [
-                    Icon(Icons.people, color: AppColors.primary, size: 32),
-                    SizedBox(height: 12),
+                    const Spacer(),
+
+                    ScaleTransition(
+                      scale: _scaleAnim,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: const BoxDecoration(
+                          color: AppColors.safe,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 60,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
                     Text(
-                      'Help other travelers',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                      widget.productName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: AppColors.onSurfaceLight,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      'Sharing your price helps other travelers get more accurate price data',
+                      CurrencyDisplay.formatEgp(widget.finalPrice),
+                      style: const TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      CurrencyDisplay.formatKrw(widget.finalPrice),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: AppColors.onSurfaceLight,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Purchase complete!',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Automatically posted to Community.',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.onSurfaceLight,
-                        height: 1.5,
                       ),
-                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.people,
+                            color: AppColors.primary,
+                            size: 32,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'Help other travelers',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Sharing your price helps other travelers get more accurate price data',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.onSurfaceLight,
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+
+                    ElevatedButton(
+                      onPressed: _submitted ? null : _submit,
+                      child: Text(_submitted ? 'Shared!' : 'Share price'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () => context.go(
+                        '/community',
+                        extra: <String, dynamic>{
+                          'itemFilter': widget.productName,
+                          'locationFilter': _communityDefaultLocation,
+                          'storeFilter': _communityDefaultStore,
+                        },
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 52),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Go to Community'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.go('/scan'),
+                      child: const Text(
+                        'Go back without sharing',
+                        style: TextStyle(color: AppColors.onSurfaceLight),
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              const Spacer(),
-
-              ElevatedButton(
-                onPressed: _submitted ? null : _submit,
-                child: Text(_submitted ? 'Shared!' : 'Share price'),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.go('/scan'),
-                child: const Text(
-                  'Go back without sharing',
-                  style: TextStyle(color: AppColors.onSurfaceLight),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

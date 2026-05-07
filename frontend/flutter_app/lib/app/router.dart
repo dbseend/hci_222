@@ -110,7 +110,20 @@ final router = GoRouter(
         ),
         GoRoute(path: '/map', builder: (_, _) => const MarketMapScreen()),
         GoRoute(path: '/language', builder: (_, _) => const PhraseScreen()),
-        GoRoute(path: '/community', builder: (_, _) => const CommunityScreen()),
+        GoRoute(
+          path: '/community',
+          builder: (_, s) {
+            final extra = s.extra;
+            final map = extra is Map<String, dynamic>
+                ? extra
+                : const <String, dynamic>{};
+            return CommunityScreen(
+              initialLocationFilter: map['locationFilter'] as String? ?? '',
+              initialItemFilter: map['itemFilter'] as String? ?? '',
+              initialStoreFilter: map['storeFilter'] as String? ?? '',
+            );
+          },
+        ),
       ],
     ),
   ],
