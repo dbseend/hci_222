@@ -11,12 +11,14 @@ class FinalPriceScreen extends StatelessWidget {
   final String productName;
   final String productId;
   final double finalPrice;
+  final String? capturedImagePath;
 
   const FinalPriceScreen({
     super.key,
     required this.productName,
     required this.finalPrice,
     this.productId = 'p001',
+    this.capturedImagePath,
   });
 
   @override
@@ -27,6 +29,7 @@ class FinalPriceScreen extends StatelessWidget {
         productName: productName,
         productId: productId,
         finalPrice: finalPrice,
+        capturedImagePath: capturedImagePath,
       ),
     );
   }
@@ -36,11 +39,13 @@ class _FinalPriceView extends StatefulWidget {
   final String productName;
   final String productId;
   final double finalPrice;
+  final String? capturedImagePath;
 
   const _FinalPriceView({
     required this.productName,
     required this.productId,
     required this.finalPrice,
+    this.capturedImagePath,
   });
 
   @override
@@ -60,8 +65,7 @@ class _FinalPriceViewState extends State<_FinalPriceView>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _scaleAnim =
-        CurvedAnimation(parent: _controller, curve: Curves.elasticOut);
+    _scaleAnim = CurvedAnimation(parent: _controller, curve: Curves.elasticOut);
     _controller.forward();
   }
 
@@ -75,12 +79,14 @@ class _FinalPriceViewState extends State<_FinalPriceView>
     setState(() => _submitted = true);
     final userId = await UserIdService.getOrCreate();
     if (!mounted) return;
-    context.read<PriceBloc>().add(PriceSubmitted(
-      productId: widget.productId,
-      price: widget.finalPrice,
-      unit: 'kg',
-      userId: userId,
-    ));
+    context.read<PriceBloc>().add(
+      PriceSubmitted(
+        productId: widget.productId,
+        price: widget.finalPrice,
+        unit: 'kg',
+        userId: userId,
+      ),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Thanks for sharing your price! 🙏'),
@@ -129,8 +135,7 @@ class _FinalPriceViewState extends State<_FinalPriceView>
                     color: AppColors.safe,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check,
-                      color: Colors.white, size: 60),
+                  child: const Icon(Icons.check, color: Colors.white, size: 60),
                 ),
               ),
 
@@ -138,17 +143,26 @@ class _FinalPriceViewState extends State<_FinalPriceView>
               Text(
                 widget.productName,
                 style: const TextStyle(
-                    fontSize: 18, color: AppColors.onSurfaceLight),
+                  fontSize: 18,
+                  color: AppColors.onSurfaceLight,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 '${widget.finalPrice.toStringAsFixed(0)} EGP',
                 style: const TextStyle(
-                    fontSize: 42, fontWeight: FontWeight.bold),
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text('Purchase complete!', style: TextStyle(fontSize: 20)),
+              const SizedBox(height: 8),
+              const Text(
+                'Automatically posted to Community.',
+                style: TextStyle(fontSize: 13, color: AppColors.onSurfaceLight),
+              ),
 
               const SizedBox(height: 40),
 
@@ -158,7 +172,8 @@ class _FinalPriceViewState extends State<_FinalPriceView>
                   color: AppColors.primary.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2)),
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: const Column(
                   children: [
@@ -167,7 +182,9 @@ class _FinalPriceViewState extends State<_FinalPriceView>
                     Text(
                       'Help other travelers',
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8),

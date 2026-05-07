@@ -12,8 +12,8 @@
 //     /scan/input        → PriceInputScreen   (extra: productName, productId)
 //     /scan/analysis     → PriceAnalysisScreen(extra: productName, productId, inputPrice)
 //     /scan/final        → FinalPriceScreen   (extra: productName, productId, finalPrice)
+//     /scan/history      → ScanHistoryScreen
 //     /map               → MarketMapScreen
-//     /language          → PhraseScreen
 //     /community         → CommunityScreen
 //
 // Data passing: route parameters are passed via GoRouter's [extra] map (Map<String, dynamic>).
@@ -31,6 +31,7 @@ import '../features/scan/presentation/screens/price_stats_screen.dart';
 import '../features/scan/presentation/screens/price_input_screen.dart';
 import '../features/scan/presentation/screens/price_analysis_screen.dart';
 import '../features/scan/presentation/screens/final_price_screen.dart';
+import '../features/scan/presentation/screens/scan_history_screen.dart';
 import '../features/scan/presentation/models/scan_route_data.dart';
 import '../features/market_map/presentation/screens/market_map_screen.dart';
 import '../features/language/presentation/screens/phrase_screen.dart';
@@ -58,6 +59,7 @@ final router = GoRouter(
                   productName: e.productName,
                   productId: e.productId,
                   detectedPrice: e.detectedPrice,
+                  capturedImagePath: e.capturedImagePath,
                 );
               },
             ),
@@ -68,6 +70,7 @@ final router = GoRouter(
                 return PriceInputScreen(
                   productName: e.productName,
                   productId: e.productId,
+                  capturedImagePath: e.capturedImagePath,
                 );
               },
             ),
@@ -79,6 +82,7 @@ final router = GoRouter(
                   productName: e.productName,
                   productId: e.productId,
                   inputPrice: e.inputPrice,
+                  capturedImagePath: e.capturedImagePath,
                 );
               },
             ),
@@ -90,8 +94,13 @@ final router = GoRouter(
                   productName: e.productName,
                   productId: e.productId,
                   finalPrice: e.finalPrice,
+                  capturedImagePath: e.capturedImagePath,
                 );
               },
+            ),
+            GoRoute(
+              path: 'history',
+              builder: (_, _) => const ScanHistoryScreen(),
             ),
           ],
         ),
@@ -111,8 +120,7 @@ class _MainShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/scan')) return 1;
     if (location.startsWith('/map')) return 2;
-    if (location.startsWith('/language')) return 3;
-    if (location.startsWith('/community')) return 4;
+    if (location.startsWith('/community')) return 3;
     return 0;
   }
 

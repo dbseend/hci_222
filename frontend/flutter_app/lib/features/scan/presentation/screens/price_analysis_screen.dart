@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/price_classifier.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/price_badge.dart';
+import '../../../community/data/repositories/community_post_repository.dart';
 import '../../data/models/region_stats.dart';
 import '../models/scan_route_data.dart';
 import '../bloc/price_bloc.dart';
@@ -16,23 +17,27 @@ class PriceAnalysisScreen extends StatelessWidget {
   final String productName;
   final String productId;
   final double inputPrice;
+  final String? capturedImagePath;
 
   const PriceAnalysisScreen({
     super.key,
     required this.productName,
     required this.inputPrice,
     this.productId = 'p001',
+    this.capturedImagePath,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => PriceBloc()
-        ..add(PriceStatsRequested(productId: productId, lat: 0, lon: 0)),
+      create: (_) =>
+          PriceBloc()
+            ..add(PriceStatsRequested(productId: productId, lat: 0, lon: 0)),
       child: _PriceAnalysisView(
         productName: productName,
         productId: productId,
         inputPrice: inputPrice,
+        capturedImagePath: capturedImagePath,
       ),
     );
   }
@@ -42,11 +47,13 @@ class _PriceAnalysisView extends StatelessWidget {
   final String productName;
   final String productId;
   final double inputPrice;
+  final String? capturedImagePath;
 
   const _PriceAnalysisView({
     required this.productName,
     required this.productId,
     required this.inputPrice,
+    this.capturedImagePath,
   });
 
   @override
@@ -68,8 +75,8 @@ class _PriceAnalysisView extends StatelessWidget {
             return AppErrorWidget(
               message: state.message,
               onRetry: () => context.read<PriceBloc>().add(
-                    PriceStatsRequested(productId: productId, lat: 0, lon: 0),
-                  ),
+                PriceStatsRequested(productId: productId, lat: 0, lon: 0),
+              ),
             );
           }
           if (state is PriceLoaded) {
@@ -107,8 +114,10 @@ class _PriceAnalysisView extends StatelessWidget {
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
-              border:
-                  Border.all(color: statusColor.withValues(alpha: 0.3), width: 2),
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.3),
+                width: 2,
+              ),
             ),
             child: Column(
               children: [
@@ -117,11 +126,17 @@ class _PriceAnalysisView extends StatelessWidget {
                 Text(
                   '${inputPrice.toStringAsFixed(0)} EGP',
                   style: const TextStyle(
-                      fontSize: 48, fontWeight: FontWeight.bold),
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text(productName,
-                    style: const TextStyle(
-                        fontSize: 16, color: AppColors.onSurfaceLight)),
+                Text(
+                  productName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.onSurfaceLight,
+                  ),
+                ),
               ],
             ),
           ),
@@ -133,9 +148,10 @@ class _PriceAnalysisView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Price Distribution',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  'Price Distribution',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
                 const SizedBox(height: 12),
                 PriceHistogramWidget(stats: stats, userPrice: inputPrice),
               ],
@@ -154,21 +170,30 @@ class _PriceAnalysisView extends StatelessWidget {
           // Negotiation guide
           if (status != PriceStatus.safe)
             AppCard(
-              child: _NegotiationContent(
-                  status: status, avg: stats.avgPrice),
+              child: _NegotiationContent(status: status, avg: stats.avgPrice),
             ),
 
           const SizedBox(height: 20),
 
           ElevatedButton(
-            onPressed: () => context.go(
-              '/scan/final',
-              extra: ScanRouteData(
+            onPressed: () async {
+              final repo = CommunityPostRepositoryImpl();
+              await repo.addPurchasePost(
                 productName: productName,
-                productId: productId,
-                finalPrice: inputPrice,
-              ),
-            ),
+                price: inputPrice,
+                imagePath: capturedImagePath,
+              );
+              if (!context.mounted) return;
+              context.go(
+                '/scan/final',
+                extra: ScanRouteData(
+                  productName: productName,
+                  productId: productId,
+                  finalPrice: inputPrice,
+                  capturedImagePath: capturedImagePath,
+                ),
+              );
+            },
             child: const Text('I bought at this price'),
           ),
           const SizedBox(height: 12),
@@ -178,12 +203,14 @@ class _PriceAnalysisView extends StatelessWidget {
               extra: ScanRouteData(
                 productName: productName,
                 productId: productId,
+                capturedImagePath: capturedImagePath,
               ),
             ),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: const Text('Re-analyze with a different price'),
           ),
@@ -207,8 +234,10 @@ class _CompareContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('vs. Regional Average',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        const Text(
+          'vs. Regional Average',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -249,9 +278,10 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(label,
-            style:
-                const TextStyle(fontSize: 12, color: AppColors.onSurfaceLight)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceLight),
+        ),
         const SizedBox(height: 4),
         Text(
           '${value.toStringAsFixed(0)} EGP',
@@ -282,18 +312,22 @@ class _NegotiationContent extends StatelessWidget {
           children: [
             Icon(Icons.handshake, color: AppColors.primary, size: 20),
             SizedBox(width: 8),
-            Text('Negotiation Guide',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(
+              'Negotiation Guide',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
           ],
         ),
         const SizedBox(height: 12),
-        Text('Target: negotiate below $targetPrice EGP',
-            style: const TextStyle(fontSize: 14)),
+        Text(
+          'Target: negotiate below $targetPrice EGP',
+          style: const TextStyle(fontSize: 14),
+        ),
         const SizedBox(height: 12),
-        const Text('Useful phrases',
-            style: TextStyle(
-                fontSize: 12, color: AppColors.onSurfaceLight)),
+        const Text(
+          'Useful phrases',
+          style: TextStyle(fontSize: 12, color: AppColors.onSurfaceLight),
+        ),
         const SizedBox(height: 8),
         _PhraseChip('Too expensive', 'هذا غالي جداً'),
         const SizedBox(height: 6),
@@ -321,10 +355,11 @@ class _PhraseChip extends StatelessWidget {
         children: [
           Text(kr, style: const TextStyle(fontSize: 13)),
           const Spacer(),
-          Text(ar,
-              style: const TextStyle(
-                  fontSize: 15, fontFamily: 'NotoSansArabic'),
-              textDirection: TextDirection.rtl),
+          Text(
+            ar,
+            style: const TextStyle(fontSize: 15, fontFamily: 'NotoSansArabic'),
+            textDirection: TextDirection.rtl,
+          ),
           const SizedBox(width: 8),
           const Icon(Icons.volume_up, size: 16, color: AppColors.primary),
         ],

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../data/repositories/scan_history_repository.dart';
 import '../models/scan_route_data.dart';
 import '../bloc/scan_bloc.dart';
 import '../bloc/scan_event.dart';
@@ -30,11 +31,13 @@ class _ScanView extends StatefulWidget {
 
 class _ScanViewState extends State<_ScanView> {
   final _picker = ImagePicker();
+  final _historyRepo = ScanHistoryRepositoryImpl();
   CameraController? _cameraController;
   bool _isInitializingCamera = false;
   bool _hasCameraPermission = true;
   String? _cameraError;
   bool _flashOn = false;
+  String? _latestCapturedImagePath;
 
   @override
   void initState() {
@@ -117,6 +120,17 @@ class _ScanViewState extends State<_ScanView> {
     try {
       final image = await controller.takePicture();
       if (!mounted) return;
+      try {
+        await _historyRepo.addCapturedImage(File(image.path));
+        final history = await _historyRepo.getHistory();
+        _latestCapturedImagePath = history.isNotEmpty
+            ? history.first.imagePath
+            : null;
+      } catch (_) {
+        // Do not block scan flow if history save fails.
+        _latestCapturedImagePath = null;
+      }
+      if (!mounted) return;
       context.read<ScanBloc>().add(ScanImageCaptured(File(image.path)));
     } catch (e) {
       if (!mounted) return;
@@ -140,6 +154,8 @@ class _ScanViewState extends State<_ScanView> {
   }
 
   Future<void> _pickAndScan(ImageSource source) async {
+    _latestCapturedImagePath = null;
+
     // Camera not supported on web — fall back to gallery
     final effectiveSource = (kIsWeb && source == ImageSource.camera)
         ? ImageSource.gallery
@@ -184,6 +200,7 @@ class _ScanViewState extends State<_ScanView> {
               productName: state.result.productName,
               productId: state.result.productId,
               detectedPrice: state.result.detectedPrice,
+              capturedImagePath: _latestCapturedImagePath,
             ),
           );
         } else if (state is ScanError) {
@@ -327,7 +344,7 @@ class _ScanViewState extends State<_ScanView> {
                                 _ScanButton(
                                   icon: Icons.history,
                                   label: 'History',
-                                  onTap: () {},
+                                  onTap: () => context.go('/scan/history'),
                                   small: true,
                                 ),
                               ],

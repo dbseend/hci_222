@@ -1,13 +1,15 @@
 // market_map_screen.dart
-// Displays an interactive OpenStreetMap with markers for nearby Cairo markets.
+// Displays Google Maps with markers for nearby Cairo markets.
 // Tapping a marker opens a bottom sheet with market details and a directions button.
 // Mock data is used for the three hardcoded markets; replace with GET /markets/nearby
 // when the backend is ready.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../../../core/constants/app_colors.dart';
+import '../models/market_location.dart';
+import '../utils/market_marker_builder.dart';
 
 class MarketMapScreen extends StatefulWidget {
   const MarketMapScreen({super.key});
@@ -17,13 +19,13 @@ class MarketMapScreen extends StatefulWidget {
 }
 
 class _MarketMapScreenState extends State<MarketMapScreen> {
-  // Mock market data (Cairo, Egypt)
-  // TODO: Replace with GET /markets/nearby?lat=&lon= when backend is ready
-  final _mockMarkets = [
-    _MockMarket('Khan el-Khalili', 30.0478, 31.2625, "Cairo's largest traditional market & souq"),
-    _MockMarket('Ataba Market', 30.0565, 31.2457, 'Specializes in fruit, vegetables & spices'),
-    _MockMarket('Imbaba Market', 30.0720, 31.2130, 'Focused on fresh fruit & vegetables'),
-  ];
+  static const _initialPosition = CameraPosition(
+    target: LatLng(30.0478, 31.2625), // Cairo — Khan el-Khalili
+    zoom: 13,
+  );
+
+  final _mockMarkets = kDefaultMarketLocations;
+  GoogleMapController? _mapController;
 
   @override
   Widget build(BuildContext context) {
@@ -33,55 +35,32 @@ class _MarketMapScreenState extends State<MarketMapScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location),
-            onPressed: () {},
+            onPressed: _moveToDefaultMarket,
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          FlutterMap(
-            options: MapOptions(
-              initialCenter: const LatLng(30.0478, 31.2625), // Cairo — Khan el-Khalili
-              initialZoom: 13,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.trueprice.app',
-              ),
-              MarkerLayer(
-                markers: _mockMarkets
-                    .map(
-                      (m) => Marker(
-                        point: LatLng(m.lat, m.lon),
-                        width: 40,
-                        height: 40,
-                        child: GestureDetector(
-                          onTap: () => _showMarketSheet(context, m),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.storefront,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
-        ],
+      body: GoogleMap(
+        initialCameraPosition: _initialPosition,
+        myLocationButtonEnabled: false,
+        mapToolbarEnabled: false,
+        zoomControlsEnabled: false,
+        onMapCreated: (controller) => _mapController = controller,
+        markers: buildMarketMarkers(
+          markets: _mockMarkets,
+          onTap: (market) => _showMarketSheet(context, market),
+        ),
       ),
     );
   }
 
-  void _showMarketSheet(BuildContext context, _MockMarket market) {
+  Future<void> _moveToDefaultMarket() async {
+    if (_mapController == null) return;
+    await _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(_initialPosition),
+    );
+  }
+
+  void _showMarketSheet(BuildContext context, MarketLocation market) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -138,12 +117,4 @@ class _MarketMapScreenState extends State<MarketMapScreen> {
       ),
     );
   }
-}
-
-class _MockMarket {
-  final String name;
-  final double lat;
-  final double lon;
-  final String desc;
-  _MockMarket(this.name, this.lat, this.lon, this.desc);
 }

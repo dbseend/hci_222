@@ -15,11 +15,13 @@ import '../models/scan_route_data.dart';
 class PriceInputScreen extends StatefulWidget {
   final String productName;
   final String productId;
+  final String? capturedImagePath;
 
   const PriceInputScreen({
     super.key,
     required this.productName,
     this.productId = 'p001',
+    this.capturedImagePath,
   });
 
   @override
@@ -42,7 +44,6 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
   static const _unitOptions = [
     _UnitOption(key: 'kg', label: 'kg', step: 0.5),
     _UnitOption(key: 'pcs', label: 'pcs', step: 1.0),
-    _UnitOption(key: 'bunch', label: 'bunch', step: 1.0),
   ];
 
   _UnitOption _selectedUnit = _unitOptions[0]; // default: kg
@@ -100,7 +101,8 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
             ? widget.productName
             : 'Product',
         productId: widget.productId,
-        inputPrice: _perUnitPrice, // EGP per kg / per pc / per bunch
+        inputPrice: _perUnitPrice, // EGP per kg / per pc
+        capturedImagePath: widget.capturedImagePath,
       ),
     );
   }
@@ -296,7 +298,9 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
                           // Reset quantity to the new unit's minimum step
                           _quantity = u.step;
                         }),
-                        selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                        selectedColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         checkmarkColor: AppColors.primary,
                         labelStyle: TextStyle(
                           color: selected

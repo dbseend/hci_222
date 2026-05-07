@@ -4,6 +4,7 @@ class ScanRouteData {
   final double? detectedPrice;
   final double inputPrice;
   final double finalPrice;
+  final String? capturedImagePath;
 
   const ScanRouteData({
     this.productName = '',
@@ -11,6 +12,7 @@ class ScanRouteData {
     this.detectedPrice,
     this.inputPrice = 0,
     this.finalPrice = 0,
+    this.capturedImagePath,
   });
 
   factory ScanRouteData.fromExtra(Object? extra) {
@@ -22,6 +24,7 @@ class ScanRouteData {
         detectedPrice: (extra['detectedPrice'] as num?)?.toDouble(),
         inputPrice: (extra['inputPrice'] as num?)?.toDouble() ?? 0,
         finalPrice: (extra['finalPrice'] as num?)?.toDouble() ?? 0,
+        capturedImagePath: extra['capturedImagePath'] as String?,
       );
     }
     return const ScanRouteData();

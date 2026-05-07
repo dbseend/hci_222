@@ -59,28 +59,8 @@ class RegionStats {
 
   // Mock data for MVP. Units are product-specific:
   // - p001: EGP/kg for grapes
-  // - camel_ride: EGP/min for camel ride offers
   // TODO(next-dev): Replace with RegionStats.fromJson() once the backend is connected
   static RegionStats mock(String productId) {
-    if (productId == 'camel_ride') {
-      return RegionStats(
-        productId: productId,
-        avgPrice: 10.0,
-        modePrice: 9.0,
-        maxPrice: 18.0,
-        minPrice: 6.0,
-        stdDev: 3.0,
-        distribution: const [
-          PriceBucket(start: 6, end: 8, count: 8),
-          PriceBucket(start: 8, end: 10, count: 22),
-          PriceBucket(start: 10, end: 12, count: 18),
-          PriceBucket(start: 12, end: 14, count: 10),
-          PriceBucket(start: 14, end: 16, count: 5),
-          PriceBucket(start: 16, end: 18, count: 2),
-        ],
-      );
-    }
-
     return RegionStats(
       productId: productId,
       avgPrice: 55.0,

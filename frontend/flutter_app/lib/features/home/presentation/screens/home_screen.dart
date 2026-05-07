@@ -9,7 +9,7 @@ class HomeScreen extends StatelessWidget {
   static const _items = [
     _HomeItem(
       title: 'Price Check',
-      subtitle: 'Scan products or check camel ride offers',
+      subtitle: 'Scan products and check local market prices',
       route: '/scan',
       icon: Icons.camera_alt,
       color: AppColors.primary,
@@ -20,13 +20,6 @@ class HomeScreen extends StatelessWidget {
       route: '/map',
       icon: Icons.map,
       color: Color(0xFF1565C0),
-    ),
-    _HomeItem(
-      title: 'Phrases',
-      subtitle: 'Use quick Arabic phrases for bargaining',
-      route: '/language',
-      icon: Icons.translate,
-      color: Color(0xFFEF6C00),
     ),
     _HomeItem(
       title: 'Community',

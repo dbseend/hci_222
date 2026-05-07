@@ -14,28 +14,35 @@ class PriceStatsScreen extends StatelessWidget {
   final String productName;
   final String productId;
   final double? detectedPrice;
+  final String? capturedImagePath;
 
   const PriceStatsScreen({
     super.key,
     required this.productName,
     this.productId = 'p001',
     this.detectedPrice,
+    this.capturedImagePath,
   });
 
   @override
   Widget build(BuildContext context) {
-    final displayName = productName.isNotEmpty ? productName : 'Detected product';
+    final displayName = productName.isNotEmpty
+        ? productName
+        : 'Detected product';
     return BlocProvider(
       create: (_) => PriceBloc()
-        ..add(PriceStatsRequested(
-          productId: productId,
-          lat: 0, // LocationService fetches the real coordinates internally
-          lon: 0,
-        )),
+        ..add(
+          PriceStatsRequested(
+            productId: productId,
+            lat: 0, // LocationService fetches the real coordinates internally
+            lon: 0,
+          ),
+        ),
       child: _PriceStatsView(
         displayName: displayName,
         productId: productId,
         detectedPrice: detectedPrice,
+        capturedImagePath: capturedImagePath,
       ),
     );
   }
@@ -45,11 +52,13 @@ class _PriceStatsView extends StatelessWidget {
   final String displayName;
   final String productId;
   final double? detectedPrice;
+  final String? capturedImagePath;
 
   const _PriceStatsView({
     required this.displayName,
     required this.productId,
     this.detectedPrice,
+    this.capturedImagePath,
   });
 
   @override
@@ -71,8 +80,8 @@ class _PriceStatsView extends StatelessWidget {
             return AppErrorWidget(
               message: state.message,
               onRetry: () => context.read<PriceBloc>().add(
-                    PriceStatsRequested(productId: productId, lat: 0, lon: 0),
-                  ),
+                PriceStatsRequested(productId: productId, lat: 0, lon: 0),
+              ),
             );
           }
           if (state is PriceLoaded) {
@@ -110,12 +119,18 @@ class _PriceStatsView extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          const Text('Price Distribution',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Price Distribution',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          Text('Sample data: $totalCount entries (demo — not real regional data)',
-              style:
-                  const TextStyle(fontSize: 12, color: AppColors.onSurfaceLight)),
+          Text(
+            'Sample data: $totalCount entries (demo — not real regional data)',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.onSurfaceLight,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -123,7 +138,10 @@ class _PriceStatsView extends StatelessWidget {
               const SizedBox(width: 16),
               if (detectedPrice != null)
                 _LegendItem(
-                    color: AppColors.warning, label: 'Scanned price', isDash: true),
+                  color: AppColors.warning,
+                  label: 'Scanned price',
+                  isDash: true,
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -137,6 +155,7 @@ class _PriceStatsView extends StatelessWidget {
               extra: ScanRouteData(
                 productName: displayName,
                 productId: productId,
+                capturedImagePath: capturedImagePath,
               ),
             ),
             child: const Text("Enter Seller's Price"),
@@ -158,9 +177,10 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(label,
-            style:
-                const TextStyle(fontSize: 12, color: AppColors.onSurfaceLight)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceLight),
+        ),
         const SizedBox(height: 4),
         Text(
           '${value.toStringAsFixed(0)} EGP',
@@ -180,8 +200,11 @@ class _LegendItem extends StatelessWidget {
   final String label;
   final bool isDash;
 
-  const _LegendItem(
-      {required this.color, required this.label, this.isDash = false});
+  const _LegendItem({
+    required this.color,
+    required this.label,
+    this.isDash = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -190,13 +213,17 @@ class _LegendItem extends StatelessWidget {
       children: [
         isDash
             ? Container(
-                width: 16, height: 2, color: color,
-                margin: const EdgeInsets.symmetric(vertical: 5))
+                width: 16,
+                height: 2,
+                color: color,
+                margin: const EdgeInsets.symmetric(vertical: 5),
+              )
             : Container(width: 12, height: 12, color: color),
         const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 11, color: AppColors.onSurfaceLight)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceLight),
+        ),
       ],
     );
   }
@@ -207,11 +234,7 @@ class PriceHistogramWidget extends StatelessWidget {
   final RegionStats stats;
   final double? userPrice;
 
-  const PriceHistogramWidget({
-    super.key,
-    required this.stats,
-    this.userPrice,
-  });
+  const PriceHistogramWidget({super.key, required this.stats, this.userPrice});
 
   int? _findUserBucketIndex() {
     if (userPrice == null) return null;
@@ -229,8 +252,9 @@ class PriceHistogramWidget extends StatelessWidget {
     final buckets = stats.distribution;
     if (buckets.isEmpty) return const SizedBox(height: 180);
 
-    final maxCount =
-        buckets.map((b) => b.count).reduce((a, b) => a > b ? a : b);
+    final maxCount = buckets
+        .map((b) => b.count)
+        .reduce((a, b) => a > b ? a : b);
     final maxY = maxCount.toDouble() * 1.3;
     final userBucketIndex = _findUserBucketIndex();
 
@@ -255,11 +279,12 @@ class PriceHistogramWidget extends StatelessWidget {
                   color: isUserBucket
                       ? AppColors.warning
                       : isAvgBucket
-                          ? AppColors.primary
-                          : AppColors.primary.withValues(alpha: 0.35),
+                      ? AppColors.primary
+                      : AppColors.primary.withValues(alpha: 0.35),
                   width: 22,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4),
+                  ),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: isUserBucket,
                     toY: maxY,
@@ -293,12 +318,15 @@ class PriceHistogramWidget extends StatelessWidget {
                 )
               : null,
           titlesData: FlTitlesData(
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -311,7 +339,9 @@ class PriceHistogramWidget extends StatelessWidget {
                     child: Text(
                       buckets[i].start.toInt().toString(),
                       style: const TextStyle(
-                          fontSize: 9, color: AppColors.onSurfaceLight),
+                        fontSize: 9,
+                        color: AppColors.onSurfaceLight,
+                      ),
                     ),
                   );
                 },
@@ -322,10 +352,8 @@ class PriceHistogramWidget extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             horizontalInterval: maxCount / 3,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: Color(0xFFEEEEEE),
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (_) =>
+                const FlLine(color: Color(0xFFEEEEEE), strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
         ),
