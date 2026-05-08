@@ -126,6 +126,24 @@ In Xcode:
 5. Run.
 ```
 
+## Supabase Local Setup
+Use a local dart-define file so you do not have to pass URL/key every run.
+
+1. Fill local secret file (git-ignored):
+```text
+.env/supabase.dev.json
+```
+
+2. Run with file:
+```bash
+flutter run --dart-define-from-file=.env/supabase.dev.json
+```
+
+3. In VS Code, select launch config:
+```text
+Flutter (Supabase Dev)
+```
+
 ## Verify
 ```bash
 flutter analyze

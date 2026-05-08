@@ -45,6 +45,9 @@ dependencies:
   # 이미지 캐시
   cached_network_image: ^3.3.1
 
+  # Supabase
+  supabase_flutter: ^2.10.3
+
   # UUID (익명 사용자)
   uuid: ^4.3.3
 

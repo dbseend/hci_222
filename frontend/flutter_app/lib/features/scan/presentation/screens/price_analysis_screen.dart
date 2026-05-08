@@ -205,6 +205,9 @@ class _PriceAnalysisView extends StatelessWidget {
                 productName: productName,
                 price: inputPrice,
                 imagePath: capturedImagePath,
+                productCode: productId,
+                storeName: 'Traveler Report',
+                locationName: 'Unknown',
               );
               if (!context.mounted) return;
               context.go(

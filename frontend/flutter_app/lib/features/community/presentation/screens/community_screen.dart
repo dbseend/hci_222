@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_display.dart';
 import '../../../../core/utils/price_classifier.dart';
@@ -197,8 +198,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   productName: post.productName,
                   price: post.price,
                   avgPrice: post.price,
-                  marketName: 'Traveler Report',
-                  location: 'Unknown',
+                  marketName: post.storeName,
+                  location: post.locationName,
                   timeAgo: _timeAgo(post.createdAt),
                   imagePath: post.imagePath,
                 ),
@@ -278,12 +279,7 @@ class _FeedCard extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 160,
-                  child: File(feed.imagePath!).existsSync()
-                      ? Image.file(File(feed.imagePath!), fit: BoxFit.cover)
-                      : Container(
-                          color: Colors.grey.shade200,
-                          child: const Icon(Icons.broken_image_outlined),
-                        ),
+                  child: _FeedImage(imagePath: feed.imagePath!),
                 ),
               ),
               const SizedBox(height: 12),
@@ -360,6 +356,52 @@ class _FeedCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FeedImage extends StatelessWidget {
+  final String imagePath;
+
+  const _FeedImage({required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    final localFile = File(imagePath);
+    if (localFile.existsSync()) {
+      return Image.file(localFile, fit: BoxFit.cover);
+    }
+
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _brokenImage(),
+      );
+    }
+
+    if (SupabaseService.isInitialized) {
+      try {
+        final signedUrl = SupabaseService.client.storage
+            .from('community-images')
+            .getPublicUrl(imagePath);
+        return Image.network(
+          signedUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _brokenImage(),
+        );
+      } catch (_) {
+        return _brokenImage();
+      }
+    }
+
+    return _brokenImage();
+  }
+
+  Widget _brokenImage() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.broken_image_outlined),
     );
   }
 }

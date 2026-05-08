@@ -46,3 +46,6 @@ app.*.map.json
 
 # Local iOS secrets
 /ios/Flutter/MapsSecrets.xcconfig
+
+# Local runtime secrets
+/.env/supabase.dev.json
