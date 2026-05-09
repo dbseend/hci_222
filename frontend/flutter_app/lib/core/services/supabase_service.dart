@@ -20,4 +20,8 @@ class SupabaseService {
     await Supabase.initialize(url: url, anonKey: anonKey);
     _initialized = true;
   }
+
+  static void resetForTest() {
+    _initialized = false;
+  }
 }

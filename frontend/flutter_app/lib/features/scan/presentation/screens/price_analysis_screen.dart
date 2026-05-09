@@ -104,13 +104,21 @@ class _PriceAnalysisView extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, RegionStats stats) {
+    final sampleSize = stats.distribution.fold<int>(
+      0,
+      (sum, b) => sum + b.count,
+    );
     final status = PriceClassifier.classify(
       observed: inputPrice,
       avg: stats.avgPrice,
       stdDev: stats.stdDev,
     );
-    final pct = PriceClassifier.percentDiff(inputPrice, stats.avgPrice);
-    final message = PriceClassifier.statusMessage(status, pct);
+    final signal = PriceClassifier.signal(
+      observed: inputPrice,
+      avg: stats.avgPrice,
+      stdDev: stats.stdDev,
+      sampleSize: sampleSize,
+    );
 
     final statusColor = switch (status) {
       PriceStatus.safe => AppColors.safe,
@@ -136,7 +144,13 @@ class _PriceAnalysisView extends StatelessWidget {
             ),
             child: Column(
               children: [
-                PriceBadge(status: status, label: message, large: true),
+                PriceBadge(
+                  status: status,
+                  label: PriceClassifier.priceDeltaLabel(signal.percentDiff),
+                  large: true,
+                ),
+                const SizedBox(height: 10),
+                _SignalPills(signal: signal),
                 const SizedBox(height: 24),
                 Text(
                   CurrencyDisplay.formatEgp(inputPrice),
@@ -185,7 +199,11 @@ class _PriceAnalysisView extends StatelessWidget {
 
           // Comparison figures
           AppCard(
-            child: _CompareContent(inputPrice: inputPrice, stats: stats),
+            child: _CompareContent(
+              inputPrice: inputPrice,
+              stats: stats,
+              signal: signal,
+            ),
           ),
 
           const SizedBox(height: 20),
@@ -252,8 +270,13 @@ class _PriceAnalysisView extends StatelessWidget {
 class _CompareContent extends StatelessWidget {
   final double inputPrice;
   final RegionStats stats;
+  final PriceSignal signal;
 
-  const _CompareContent({required this.inputPrice, required this.stats});
+  const _CompareContent({
+    required this.inputPrice,
+    required this.stats,
+    required this.signal,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +291,22 @@ class _CompareContent extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
         const SizedBox(height: 16),
+        Text(
+          PriceClassifier.percentileLabel(signal.percentile),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          PriceClassifier.confidenceLabel(
+            signal.confidenceLevel,
+            signal.confidenceScore,
+          ),
+          style: TextStyle(
+            fontSize: 12,
+            color: _confidenceColor(signal.confidenceLevel),
+          ),
+        ),
+        const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -299,6 +338,74 @@ class _CompareContent extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Color _confidenceColor(ConfidenceLevel level) {
+    return switch (level) {
+      ConfidenceLevel.high => AppColors.safe,
+      ConfidenceLevel.medium => AppColors.negotiable,
+      ConfidenceLevel.low => AppColors.warning,
+    };
+  }
+}
+
+class _SignalPills extends StatelessWidget {
+  final PriceSignal signal;
+
+  const _SignalPills({required this.signal});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        _SignalPill(
+          icon: Icons.query_stats,
+          label: PriceClassifier.percentileLabel(signal.percentile),
+        ),
+        _SignalPill(
+          icon: Icons.verified_outlined,
+          label: PriceClassifier.confidenceLabel(
+            signal.confidenceLevel,
+            signal.confidenceScore,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SignalPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _SignalPill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.onSurfaceLight),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.onSurfaceLight,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

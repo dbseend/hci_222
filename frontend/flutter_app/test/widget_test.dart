@@ -37,6 +37,54 @@ void main() {
     test('percentDiff is correct', () {
       expect(PriceClassifier.percentDiff(45, 38), closeTo(18.4, 0.1));
     });
+
+    test('percentile is around 50 at average', () {
+      expect(
+        PriceClassifier.percentile(observed: 55, avg: 55, stdDev: 10),
+        closeTo(50, 0.5),
+      );
+    });
+
+    test('percentile increases as observed price increases', () {
+      final low = PriceClassifier.percentile(observed: 45, avg: 55, stdDev: 10);
+      final high = PriceClassifier.percentile(
+        observed: 65,
+        avg: 55,
+        stdDev: 10,
+      );
+      expect(low, lessThan(50));
+      expect(high, greaterThan(50));
+      expect(high, greaterThan(low));
+    });
+
+    test('confidence score improves with larger sample size', () {
+      final small = PriceClassifier.confidenceScore(
+        sampleSize: 10,
+        avg: 55,
+        stdDev: 10,
+      );
+      final large = PriceClassifier.confidenceScore(
+        sampleSize: 120,
+        avg: 55,
+        stdDev: 10,
+      );
+
+      expect(large, greaterThan(small));
+      expect(large, inInclusiveRange(0, 100));
+    });
+
+    test('signal bundles percent, percentile, and confidence', () {
+      final signal = PriceClassifier.signal(
+        observed: 60,
+        avg: 55,
+        stdDev: 10,
+        sampleSize: 80,
+      );
+
+      expect(signal.percentDiff, closeTo(9.09, 0.1));
+      expect(signal.percentile, greaterThan(50));
+      expect(signal.confidenceScore, inInclusiveRange(0, 100));
+    });
   });
 
   group('CurrencyDisplay', () {

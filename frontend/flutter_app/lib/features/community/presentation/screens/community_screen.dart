@@ -44,50 +44,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
   bool _filtersExpanded = true;
   _SortOption _sortOption = _SortOption.newest;
 
-  // Mock feed data (Cairo, Egypt — prices in EGP)
-  static final _mockFeed = [
-    _FeedItem(
-      productName: 'Grapes 1kg',
-      price: 65.0,
-      avgPrice: 55.0,
-      marketName: 'Khan el-Khalili Market',
-      location: 'Old Cairo',
-      timeAgo: '2 min ago',
-    ),
-    _FeedItem(
-      productName: 'Tomatoes 1kg',
-      price: 14.0,
-      avgPrice: 10.0,
-      marketName: 'Ataba Market',
-      location: 'Downtown Cairo',
-      timeAgo: '15 min ago',
-    ),
-    _FeedItem(
-      productName: 'Cucumbers 1kg',
-      price: 6.0,
-      avgPrice: 8.0,
-      marketName: 'Imbaba Market',
-      location: 'Imbaba',
-      timeAgo: '32 min ago',
-    ),
-    _FeedItem(
-      productName: 'Pomegranate 1 pc',
-      price: 45.0,
-      avgPrice: 30.0,
-      marketName: 'Khan el-Khalili Market',
-      location: 'Old Cairo',
-      timeAgo: '1 hr ago',
-    ),
-    _FeedItem(
-      productName: 'Lemons 5 pcs',
-      price: 18.0,
-      avgPrice: 20.0,
-      marketName: 'Ataba Market',
-      location: 'Downtown Cairo',
-      timeAgo: '2 hr ago',
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -206,7 +162,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               )
               .toList();
 
-          final filtered = _applyFilters([...userFeed, ..._mockFeed]);
+          final filtered = _applyFilters(userFeed);
           final feed = _sortFeed(filtered);
 
           return RefreshIndicator(

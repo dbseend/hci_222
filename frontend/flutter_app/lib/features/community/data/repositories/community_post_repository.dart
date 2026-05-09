@@ -23,6 +23,7 @@ abstract class CommunityPostRepository {
 
 class CommunityPostRepositoryImpl implements CommunityPostRepository {
   static const _storageKey = 'community_user_posts';
+  static const _remoteTimeout = Duration(seconds: 5);
 
   final Future<SharedPreferences> Function() _prefsProvider;
 
@@ -48,7 +49,7 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
           productCode: productCode,
           storeName: storeName,
           locationName: locationName,
-        );
+        ).timeout(_remoteTimeout);
         return;
       } catch (_) {
         // Fallback to local cache if remote write fails.
@@ -96,7 +97,7 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
   Future<List<CommunityPost>> getUserPosts() async {
     if (SupabaseService.isInitialized) {
       try {
-        return await _getUserPostsRemote();
+        return await _getUserPostsRemote().timeout(_remoteTimeout);
       } catch (_) {
         // Fallback to local cache if remote read fails.
       }
