@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/tts_service.dart';
 import '../../../../core/utils/currency_display.dart';
 import '../../../../core/utils/price_classifier.dart';
+import '../../../../core/utils/price_result_speech.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/price_badge.dart';
 import '../../../community/data/repositories/community_post_repository.dart';
@@ -137,6 +139,13 @@ class _PriceAnalysisView extends StatelessWidget {
       PriceStatus.negotiable => AppColors.negotiable,
       PriceStatus.warning => AppColors.warning,
     };
+    final speechText = PriceResultSpeech.build(
+      productName: productName,
+      offeredPrice: inputPrice,
+      averagePrice: stats.avgPrice,
+      status: status,
+      percentDiff: signal.percentDiff,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -186,6 +195,8 @@ class _PriceAnalysisView extends StatelessWidget {
                     color: AppColors.onSurfaceLight,
                   ),
                 ),
+                const SizedBox(height: 16),
+                _ResultVoiceButton(text: speechText),
               ],
             ),
           ),
@@ -286,6 +297,58 @@ class _PriceAnalysisView extends StatelessWidget {
       'warning' => PriceStatus.warning,
       _ => null,
     };
+  }
+}
+
+class _ResultVoiceButton extends StatefulWidget {
+  final String text;
+
+  const _ResultVoiceButton({required this.text});
+
+  @override
+  State<_ResultVoiceButton> createState() => _ResultVoiceButtonState();
+}
+
+class _ResultVoiceButtonState extends State<_ResultVoiceButton> {
+  final _tts = TtsService();
+  bool _speaking = false;
+
+  Future<void> _toggle() async {
+    if (_speaking) {
+      await _tts.stop();
+      if (mounted) setState(() => _speaking = false);
+      return;
+    }
+
+    setState(() => _speaking = true);
+    final played = await _tts.speak(widget.text);
+    if (!mounted) return;
+    setState(() => _speaking = false);
+
+    if (!played) {
+      final detail = _tts.lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            detail == null
+                ? 'Audio is unavailable on this device.'
+                : 'Audio failed: $detail',
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: _speaking ? 'Stop audio' : 'Play price result',
+      child: IconButton.filledTonal(
+        onPressed: _toggle,
+        icon: Icon(_speaking ? Icons.stop_circle : Icons.volume_up),
+        color: _speaking ? AppColors.warning : AppColors.primary,
+      ),
+    );
   }
 }
 
@@ -519,11 +582,45 @@ class _NegotiationContent extends StatelessWidget {
   }
 }
 
-class _PhraseChip extends StatelessWidget {
+class _PhraseChip extends StatefulWidget {
   final String kr;
   final String ar;
 
   const _PhraseChip(this.kr, this.ar);
+
+  @override
+  State<_PhraseChip> createState() => _PhraseChipState();
+}
+
+class _PhraseChipState extends State<_PhraseChip> {
+  final _tts = TtsService();
+  bool _speaking = false;
+
+  Future<void> _toggleAudio() async {
+    if (_speaking) {
+      await _tts.stop();
+      if (mounted) setState(() => _speaking = false);
+      return;
+    }
+
+    setState(() => _speaking = true);
+    final played = await _tts.speakArabic(widget.ar);
+    if (!mounted) return;
+    setState(() => _speaking = false);
+
+    if (!played) {
+      final detail = _tts.lastError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            detail == null
+                ? 'Arabic audio is unavailable on this device.'
+                : 'Arabic audio failed: $detail',
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -535,15 +632,26 @@ class _PhraseChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(kr, style: const TextStyle(fontSize: 13)),
+          Text(widget.kr, style: const TextStyle(fontSize: 13)),
           const Spacer(),
           Text(
-            ar,
+            widget.ar,
             style: const TextStyle(fontSize: 15, fontFamily: 'NotoSansArabic'),
             textDirection: TextDirection.rtl,
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.volume_up, size: 16, color: AppColors.primary),
+          const SizedBox(width: 4),
+          IconButton(
+            tooltip: _speaking ? 'Stop phrase audio' : 'Play phrase audio',
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: EdgeInsets.zero,
+            onPressed: _toggleAudio,
+            icon: Icon(
+              _speaking ? Icons.stop_circle : Icons.volume_up,
+              size: 18,
+              color: _speaking ? AppColors.warning : AppColors.primary,
+            ),
+          ),
         ],
       ),
     );
