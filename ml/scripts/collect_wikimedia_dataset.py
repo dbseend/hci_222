@@ -22,7 +22,7 @@ from pathlib import Path
 from urllib.parse import quote, urlencode
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DATASET_ROOT = ROOT / "dataset_sources"
 IMAGE_ROOT = DATASET_ROOT / "images"
 META_ROOT = DATASET_ROOT / "metadata"

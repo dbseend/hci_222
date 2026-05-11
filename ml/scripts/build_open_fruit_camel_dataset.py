@@ -23,7 +23,7 @@ import shutil
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "dataset_open_v1"
 OUT = BASE / "yolo"
 SEED = 222

@@ -30,6 +30,16 @@
 - 현재 Flutter MVP는 mock repository로 동작합니다.
 - MLKit/OCR은 현재 앱에서 제거되었습니다. 가격 OCR이 필요해지면 backend OCR 또는 별도 on-device OCR 전략을 다시 선택해야 합니다.
 
+## Repository Boundaries
+- `frontend/flutter_app`: user-facing Flutter app and tests
+- `backend`: FastAPI catalog/price service and tests
+- `db`: database schema, views, seeds, and RPC definitions
+- `ml`: dataset preparation scripts, audit tools, and Colab notebooks
+- `docs`: project-level architecture and delivery notes
+
+Local datasets and training outputs stay in ignored root folders such as
+`dataset_open_v1/`, `dataset_sources/`, `datasets/`, `outputs/`, and `runs/`.
+
 ## Guiding Principle
 - 학습보다 구현, 완벽보다 동작
 - iPhone 실기기 데모 우선

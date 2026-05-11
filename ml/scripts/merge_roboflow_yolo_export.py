@@ -8,8 +8,8 @@ Expected target class order:
 2 other_fruit
 
 Examples:
-  python3 scripts/merge_roboflow_yolo_export.py /path/to/cherry-tomato-yolov11.zip --source-name cherry_tomato1
-  python3 scripts/merge_roboflow_yolo_export.py /path/to/tomato-roboflow.zip --source-name roboflow_tomato
+  python3 ml/scripts/merge_roboflow_yolo_export.py /path/to/cherry-tomato-yolov11.zip --source-name cherry_tomato1
+  python3 ml/scripts/merge_roboflow_yolo_export.py /path/to/tomato-roboflow.zip --source-name roboflow_tomato
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import zipfile
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 TARGET = ROOT / "dataset_sources" / "fruit_detection_yolo"
 TARGET_CLASSES = ["tomato", "cherry_tomato", "other_fruit"]
 CLASS_REMAP_BY_NAME = {

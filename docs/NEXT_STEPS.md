@@ -14,18 +14,20 @@
 
 ## 3) YOLO 추론 파이프라인 고정
 - 클래스 목록 확정 및 라벨 정리
-- baseline(`yolov8n`) 학습 + latency 측정
+- `ml/notebooks/train_trueprice_yolo_colab.ipynb`에서 baseline(`yolov8n`) 학습 + latency 측정
 - FastAPI inference endpoint 안정화
 - 현재 MLKit/OCR은 제거되어 있으므로, 가격표 OCR이 필요하면 backend OCR로 붙이는 방향을 우선 검토
 
 ## 4) 데이터 품질 보강
+- 데이터셋 생성/검증 코드는 `ml/scripts`, `ml/tools` 기준으로 실행
+- 실제 데이터셋, zip, 학습 결과는 Git에 올리지 않고 로컬/Drive에서 관리
 - `db/migrations` 기준 가격 관측치 스키마 점검
 - RPC(`get_price_reference.sql`) 결과를 앱 통계 포맷과 일치
 - `camel_ride`처럼 상품이 아닌 서비스 가격도 product/category로 저장할지 결정
 - fallback 통계(샘플 부족 시) 정책 정의
 
 ## 5) MVP 릴리즈 전 정리
-- `.DS_Store` gitignore 처리
+- `.DS_Store`, 데이터셋, 모델 산출물 gitignore 상태 확인
 - 오타 문서 `docs/TruePrice-Guidnlines.md` 삭제 상태 확인
 - README와 앱 문구의 언어/타깃(iPhone-first) 일관성 확인
 - `flutter analyze`, `flutter test`, `flutter build ios --no-codesign` 통과 확인

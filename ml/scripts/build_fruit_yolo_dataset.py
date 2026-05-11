@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 TOMATO_RAW = ROOT / "dataset_sources" / "external_raw" / "tomato_detection" / "ds0"
 OUT = ROOT / "dataset_sources" / "fruit_detection_yolo"
 

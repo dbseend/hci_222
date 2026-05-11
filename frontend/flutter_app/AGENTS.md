@@ -5,9 +5,9 @@ You are helping build the TruePrice Flutter app. Optimize for a working mobile d
 ## Scope
 
 - This directory contains only the Flutter app.
-- Monorepo root: `../`
-- FastAPI backend: `../trueprice-api/`
-- Supabase migrations: `../supabase/migrations/`
+- Monorepo root: `../..`
+- FastAPI backend: `../../backend/`
+- Supabase migrations: `../../db/migrations/`
 - Product flow: camera or image upload -> recognition result from local logic or FastAPI -> price matching result -> clear UI result.
 
 ## Current Stack
@@ -17,7 +17,7 @@ You are helping build the TruePrice Flutter app. Optimize for a working mobile d
 - State management already available: `flutter_bloc`
 - Networking: `dio`
 - Image input: `camera`, `image_picker`
-- OCR: `google_mlkit_text_recognition`
+- OCR: currently not installed; add backend OCR or an on-device package only if the MVP flow needs it.
 - Location: `geolocator`, `permission_handler`
 - Map: `flutter_map`, `latlong2`
 - Local storage: `shared_preferences`
@@ -75,8 +75,8 @@ Use the user's provided `USD_checklist.pdf` as the practical design review basel
 
 ## Recognition MVP Strategy
 
-- Fastest path with the current dependency set: image picker or camera input plus OCR/category matching.
-- When the FastAPI backend is available, prefer sending images to `../trueprice-api/` through a stable `/recognize` contract.
+- Fastest path with the current dependency set: camera or image picker input plus local category matching or backend mock detection.
+- When the FastAPI backend is available, prefer sending images to `../../backend/` through a stable detection contract.
 - If true on-device object detection is required, prefer a small local TFLite path with `tflite_flutter`, but ask before adding the package and model assets.
 - For price lookup MVP, prefer local JSON/seed data in `assets/data/` or the FastAPI mock API before adding external APIs.
 - Make failure states demo-safe: no camera permission, no match, no network, and empty price data should all show usable UI.
@@ -87,4 +87,3 @@ Use the user's provided `USD_checklist.pdf` as the practical design review basel
 - `flutter analyze` has been run when Dart code changes.
 - `flutter test` has been run when behavior or widgets change.
 - New package additions, routing changes, and API contract changes are explicitly called out.
-
