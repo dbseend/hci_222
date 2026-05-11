@@ -23,3 +23,7 @@ xcuserdata/
 
 # Local run outputs
 outputs/
+
+# Local dataset workspaces and downloaded archives/images
+dataset_open_v1/
+dataset_sources/

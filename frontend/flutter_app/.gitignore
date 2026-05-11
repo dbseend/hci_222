@@ -49,3 +49,4 @@ app.*.map.json
 
 # Local runtime secrets
 /.env/supabase.dev.json
+.vercel
