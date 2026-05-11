@@ -197,12 +197,16 @@ void main() {
           lat: 30.0478,
           lon: 31.2625,
           desc: 'Traditional market',
+          rating: 4.6,
+          reviewCount: 128,
         ),
         const MarketLocation(
           name: 'Ataba Market',
           lat: 30.0565,
           lon: 31.2457,
           desc: 'Fruit and spices',
+          rating: 4.3,
+          reviewCount: 94,
         ),
       ];
 

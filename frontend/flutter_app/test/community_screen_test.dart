@@ -119,4 +119,13 @@ void main() {
     expect(find.text('Tomatoes 1kg'), findsOneWidget);
     expect(find.text('Grapes 1kg'), findsNothing);
   });
+
+  testWidgets('shows sample community feed on first launch', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: CommunityScreen()));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('No posts match the selected filters.'), findsNothing);
+    expect(find.text('5 results'), findsOneWidget);
+    expect(find.text('Lemons 5 pcs'), findsOneWidget);
+  });
 }

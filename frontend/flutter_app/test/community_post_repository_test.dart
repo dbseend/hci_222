@@ -35,5 +35,18 @@ void main() {
       expect(posts.first.imagePath, '/tmp/tomato.jpg');
       expect(posts.first.createdAt.isAfter(posts.last.createdAt), isTrue);
     });
+
+    test('returns sample feed when no community posts exist yet', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final repo = CommunityPostRepositoryImpl(
+        prefsProvider: () async => prefs,
+      );
+
+      final posts = await repo.getUserPosts();
+
+      expect(posts, isNotEmpty);
+      expect(posts.map((post) => post.productName), contains('Tomatoes 1kg'));
+      expect(posts.map((post) => post.storeName), contains('Ataba Market'));
+    });
   });
 }

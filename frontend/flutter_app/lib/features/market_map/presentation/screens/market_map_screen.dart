@@ -101,6 +101,11 @@ class _MarketMapScreenState extends State<MarketMapScreen> {
                           color: AppColors.onSurfaceLight,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      _RatingRow(
+                        rating: market.rating,
+                        reviewCount: market.reviewCount,
+                      ),
                     ],
                   ),
                 ),
@@ -115,6 +120,39 @@ class _MarketMapScreenState extends State<MarketMapScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RatingRow extends StatelessWidget {
+  final double rating;
+  final int reviewCount;
+
+  const _RatingRow({required this.rating, required this.reviewCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        ...List.generate(5, (index) {
+          final starNumber = index + 1;
+          final icon = rating >= starNumber
+              ? Icons.star
+              : rating >= starNumber - 0.5
+              ? Icons.star_half
+              : Icons.star_border;
+          return Icon(icon, size: 16, color: AppColors.negotiable);
+        }),
+        const SizedBox(width: 6),
+        Text(
+          '${rating.toStringAsFixed(1)} ($reviewCount)',
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.onSurfaceLight,
+          ),
+        ),
+      ],
     );
   }
 }

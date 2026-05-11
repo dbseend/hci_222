@@ -97,13 +97,15 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
   Future<List<CommunityPost>> getUserPosts() async {
     if (SupabaseService.isInitialized) {
       try {
-        return await _getUserPostsRemote().timeout(_remoteTimeout);
+        final remotePosts = await _getUserPostsRemote().timeout(_remoteTimeout);
+        return remotePosts.isEmpty ? _samplePosts() : remotePosts;
       } catch (_) {
         // Fallback to local cache if remote read fails.
       }
     }
 
-    return _getUserPostsLocal();
+    final localPosts = await _getUserPostsLocal();
+    return localPosts.isEmpty ? _samplePosts() : localPosts;
   }
 
   Future<List<CommunityPost>> _getUserPostsLocal() async {
@@ -254,6 +256,52 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
     }).toList();
 
     return mapped;
+  }
+
+  List<CommunityPost> _samplePosts() {
+    final now = DateTime.now();
+    return [
+      CommunityPost(
+        id: 'sample_5',
+        productName: 'Lemons 5 pcs',
+        price: 19.0,
+        storeName: 'Ataba Market',
+        locationName: 'Downtown Cairo',
+        createdAt: now.subtract(const Duration(minutes: 10)),
+      ),
+      CommunityPost(
+        id: 'sample_4',
+        productName: 'Pomegranate 1 pc',
+        price: 44.0,
+        storeName: 'Khan el-Khalili Market',
+        locationName: 'Old Cairo',
+        createdAt: now.subtract(const Duration(minutes: 30)),
+      ),
+      CommunityPost(
+        id: 'sample_3',
+        productName: 'Cucumbers 1kg',
+        price: 7.2,
+        storeName: 'Imbaba Market',
+        locationName: 'Imbaba',
+        createdAt: now.subtract(const Duration(hours: 1)),
+      ),
+      CommunityPost(
+        id: 'sample_2',
+        productName: 'Tomatoes 1kg',
+        price: 13.5,
+        storeName: 'Ataba Market',
+        locationName: 'Downtown Cairo',
+        createdAt: now.subtract(const Duration(hours: 2)),
+      ),
+      CommunityPost(
+        id: 'sample_1',
+        productName: 'Grapes 1kg',
+        price: 64.0,
+        storeName: 'Khan el-Khalili Market',
+        locationName: 'Old Cairo',
+        createdAt: now.subtract(const Duration(hours: 3)),
+      ),
+    ];
   }
 
   String _fileExtension(String path) {
