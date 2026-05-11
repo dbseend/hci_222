@@ -1,0 +1,14 @@
+[
+  {
+    "product_id": "tomato",
+    "display_name": "Tomato",
+    "unit": "kg",
+    "aliases": ["tomato", "tomatoes", "tomatoes_single"]
+  },
+  {
+    "product_id": "camel_doll",
+    "display_name": "Camel Doll",
+    "unit": "piece",
+    "aliases": ["camel doll", "camel souvenir", "camel ornament"]
+  }
+]

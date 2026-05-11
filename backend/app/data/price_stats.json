@@ -1,0 +1,24 @@
+[
+  {
+    "product_id": "tomato",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 20,
+    "median_price": 19,
+    "min_price": 15,
+    "max_price": 28,
+    "stddev_price": 4,
+    "sample_count": 42
+  },
+  {
+    "product_id": "camel_doll",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 120,
+    "median_price": 110,
+    "min_price": 80,
+    "max_price": 180,
+    "stddev_price": 32,
+    "sample_count": 18
+  }
+]

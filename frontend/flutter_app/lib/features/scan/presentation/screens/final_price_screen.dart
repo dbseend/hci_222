@@ -20,7 +20,7 @@ class FinalPriceScreen extends StatelessWidget {
     super.key,
     required this.productName,
     required this.finalPrice,
-    this.productId = 'p001',
+    this.productId = 'tomato',
     this.detectedPrice,
     this.capturedImagePath,
   });

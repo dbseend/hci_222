@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,7 @@ class _ScanView extends StatefulWidget {
 }
 
 class _ScanViewState extends State<_ScanView> {
+  static const Duration _cameraInitTimeout = Duration(seconds: 8);
   final _picker = ImagePicker();
   final _historyRepo = ScanHistoryRepositoryImpl();
   CameraController? _cameraController;
@@ -64,6 +66,9 @@ class _ScanViewState extends State<_ScanView> {
     }
 
     try {
+      await _cameraController?.dispose();
+      _cameraController = null;
+
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         throw CameraException('no_camera', 'No camera found on this device.');
@@ -76,12 +81,12 @@ class _ScanViewState extends State<_ScanView> {
 
       final controller = CameraController(
         backCamera,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
-      await controller.initialize();
+      await controller.initialize().timeout(_cameraInitTimeout);
       await controller.setFlashMode(FlashMode.off);
 
       if (!mounted) {
@@ -97,7 +102,10 @@ class _ScanViewState extends State<_ScanView> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _cameraError = 'Failed to start camera. Please try again. ($e)';
+        final timedOut = e is TimeoutException;
+        _cameraError = timedOut
+            ? 'Camera startup timed out. Use Gallery/Manual mode or retry.'
+            : 'Failed to start camera. Please try again. ($e)';
         _isInitializingCamera = false;
       });
     }
@@ -121,11 +129,9 @@ class _ScanViewState extends State<_ScanView> {
       final image = await controller.takePicture();
       if (!mounted) return;
       try {
-        await _historyRepo.addCapturedImage(File(image.path));
-        final history = await _historyRepo.getHistory();
-        _latestCapturedImagePath = history.isNotEmpty
-            ? history.first.imagePath
-            : null;
+        _latestCapturedImagePath = await _historyRepo.addCapturedImage(
+          File(image.path),
+        );
       } catch (_) {
         // Do not block scan flow if history save fails.
         _latestCapturedImagePath = null;
@@ -425,8 +431,20 @@ class _ScanViewState extends State<_ScanView> {
         icon: Icons.error_outline,
         title: 'Camera unavailable',
         message: _cameraError!,
-        actionLabel: 'Retry',
-        onAction: _initCamera,
+        actionLabel: null,
+        onAction: null,
+        bottomActions: [
+          _CameraAction(label: 'Retry camera', onPressed: _initCamera),
+          _CameraAction(
+            label: 'Open gallery',
+            onPressed: () => _pickAndScan(ImageSource.gallery),
+          ),
+          _CameraAction(
+            label: 'Enter price manually',
+            onPressed: () =>
+                context.go('/scan/input', extra: const ScanRouteData()),
+          ),
+        ],
       );
     }
 
@@ -458,6 +476,7 @@ class _CameraMessage extends StatelessWidget {
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final List<_CameraAction> bottomActions;
 
   const _CameraMessage({
     required this.icon,
@@ -465,6 +484,7 @@ class _CameraMessage extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.bottomActions = const [],
   });
 
   @override
@@ -504,10 +524,33 @@ class _CameraMessage extends StatelessWidget {
               child: Text(actionLabel!),
             ),
           ],
+          if (bottomActions.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            ...bottomActions.map(
+              (action) => Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: OutlinedButton(
+                  onPressed: action.onPressed,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white38),
+                  ),
+                  child: Text(action.label),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+}
+
+class _CameraAction {
+  final String label;
+  final VoidCallback onPressed;
+
+  const _CameraAction({required this.label, required this.onPressed});
 }
 
 class _ScanButton extends StatelessWidget {

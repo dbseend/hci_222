@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/scan_history_item.dart';
 
 abstract class ScanHistoryRepository {
-  Future<void> addCapturedImage(File image);
+  Future<String?> addCapturedImage(File image);
   Future<List<ScanHistoryItem>> getHistory();
   Future<void> clearHistory();
 }
@@ -28,8 +28,8 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
            directoryProvider ?? getApplicationDocumentsDirectory;
 
   @override
-  Future<void> addCapturedImage(File image) async {
-    if (!await image.exists()) return;
+  Future<String?> addCapturedImage(File image) async {
+    if (!await image.exists()) return null;
 
     final historyDir = await _historyDirectory();
     final now = DateTime.now();
@@ -55,6 +55,7 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
     }
 
     await _save(trimmed);
+    return copied.path;
   }
 
   @override

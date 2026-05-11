@@ -1,0 +1,8 @@
+path: datasets/trueprice_yolo
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: tomato
+  1: camel_doll

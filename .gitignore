@@ -1,6 +1,15 @@
 # macOS
 .DS_Store
 
+# IDE local state
+.idea/caches/
+.idea/deviceManager.xml
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
 # Flutter/Dart generated files
 .dart_tool/
 .flutter-plugins
@@ -11,3 +20,6 @@ build/
 # Xcode generated user state
 xcuserdata/
 *.xcuserstate
+
+# Local run outputs
+outputs/

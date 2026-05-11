@@ -80,7 +80,6 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final item = items[index];
-                final file = File(item.imagePath);
                 return Container(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -94,12 +93,16 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
                       child: SizedBox(
                         width: 56,
                         height: 56,
-                        child: file.existsSync()
-                            ? Image.file(file, fit: BoxFit.cover)
-                            : Container(
-                                color: Colors.grey.shade200,
-                                child: const Icon(Icons.broken_image_outlined),
-                              ),
+                        child: Image.file(
+                          File(item.imagePath),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.broken_image_outlined),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     title: const Text(

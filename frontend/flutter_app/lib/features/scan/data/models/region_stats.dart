@@ -3,11 +3,6 @@
 //          (or served from mock data during development).
 //          PriceBucket represents one bar in the histogram.
 //          RegionStats holds the full distribution for a product in a given region.
-// Mock→Real migration: replace RegionStats.mock() with RegionStats.fromJson(res.data)
-//                      once the price-stats API endpoint is live.
-// TODO(next-dev): Add 'currency' and 'unit' fields to RegionStats so the UI can
-//                 display "EGP / kg" instead of hard-coding the unit label.
-
 class PriceBucket {
   final double start;
   final double end;
@@ -28,34 +23,61 @@ class PriceBucket {
 
 class RegionStats {
   final String productId;
+  final String region;
+  final String currency;
   final double avgPrice;
   final double modePrice;
   final double maxPrice;
   final double minPrice;
   final double stdDev;
+  final int sampleCount;
   final List<PriceBucket> distribution;
 
   const RegionStats({
     required this.productId,
+    this.region = 'cairo',
+    this.currency = 'EGP',
     required this.avgPrice,
     required this.modePrice,
     required this.maxPrice,
     required this.minPrice,
     required this.stdDev,
+    required this.sampleCount,
     required this.distribution,
   });
 
-  factory RegionStats.fromJson(Map<String, dynamic> json) => RegionStats(
-    productId: json['product_id'] as String,
-    avgPrice: (json['avg_price'] as num).toDouble(),
-    modePrice: (json['mode_price'] as num).toDouble(),
-    maxPrice: (json['max_price'] as num).toDouble(),
-    minPrice: (json['min_price'] as num).toDouble(),
-    stdDev: (json['std_dev'] as num).toDouble(),
-    distribution: (json['distribution'] as List)
-        .map((e) => PriceBucket.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+  factory RegionStats.fromJson(Map<String, dynamic> json) {
+    final avgPrice = (json['avg_price'] as num).toDouble();
+    final minPrice = (json['min_price'] as num).toDouble();
+    final maxPrice = (json['max_price'] as num).toDouble();
+    final sampleCount = (json['sample_count'] as num?)?.toInt() ?? 0;
+    final distributionJson = json['distribution'];
+
+    return RegionStats(
+      productId: json['product_id'] as String,
+      region: json['region'] as String? ?? 'cairo',
+      currency: json['currency'] as String? ?? 'EGP',
+      avgPrice: avgPrice,
+      modePrice:
+          ((json['mode_price'] ?? json['median_price'] ?? avgPrice) as num)
+              .toDouble(),
+      maxPrice: maxPrice,
+      minPrice: minPrice,
+      stdDev: ((json['std_dev'] ?? json['stddev_price'] ?? 0) as num)
+          .toDouble(),
+      sampleCount: sampleCount,
+      distribution: distributionJson is List
+          ? distributionJson
+                .map((e) => PriceBucket.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : _buildSyntheticDistribution(
+              minPrice: minPrice,
+              maxPrice: maxPrice,
+              avgPrice: avgPrice,
+              sampleCount: sampleCount,
+            ),
+    );
+  }
 
   // Mock data for MVP. Units are product-specific:
   // - p001: EGP/kg for grapes
@@ -63,6 +85,7 @@ class RegionStats {
   static RegionStats mock(String productId) {
     return RegionStats(
       productId: productId,
+      sampleCount: 88,
       avgPrice: 55.0,
       modePrice: 50.0,
       maxPrice: 80.0,
@@ -79,5 +102,42 @@ class RegionStats {
         PriceBucket(start: 75, end: 80, count: 2),
       ],
     );
+  }
+
+  static List<PriceBucket> _buildSyntheticDistribution({
+    required double minPrice,
+    required double maxPrice,
+    required double avgPrice,
+    required int sampleCount,
+  }) {
+    if (sampleCount <= 0 || maxPrice <= minPrice) return const [];
+
+    const bucketCount = 8;
+    final width = (maxPrice - minPrice) / bucketCount;
+    final weights = List<double>.generate(bucketCount, (index) {
+      final center = minPrice + width * (index + 0.5);
+      final distance = ((center - avgPrice).abs() / (maxPrice - minPrice))
+          .clamp(0.0, 1.0);
+      return 1.0 - distance;
+    });
+    final totalWeight = weights.fold<double>(0, (sum, value) => sum + value);
+
+    var assigned = 0;
+    final buckets = <PriceBucket>[];
+    for (var i = 0; i < bucketCount; i++) {
+      final isLast = i == bucketCount - 1;
+      final count = isLast
+          ? sampleCount - assigned
+          : (sampleCount * weights[i] / totalWeight).round();
+      assigned += count;
+      buckets.add(
+        PriceBucket(
+          start: minPrice + width * i,
+          end: minPrice + width * (i + 1),
+          count: count,
+        ),
+      );
+    }
+    return buckets;
   }
 }

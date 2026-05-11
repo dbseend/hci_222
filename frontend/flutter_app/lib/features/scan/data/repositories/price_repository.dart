@@ -1,18 +1,10 @@
-// price_repository.dart
-// Purpose: Repository interface + mock implementation for price data.
-//          PriceRepository defines the two operations the app needs:
-//            1. getStats()    — fetch regional price distribution for a product
-//            2. submitPrice() — crowdsource a new price observation from the user
-//          PriceRepositoryImpl currently uses mock data with simulated network delays.
-//
-// Mock→Real migration path:
-//   1. Uncomment the DioClient blocks in getStats() and submitPrice().
-//   2. Import DioClient and ApiEndpoints from the network layer.
-//   3. Delete the RegionStats.mock() call and Future.delayed stubs.
-//   The in-memory cache (_cache) stays in place to reduce redundant API calls.
-//
-// Architecture: injected into the ScanBloc via the constructor; swap mock for real at DI site.
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
+import '../../../../../core/constants/api_endpoints.dart';
+import '../../../../../core/network/dio_client.dart';
+import '../../../../../core/utils/price_classifier.dart';
+import '../models/price_comparison.dart';
 import '../models/region_stats.dart';
 
 abstract class PriceRepository {
@@ -20,6 +12,13 @@ abstract class PriceRepository {
     required String productId,
     required double lat,
     required double lon,
+  });
+
+  Future<PriceComparison> comparePrice({
+    required String productId,
+    required double price,
+    String region = 'cairo',
+    String currency = 'EGP',
   });
 
   Future<void> submitPrice({
@@ -33,7 +32,10 @@ abstract class PriceRepository {
 }
 
 class PriceRepositoryImpl implements PriceRepository {
-  // Simple in-memory cache: each productId is fetched at most once per app session
+  final Dio _dio;
+
+  PriceRepositoryImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
+
   static final Map<String, RegionStats> _cache = {};
 
   @override
@@ -42,23 +44,61 @@ class PriceRepositoryImpl implements PriceRepository {
     required double lat,
     required double lon,
   }) async {
-    if (_cache.containsKey(productId)) {
-      return _cache[productId]!;
+    const region = 'cairo';
+    final cacheKey = '$productId:$region';
+    if (_cache.containsKey(cacheKey)) {
+      return _cache[cacheKey]!;
     }
 
-    // TODO(next-dev): Uncomment when backend is ready
-    // final res = await DioClient.instance.get(
-    //   ApiEndpoints.priceStats,
-    //   queryParameters: {'product_id': productId, 'lat': lat, 'lon': lon},
-    // );
-    // final stats = RegionStats.fromJson(res.data);
-    // _cache[productId] = stats;
-    // return stats;
+    try {
+      final res = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.productPriceStats(productId),
+        queryParameters: {'region': region},
+      );
+      final stats = RegionStats.fromJson(res.data!);
+      _cache[cacheKey] = stats;
+      return stats;
+    } on DioException catch (e) {
+      debugPrint(
+        '[PriceRepository] Failed to load price stats from API: $e. '
+        'Using local MVP fallback.',
+      );
+      final stats = RegionStats.mock(productId);
+      _cache[cacheKey] = stats;
+      return stats;
+    }
+  }
 
-    await Future.delayed(const Duration(milliseconds: 500));
-    final stats = RegionStats.mock(productId);
-    _cache[productId] = stats;
-    return stats;
+  @override
+  Future<PriceComparison> comparePrice({
+    required String productId,
+    required double price,
+    String region = 'cairo',
+    String currency = 'EGP',
+  }) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.priceCompare,
+        data: {
+          'product_id': productId,
+          'region': region,
+          'user_price': price,
+          'currency': currency,
+        },
+      );
+      return PriceComparison.fromJson(res.data!);
+    } on DioException catch (e) {
+      debugPrint(
+        '[PriceRepository] Failed to compare price from API: $e. '
+        'Using local MVP fallback.',
+      );
+      return _localComparison(
+        productId: productId,
+        price: price,
+        region: region,
+        currency: currency,
+      );
+    }
   }
 
   @override
@@ -70,21 +110,53 @@ class PriceRepositoryImpl implements PriceRepository {
     required double lon,
     required String userId,
   }) async {
-    // TODO(next-dev): Uncomment when backend is ready
-    // await DioClient.instance.post(ApiEndpoints.submitPrice, data: {
-    //   'product_id': productId,
-    //   'price': price,
-    //   'unit': unit,
-    //   'lat': lat,
-    //   'lon': lon,
-    //   'user_id': userId,
-    // });
-
-    // Invalidate cache for this product so the next getStats() call returns fresh data
-    _cache.remove(productId);
-    await Future.delayed(const Duration(milliseconds: 300));
+    _cache.removeWhere((key, _) => key.startsWith('$productId:'));
   }
 
   /// Clears the in-memory cache — useful in tests to force a fresh fetch.
   static void clearCache() => _cache.clear();
+
+  PriceComparison _localComparison({
+    required String productId,
+    required double price,
+    required String region,
+    required String currency,
+  }) {
+    final cacheKey = '$productId:$region';
+    final stats = _cache[cacheKey] ?? RegionStats.mock(productId);
+    final sampleCount = stats.sampleCount > 0
+        ? stats.sampleCount
+        : stats.distribution.fold<int>(0, (sum, bucket) => sum + bucket.count);
+    final percentDiff = PriceClassifier.percentDiff(price, stats.avgPrice);
+    final status = PriceClassifier.classify(
+      observed: price,
+      avg: stats.avgPrice,
+      stdDev: stats.stdDev,
+    );
+    final verdict = switch (status) {
+      PriceStatus.safe => 'fair',
+      PriceStatus.negotiable => 'negotiable',
+      PriceStatus.warning => 'overpriced',
+    };
+
+    return PriceComparison(
+      productId: productId,
+      displayName: productId,
+      unit: 'kg',
+      region: stats.region,
+      currency: stats.currency,
+      userPrice: price,
+      avgPrice: stats.avgPrice,
+      medianPrice: stats.modePrice,
+      minPrice: stats.minPrice,
+      maxPrice: stats.maxPrice,
+      stdDev: stats.stdDev,
+      sampleCount: sampleCount,
+      percentDiff: percentDiff,
+      verdict: verdict,
+      message:
+          '${PriceClassifier.statusMessage(status, percentDiff)} '
+          '${PriceClassifier.priceDeltaLabel(percentDiff)}.',
+    );
+  }
 }

@@ -95,7 +95,7 @@ void main() {
     );
     await tester.enterText(textFieldWithLabel('Item'), '  TOMATOES ');
     await tester.enterText(textFieldWithLabel('Store/Company'), '  ataba ');
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
 
     expect(find.text('1 results'), findsOneWidget);
     expect(find.text('Tomatoes 1kg'), findsOneWidget);

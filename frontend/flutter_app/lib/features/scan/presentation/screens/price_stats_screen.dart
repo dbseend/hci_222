@@ -20,7 +20,7 @@ class PriceStatsScreen extends StatelessWidget {
   const PriceStatsScreen({
     super.key,
     required this.productName,
-    this.productId = 'p001',
+    this.productId = 'tomato',
     this.detectedPrice,
     this.capturedImagePath,
   });

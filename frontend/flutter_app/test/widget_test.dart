@@ -6,6 +6,7 @@ import 'package:trueprice/core/utils/price_classifier.dart';
 import 'package:trueprice/features/market_map/presentation/models/market_location.dart';
 import 'package:trueprice/features/market_map/presentation/utils/market_marker_builder.dart';
 import 'package:trueprice/features/scan/presentation/screens/price_input_screen.dart';
+import 'package:trueprice/features/scan/data/models/price_comparison.dart';
 import 'package:trueprice/features/scan/data/models/region_stats.dart';
 import 'package:trueprice/features/onboarding/presentation/screens/permission_screen.dart';
 import 'package:trueprice/features/scan/presentation/screens/final_price_screen.dart';
@@ -109,6 +110,56 @@ void main() {
       expect(stats.productId, 'p001');
       expect(stats.avgPrice, 55.0);
       expect(stats.distribution, isNotEmpty);
+    });
+
+    test('parses backend price stats and builds chart distribution', () {
+      final stats = RegionStats.fromJson({
+        'product_id': 'tomato',
+        'region': 'cairo',
+        'currency': 'EGP',
+        'avg_price': 20,
+        'median_price': 19,
+        'min_price': 15,
+        'max_price': 28,
+        'stddev_price': 4,
+        'sample_count': 42,
+      });
+
+      expect(stats.productId, 'tomato');
+      expect(stats.region, 'cairo');
+      expect(stats.currency, 'EGP');
+      expect(stats.avgPrice, 20);
+      expect(stats.modePrice, 19);
+      expect(stats.stdDev, 4);
+      expect(stats.sampleCount, 42);
+      expect(stats.distribution.fold<int>(0, (sum, b) => sum + b.count), 42);
+    });
+  });
+
+  group('PriceComparison', () {
+    test('parses backend compare response', () {
+      final comparison = PriceComparison.fromJson({
+        'product_id': 'tomato',
+        'display_name': 'Tomato',
+        'unit': 'kg',
+        'region': 'cairo',
+        'currency': 'EGP',
+        'user_price': 25,
+        'avg_price': 20,
+        'median_price': 19,
+        'min_price': 15,
+        'max_price': 28,
+        'stddev_price': 4,
+        'sample_count': 42,
+        'percent_diff': 25,
+        'verdict': 'negotiable',
+        'message': 'Slightly above the local average (+25.0%).',
+      });
+
+      expect(comparison.productId, 'tomato');
+      expect(comparison.verdict, 'negotiable');
+      expect(comparison.percentDiff, 25);
+      expect(comparison.message, contains('average'));
     });
   });
 

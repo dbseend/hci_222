@@ -83,7 +83,7 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
       createdAt: now,
     );
 
-    final current = await getUserPosts();
+    final current = await _getUserPostsLocal();
     final updated = [post, ...current];
 
     final prefs = await _prefsProvider();

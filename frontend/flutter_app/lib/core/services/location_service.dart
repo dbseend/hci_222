@@ -16,12 +16,17 @@ const _kDefaultLon = 31.2357;
 class LatLon {
   final double lat;
   final double lon;
+
   /// true = using Cairo default instead of real GPS — UI can show an info banner when this is set
   final bool isFallback;
 
   const LatLon(this.lat, this.lon, {this.isFallback = false});
 
-  static const defaultLocation = LatLon(_kDefaultLat, _kDefaultLon, isFallback: true);
+  static const defaultLocation = LatLon(
+    _kDefaultLat,
+    _kDefaultLon,
+    isFallback: true,
+  );
 }
 
 class LocationService {
@@ -42,7 +47,10 @@ class LocationService {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('[LocationService] Location service disabled → using Cairo default');
+        debugPrint(
+          '[LocationService] Location service disabled → using Cairo default',
+        );
+        _cached = LatLon.defaultLocation;
         return LatLon.defaultLocation; // isFallback = true
       }
 
@@ -50,23 +58,36 @@ class LocationService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          debugPrint('[LocationService] Location permission denied → using Cairo default');
+          debugPrint(
+            '[LocationService] Location permission denied → using Cairo default',
+          );
+          _cached = LatLon.defaultLocation;
           return LatLon.defaultLocation; // isFallback = true
         }
       }
       if (permission == LocationPermission.deniedForever) {
-        debugPrint('[LocationService] Location permission permanently denied → using Cairo default');
+        debugPrint(
+          '[LocationService] Location permission permanently denied → using Cairo default',
+        );
+        _cached = LatLon.defaultLocation;
         return LatLon.defaultLocation; // isFallback = true
       }
 
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low, // low accuracy to preserve battery
+        desiredAccuracy:
+            LocationAccuracy.low, // low accuracy to preserve battery
         timeLimit: const Duration(seconds: 5),
       );
-      _cached = LatLon(pos.latitude, pos.longitude); // isFallback = false (real GPS)
+      _cached = LatLon(
+        pos.latitude,
+        pos.longitude,
+      ); // isFallback = false (real GPS)
       return _cached!;
     } catch (e) {
-      debugPrint('[LocationService] Failed to get location: $e → using Cairo default');
+      debugPrint(
+        '[LocationService] Failed to get location: $e → using Cairo default',
+      );
+      _cached = LatLon.defaultLocation;
       return LatLon.defaultLocation; // isFallback = true
     }
   }

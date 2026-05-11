@@ -33,9 +33,9 @@ class ScanRepositoryImpl implements ScanRepository {
     //      - lon: double  (current longitude)
     //    Response (JSON):
     //      {
-    //        "product_id": "p001",
-    //        "name_kr": "포도 (Grapes)",
-    //        "name_ar": "عنب",
+    //        "product_id": "tomato",
+    //        "name_kr": "Tomato",
+    //        "name_ar": "طماطم",
     //        "confidence": 0.92,
     //        "detected_price": 65.0   // price read from tag via OCR (null if not found)
     //      }
@@ -54,7 +54,7 @@ class ScanRepositoryImpl implements ScanRepository {
     //    Recommended to implement this feature in a dedicated AR screen.
     // ──────────────────────────────────────────────────────────────
 
-    // [DEMO] Mock: return grapes result after a 2-second delay
+    // [DEMO] Mock: return tomato result after a 2-second delay
     await Future.delayed(const Duration(seconds: 2));
     return DetectionResult.mock();
   }

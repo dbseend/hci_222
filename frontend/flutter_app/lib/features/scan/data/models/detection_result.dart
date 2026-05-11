@@ -34,13 +34,12 @@ class DetectionResult {
     );
   }
 
-  // Mock result: Grapes, price in EGP (Cairo baseline)
-  // TODO(next-dev): Replace with DetectionResult.fromJson(res.data) once the YOLO backend is wired up
+  // Mock result until the on-device YOLO model is wired up.
   static DetectionResult mock() => const DetectionResult(
-        productId: 'p001',
-        productName: 'Tomate',
-        productNameAr: 'عنب',
-        confidence: 0.92,
-        detectedPrice: 65.0,
-      );
+    productId: 'tomato',
+    productName: 'Tomato',
+    productNameAr: 'طماطم',
+    confidence: 0.92,
+    detectedPrice: 25.0,
+  );
 }

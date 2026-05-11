@@ -9,9 +9,9 @@ class PriceBloc extends Bloc<PriceEvent, PriceState> {
   final LocationService _location;
 
   PriceBloc({PriceRepository? repo, LocationService? location})
-      : _repo = repo ?? PriceRepositoryImpl(),
-        _location = location ?? LocationService(),
-        super(const PriceInitial()) {
+    : _repo = repo ?? PriceRepositoryImpl(),
+      _location = location ?? LocationService(),
+      super(const PriceInitial()) {
     on<PriceStatsRequested>(_onStatsRequested);
     on<PriceSubmitted>(_onSubmitted);
   }
@@ -28,6 +28,23 @@ class PriceBloc extends Bloc<PriceEvent, PriceState> {
         lat: pos.lat,
         lon: pos.lon,
       );
+      final userPrice = event.userPrice;
+      if (userPrice != null) {
+        final comparison = await _repo.comparePrice(
+          productId: event.productId,
+          price: userPrice,
+          region: stats.region,
+          currency: stats.currency,
+        );
+        emit(
+          PriceLoaded(
+            stats: stats,
+            userPrice: userPrice,
+            comparison: comparison,
+          ),
+        );
+        return;
+      }
       emit(PriceLoaded(stats: stats));
     } catch (e) {
       emit(PriceError('Failed to load price data. Please try again. ($e)'));

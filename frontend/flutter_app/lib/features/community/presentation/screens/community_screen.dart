@@ -2,6 +2,7 @@
 // Displays a community feed of recent price reports submitted by other users.
 // Auto-uploaded posts from the Scan purchase-confirm flow are shown at the top.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -32,12 +33,19 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   static final RegExp _multiSpaceRegExp = RegExp(r'\s+');
+  static const Duration _filterDebounce = Duration(milliseconds: 180);
+  static const int _precomputeThreshold = 80;
 
   final _repo = CommunityPostRepositoryImpl();
-  late Future<List<CommunityPost>> _postsFuture;
   final _locationController = TextEditingController();
   final _productController = TextEditingController();
   final _storeController = TextEditingController();
+  Timer? _filterDebounceTimer;
+  List<_FeedItem> _allFeed = const [];
+  List<_FeedItem> _visibleFeed = const [];
+  List<_FeedCardData>? _precomputedVisibleCards;
+  bool _isLoading = true;
+  String? _loadError;
   String _locationFilter = '';
   String _productFilter = '';
   String _storeFilter = '';
@@ -47,7 +55,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   void initState() {
     super.initState();
-    _postsFuture = _repo.getUserPosts();
     _locationController.text = widget.initialLocationFilter;
     _productController.text = widget.initialItemFilter;
     _storeController.text = widget.initialStoreFilter;
@@ -57,23 +64,55 @@ class _CommunityScreenState extends State<CommunityScreen> {
     _locationController.addListener(_onFilterChanged);
     _productController.addListener(_onFilterChanged);
     _storeController.addListener(_onFilterChanged);
+    _loadPosts();
   }
 
   @override
   void dispose() {
+    _filterDebounceTimer?.cancel();
     _locationController.dispose();
     _productController.dispose();
     _storeController.dispose();
     super.dispose();
   }
 
-  Future<void> _reload() async {
-    setState(() {
-      _postsFuture = _repo.getUserPosts();
-    });
+  Future<void> _loadPosts() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
+    try {
+      final userPosts = await _repo.getUserPosts();
+      final nextFeed = userPosts
+          .map((post) => _FeedItem.fromPost(post, normalizer: _normalize))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _allFeed = nextFeed;
+        _isLoading = false;
+      });
+      _applyFilterAndSort(
+        locationFilter: _locationFilter,
+        productFilter: _productFilter,
+        storeFilter: _storeFilter,
+        sortOption: _sortOption,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = '$e';
+      });
+    }
   }
 
-  String _timeAgo(DateTime createdAt) {
+  Future<void> _reload() async {
+    await _loadPosts();
+  }
+
+  static String _timeAgo(DateTime createdAt) {
     final diff = DateTime.now().difference(createdAt);
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
@@ -85,22 +124,25 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return value.trim().toLowerCase().replaceAll(_multiSpaceRegExp, ' ');
   }
 
-  bool _containsIgnoreCase(String text, String query) {
-    if (query.isEmpty) return true;
-    return _normalize(text).contains(_normalize(query));
-  }
-
-  List<_FeedItem> _applyFilters(List<_FeedItem> feed) {
+  List<_FeedItem> _applyFilters(
+    List<_FeedItem> feed, {
+    required String locationFilter,
+    required String productFilter,
+    required String storeFilter,
+  }) {
     return feed.where((item) {
-      return _containsIgnoreCase(item.location, _locationFilter) &&
-          _containsIgnoreCase(item.productName, _productFilter) &&
-          _containsIgnoreCase(item.marketName, _storeFilter);
+      return (locationFilter.isEmpty ||
+              item.locationNormalized.contains(locationFilter)) &&
+          (productFilter.isEmpty ||
+              item.productNameNormalized.contains(productFilter)) &&
+          (storeFilter.isEmpty ||
+              item.marketNameNormalized.contains(storeFilter));
     }).toList();
   }
 
-  List<_FeedItem> _sortFeed(List<_FeedItem> feed) {
+  List<_FeedItem> _sortFeed(List<_FeedItem> feed, _SortOption sortOption) {
     final sorted = List<_FeedItem>.from(feed);
-    switch (_sortOption) {
+    switch (sortOption) {
       case _SortOption.newest:
         return sorted;
       case _SortOption.priceLowToHigh:
@@ -117,111 +159,175 @@ class _CommunityScreenState extends State<CommunityScreen> {
       _productFilter.isNotEmpty ||
       _storeFilter.isNotEmpty;
 
-  void _onFilterChanged() {
-    final nextLocation = _normalize(_locationController.text);
-    final nextProduct = _normalize(_productController.text);
-    final nextStore = _normalize(_storeController.text);
-    if (nextLocation == _locationFilter &&
-        nextProduct == _productFilter &&
-        nextStore == _storeFilter) {
-      return;
-    }
+  void _applyFilterAndSort({
+    required String locationFilter,
+    required String productFilter,
+    required String storeFilter,
+    required _SortOption sortOption,
+  }) {
+    final filtered = _applyFilters(
+      _allFeed,
+      locationFilter: locationFilter,
+      productFilter: productFilter,
+      storeFilter: storeFilter,
+    );
+    final sorted = _sortFeed(filtered, sortOption);
+    final precomputed = sorted.length > _precomputeThreshold
+        ? sorted.map(_FeedCardData.fromItem).toList(growable: false)
+        : null;
 
+    if (!mounted) return;
     setState(() {
-      _locationFilter = nextLocation;
-      _productFilter = nextProduct;
-      _storeFilter = nextStore;
+      _locationFilter = locationFilter;
+      _productFilter = productFilter;
+      _storeFilter = storeFilter;
+      _sortOption = sortOption;
+      _visibleFeed = sorted;
+      _precomputedVisibleCards = precomputed;
     });
   }
 
+  void _onFilterChanged() {
+    _filterDebounceTimer?.cancel();
+    _filterDebounceTimer = Timer(_filterDebounce, () {
+      if (!mounted) return;
+      final nextLocation = _normalize(_locationController.text);
+      final nextProduct = _normalize(_productController.text);
+      final nextStore = _normalize(_storeController.text);
+      if (nextLocation == _locationFilter &&
+          nextProduct == _productFilter &&
+          nextStore == _storeFilter) {
+        return;
+      }
+      _applyFilterAndSort(
+        locationFilter: nextLocation,
+        productFilter: nextProduct,
+        storeFilter: nextStore,
+        sortOption: _sortOption,
+      );
+    });
+  }
+
+  void _onSortChanged(_SortOption sort) {
+    if (_sortOption == sort) return;
+    _applyFilterAndSort(
+      locationFilter: _locationFilter,
+      productFilter: _productFilter,
+      storeFilter: _storeFilter,
+      sortOption: sort,
+    );
+  }
+
   void _resetFilters() {
+    _filterDebounceTimer?.cancel();
     _locationController.clear();
     _productController.clear();
     _storeController.clear();
+    _applyFilterAndSort(
+      locationFilter: '',
+      productFilter: '',
+      storeFilter: '',
+      sortOption: _sortOption,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Community')),
-      body: FutureBuilder<List<CommunityPost>>(
-        future: _postsFuture,
-        builder: (context, snapshot) {
-          final userPosts = snapshot.data ?? const <CommunityPost>[];
-          final userFeed = userPosts
-              .map(
-                (post) => _FeedItem(
-                  productName: post.productName,
-                  price: post.price,
-                  avgPrice: post.price,
-                  marketName: post.storeName,
-                  location: post.locationName,
-                  timeAgo: _timeAgo(post.createdAt),
-                  imagePath: post.imagePath,
-                ),
-              )
-              .toList();
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Community')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-          final filtered = _applyFilters(userFeed);
-          final feed = _sortFeed(filtered);
-
-          return RefreshIndicator(
-            onRefresh: _reload,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+    if (_loadError != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Community')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _InlineFilters(
-                  locationController: _locationController,
-                  itemController: _productController,
-                  storeController: _storeController,
-                  filtersExpanded: _filtersExpanded,
-                  hasActiveFilter: _hasActiveFilter,
-                  sortOption: _sortOption,
-                  resultCount: feed.length,
-                  onToggleExpanded: () {
-                    setState(() {
-                      _filtersExpanded = !_filtersExpanded;
-                    });
-                  },
-                  onSortChanged: (sort) {
-                    setState(() {
-                      _sortOption = sort;
-                    });
-                  },
-                  onReset: _resetFilters,
+                const Text(
+                  'Failed to load community posts.',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _loadError!,
+                  style: const TextStyle(color: AppColors.onSurfaceLight),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                if (feed.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 24),
-                    child: Text(
-                      'No posts match the selected filters.',
-                      style: TextStyle(color: AppColors.onSurfaceLight),
-                    ),
-                  ),
-                for (final item in feed) _FeedCard(feed: item),
+                ElevatedButton(
+                  onPressed: _loadPosts,
+                  child: const Text('Retry'),
+                ),
               ],
             ),
-          );
-        },
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Community')),
+      body: RefreshIndicator(
+        onRefresh: _reload,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: _visibleFeed.isEmpty ? 3 : _visibleFeed.length + 2,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _InlineFilters(
+                locationController: _locationController,
+                itemController: _productController,
+                storeController: _storeController,
+                filtersExpanded: _filtersExpanded,
+                hasActiveFilter: _hasActiveFilter,
+                sortOption: _sortOption,
+                resultCount: _visibleFeed.length,
+                onToggleExpanded: () {
+                  setState(() {
+                    _filtersExpanded = !_filtersExpanded;
+                  });
+                },
+                onSortChanged: _onSortChanged,
+                onReset: _resetFilters,
+              );
+            }
+            if (index == 1) return const SizedBox(height: 12);
+            if (_visibleFeed.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: Text(
+                  'No posts match the selected filters.',
+                  style: TextStyle(color: AppColors.onSurfaceLight),
+                ),
+              );
+            }
+
+            final item = _visibleFeed[index - 2];
+            final precomputedCards = _precomputedVisibleCards;
+            if (precomputedCards != null &&
+                precomputedCards.length == _visibleFeed.length) {
+              return _FeedCard(card: precomputedCards[index - 2]);
+            }
+            return _FeedCard(card: _FeedCardData.fromItem(item));
+          },
+        ),
       ),
     );
   }
 }
 
 class _FeedCard extends StatelessWidget {
-  final _FeedItem feed;
-  const _FeedCard({required this.feed});
+  final _FeedCardData card;
+  const _FeedCard({required this.card});
 
   @override
   Widget build(BuildContext context) {
-    final status = PriceClassifier.classify(
-      observed: feed.price,
-      avg: feed.avgPrice,
-      stdDev: feed.avgPrice <= 0 ? 1 : feed.avgPrice * 0.25,
-    );
-    final pct = PriceClassifier.percentDiff(feed.price, feed.avgPrice);
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: AppCard(
@@ -229,13 +335,13 @@ class _FeedCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (feed.imagePath != null && feed.imagePath!.isNotEmpty) ...[
+            if (card.imagePath != null && card.imagePath!.isNotEmpty) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
                   width: double.infinity,
                   height: 160,
-                  child: _FeedImage(imagePath: feed.imagePath!),
+                  child: _FeedImage(imagePath: card.imagePath!),
                 ),
               ),
               const SizedBox(height: 12),
@@ -247,7 +353,7 @@ class _FeedCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        feed.productName,
+                        card.productName,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -255,7 +361,7 @@ class _FeedCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${feed.marketName} · ${feed.location}',
+                        '${card.marketName} · ${card.location}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.onSurfaceLight,
@@ -264,12 +370,7 @@ class _FeedCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                PriceBadge(
-                  status: status,
-                  label: pct >= 0
-                      ? '+${pct.toStringAsFixed(0)}%'
-                      : '${pct.toStringAsFixed(0)}%',
-                ),
+                PriceBadge(status: card.status, label: card.badgeLabel),
               ],
             ),
             const SizedBox(height: 12),
@@ -281,7 +382,7 @@ class _FeedCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        CurrencyDisplay.formatEgpWithKrw(feed.price),
+                        card.priceText,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -290,7 +391,7 @@ class _FeedCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'avg. ${CurrencyDisplay.formatEgpWithKrw(feed.avgPrice)}',
+                        'avg. ${card.avgPriceText}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.onSurfaceLight,
@@ -301,7 +402,7 @@ class _FeedCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  feed.timeAgo,
+                  card.timeAgo,
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.onSurfaceLight,
@@ -323,14 +424,17 @@ class _FeedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localFile = File(imagePath);
-    if (localFile.existsSync()) {
-      return Image.file(localFile, fit: BoxFit.cover);
-    }
-
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return Image.network(
         imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _brokenImage(),
+      );
+    }
+
+    if (imagePath.startsWith('/')) {
+      return Image.file(
+        File(imagePath),
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => _brokenImage(),
       );
@@ -368,7 +472,14 @@ class _FeedItem {
   final double avgPrice;
   final String marketName;
   final String location;
+  final String productNameNormalized;
+  final String marketNameNormalized;
+  final String locationNormalized;
   final String timeAgo;
+  final String priceText;
+  final String avgPriceText;
+  final PriceStatus status;
+  final String badgeLabel;
   final String? imagePath;
 
   _FeedItem({
@@ -377,9 +488,87 @@ class _FeedItem {
     required this.avgPrice,
     required this.marketName,
     required this.location,
+    required this.productNameNormalized,
+    required this.marketNameNormalized,
+    required this.locationNormalized,
     required this.timeAgo,
+    required this.priceText,
+    required this.avgPriceText,
+    required this.status,
+    required this.badgeLabel,
     this.imagePath,
   });
+
+  factory _FeedItem.fromPost(
+    CommunityPost post, {
+    required String Function(String value) normalizer,
+  }) {
+    final avgPrice = post.price;
+    final status = PriceClassifier.classify(
+      observed: post.price,
+      avg: avgPrice,
+      stdDev: avgPrice <= 0 ? 1 : avgPrice * 0.25,
+    );
+    final pct = PriceClassifier.percentDiff(post.price, avgPrice);
+    final badgeLabel = pct >= 0
+        ? '+${pct.toStringAsFixed(0)}%'
+        : '${pct.toStringAsFixed(0)}%';
+
+    return _FeedItem(
+      productName: post.productName,
+      price: post.price,
+      avgPrice: avgPrice,
+      marketName: post.storeName,
+      location: post.locationName,
+      productNameNormalized: normalizer(post.productName),
+      marketNameNormalized: normalizer(post.storeName),
+      locationNormalized: normalizer(post.locationName),
+      timeAgo: _CommunityScreenState._timeAgo(post.createdAt),
+      priceText: CurrencyDisplay.formatEgpWithKrw(post.price),
+      avgPriceText: CurrencyDisplay.formatEgpWithKrw(avgPrice),
+      status: status,
+      badgeLabel: badgeLabel,
+      imagePath: post.imagePath,
+    );
+  }
+}
+
+class _FeedCardData {
+  final String productName;
+  final String marketName;
+  final String location;
+  final String priceText;
+  final String avgPriceText;
+  final String timeAgo;
+  final PriceStatus status;
+  final String badgeLabel;
+  final String? imagePath;
+
+  const _FeedCardData({
+    required this.productName,
+    required this.marketName,
+    required this.location,
+    required this.priceText,
+    required this.avgPriceText,
+    required this.timeAgo,
+    required this.status,
+    required this.badgeLabel,
+    this.imagePath,
+  });
+
+  factory _FeedCardData.fromItem(_FeedItem item) {
+    return _FeedCardData(
+      productName: item.productName,
+      marketName: item.marketName,
+      location: item.location,
+      priceText: item.priceText,
+      avgPriceText: item.avgPriceText,
+      timeAgo: item.timeAgo,
+      status: item.status,
+      badgeLabel: item.badgeLabel,
+      imagePath: item.imagePath,
+    );
+  }
 }
 
 class _InlineFilters extends StatelessWidget {

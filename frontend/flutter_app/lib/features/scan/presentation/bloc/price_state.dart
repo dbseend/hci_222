@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../data/models/price_comparison.dart';
 import '../../data/models/region_stats.dart';
 
 abstract class PriceState extends Equatable {
@@ -17,13 +18,19 @@ class PriceLoading extends PriceState {
 
 class PriceLoaded extends PriceState {
   final RegionStats stats;
-  final double? userPrice; // price entered by the user (used for histogram vertical line)
-  const PriceLoaded({required this.stats, this.userPrice});
+  final double?
+  userPrice; // price entered by the user (used for histogram vertical line)
+  final PriceComparison? comparison;
+  const PriceLoaded({required this.stats, this.userPrice, this.comparison});
   @override
-  List<Object?> get props => [stats, userPrice];
+  List<Object?> get props => [stats, userPrice, comparison];
 
-  PriceLoaded copyWith({double? userPrice}) =>
-      PriceLoaded(stats: stats, userPrice: userPrice ?? this.userPrice);
+  PriceLoaded copyWith({double? userPrice, PriceComparison? comparison}) =>
+      PriceLoaded(
+        stats: stats,
+        userPrice: userPrice ?? this.userPrice,
+        comparison: comparison ?? this.comparison,
+      );
 }
 
 class PriceSubmitting extends PriceState {

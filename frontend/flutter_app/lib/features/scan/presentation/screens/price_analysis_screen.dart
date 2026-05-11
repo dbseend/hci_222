@@ -7,6 +7,7 @@ import '../../../../core/utils/price_classifier.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/price_badge.dart';
 import '../../../community/data/repositories/community_post_repository.dart';
+import '../../data/models/price_comparison.dart';
 import '../../data/models/region_stats.dart';
 import '../models/scan_route_data.dart';
 import '../bloc/price_bloc.dart';
@@ -25,7 +26,7 @@ class PriceAnalysisScreen extends StatelessWidget {
     super.key,
     required this.productName,
     required this.inputPrice,
-    this.productId = 'p001',
+    this.productId = 'tomato',
     this.detectedPrice,
     this.capturedImagePath,
   });
@@ -33,9 +34,15 @@ class PriceAnalysisScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          PriceBloc()
-            ..add(PriceStatsRequested(productId: productId, lat: 0, lon: 0)),
+      create: (_) => PriceBloc()
+        ..add(
+          PriceStatsRequested(
+            productId: productId,
+            lat: 0,
+            lon: 0,
+            userPrice: inputPrice,
+          ),
+        ),
       child: _PriceAnalysisView(
         productName: productName,
         productId: productId,
@@ -95,7 +102,7 @@ class _PriceAnalysisView extends StatelessWidget {
             );
           }
           if (state is PriceLoaded) {
-            return _buildContent(context, state.stats);
+            return _buildContent(context, state.stats, state.comparison);
           }
           return const SizedBox();
         },
@@ -103,16 +110,21 @@ class _PriceAnalysisView extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, RegionStats stats) {
-    final sampleSize = stats.distribution.fold<int>(
-      0,
-      (sum, b) => sum + b.count,
-    );
-    final status = PriceClassifier.classify(
-      observed: inputPrice,
-      avg: stats.avgPrice,
-      stdDev: stats.stdDev,
-    );
+  Widget _buildContent(
+    BuildContext context,
+    RegionStats stats,
+    PriceComparison? comparison,
+  ) {
+    final sampleSize = stats.sampleCount > 0
+        ? stats.sampleCount
+        : stats.distribution.fold<int>(0, (sum, b) => sum + b.count);
+    final status =
+        _statusFromBackend(comparison) ??
+        PriceClassifier.classify(
+          observed: inputPrice,
+          avg: stats.avgPrice,
+          stdDev: stats.stdDev,
+        );
     final signal = PriceClassifier.signal(
       observed: inputPrice,
       avg: stats.avgPrice,
@@ -203,6 +215,7 @@ class _PriceAnalysisView extends StatelessWidget {
               inputPrice: inputPrice,
               stats: stats,
               signal: signal,
+              backendMessage: comparison?.message,
             ),
           ),
 
@@ -265,17 +278,28 @@ class _PriceAnalysisView extends StatelessWidget {
       ),
     );
   }
+
+  PriceStatus? _statusFromBackend(PriceComparison? comparison) {
+    return switch (comparison?.verdict) {
+      'safe' => PriceStatus.safe,
+      'negotiable' => PriceStatus.negotiable,
+      'warning' => PriceStatus.warning,
+      _ => null,
+    };
+  }
 }
 
 class _CompareContent extends StatelessWidget {
   final double inputPrice;
   final RegionStats stats;
   final PriceSignal signal;
+  final String? backendMessage;
 
   const _CompareContent({
     required this.inputPrice,
     required this.stats,
     required this.signal,
+    this.backendMessage,
   });
 
   @override
@@ -306,6 +330,16 @@ class _CompareContent extends StatelessWidget {
             color: _confidenceColor(signal.confidenceLevel),
           ),
         ),
+        if (backendMessage != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            backendMessage!,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.onSurfaceLight,
+            ),
+          ),
+        ],
         const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,

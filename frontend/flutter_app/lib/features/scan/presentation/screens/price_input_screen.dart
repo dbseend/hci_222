@@ -23,7 +23,7 @@ class PriceInputScreen extends StatefulWidget {
   const PriceInputScreen({
     super.key,
     required this.productName,
-    this.productId = 'p001',
+    this.productId = 'tomato',
     this.detectedPrice,
     this.initialInputPrice = 0,
     this.capturedImagePath,

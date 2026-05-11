@@ -5,12 +5,22 @@ class DioClient {
   static Dio? _instance;
 
   static Dio get instance {
-    _instance ??= Dio(BaseOptions(
-      baseUrl: ApiEndpoints.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      headers: {'Content-Type': 'application/json'},
-    ));
+    _instance ??= Dio(
+      BaseOptions(
+        baseUrl: ApiEndpoints.baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
     return _instance!;
+  }
+
+  static void setInstanceForTest(Dio dio) {
+    _instance = dio;
+  }
+
+  static void resetForTest() {
+    _instance = null;
   }
 }

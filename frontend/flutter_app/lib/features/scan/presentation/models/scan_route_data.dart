@@ -8,7 +8,7 @@ class ScanRouteData {
 
   const ScanRouteData({
     this.productName = '',
-    this.productId = 'p001',
+    this.productId = 'tomato',
     this.detectedPrice,
     this.inputPrice = 0,
     this.finalPrice = 0,
@@ -20,7 +20,7 @@ class ScanRouteData {
     if (extra is Map<String, dynamic>) {
       return ScanRouteData(
         productName: extra['productName'] as String? ?? '',
-        productId: extra['productId'] as String? ?? 'p001',
+        productId: extra['productId'] as String? ?? 'tomato',
         detectedPrice: (extra['detectedPrice'] as num?)?.toDouble(),
         inputPrice: (extra['inputPrice'] as num?)?.toDouble() ?? 0,
         finalPrice: (extra['finalPrice'] as num?)?.toDouble() ?? 0,
