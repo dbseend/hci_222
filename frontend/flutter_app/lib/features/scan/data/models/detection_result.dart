@@ -36,9 +36,9 @@ class DetectionResult {
 
   // Mock result until the on-device YOLO model is wired up.
   static DetectionResult mock() => const DetectionResult(
-    productId: 'tomato',
-    productName: 'Tomato',
-    productNameAr: 'طماطم',
+    productId: 'fruit',
+    productName: 'Fruit',
+    productNameAr: 'فاكهة',
     confidence: 0.92,
     detectedPrice: 25.0,
   );

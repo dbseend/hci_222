@@ -35,6 +35,7 @@ DerivedData/
 outputs/
 runs/
 wandb/
+backend/models/
 
 # Local environment and secrets
 .env

@@ -9,11 +9,7 @@ from pathlib import Path
 
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
-SPLITS = ("train", "val", "test")
-CLASS_NAMES = {
-    0: "tomato",
-    1: "camel_doll",
-}
+SPLITS = ("train", "valid", "test")
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,9 +19,30 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "dataset_dir",
         type=Path,
-        help="Path to datasets/trueprice_yolo.",
+        help="Path to a YOLO dataset directory containing data.yaml.",
     )
     return parser.parse_args()
+
+
+def load_class_names(dataset_dir: Path) -> dict[int, str]:
+    data_yaml = dataset_dir / "data.yaml"
+    if not data_yaml.exists():
+        raise FileNotFoundError(f"Missing data.yaml: {data_yaml}")
+
+    text = data_yaml.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if not line.strip().startswith("names:"):
+            continue
+        raw_names = line.split(":", 1)[1].strip()
+        if raw_names.startswith("[") and raw_names.endswith("]"):
+            names = [
+                item.strip().strip("'\"")
+                for item in raw_names.strip("[]").split(",")
+                if item.strip()
+            ]
+            return {index: name for index, name in enumerate(names)}
+
+    raise ValueError(f"Could not parse inline names list from {data_yaml}")
 
 
 def image_files(path: Path) -> list[Path]:
@@ -37,10 +54,10 @@ def image_files(path: Path) -> list[Path]:
 
 
 def label_path_for(dataset_dir: Path, split: str, image_path: Path) -> Path:
-    return dataset_dir / "labels" / split / f"{image_path.stem}.txt"
+    return dataset_dir / split / "labels" / f"{image_path.stem}.txt"
 
 
-def validate_label_file(label_path: Path, split: str) -> tuple[Counter[int], list[str]]:
+def validate_label_file(label_path: Path, split: str, class_names: dict[int, str]) -> tuple[Counter[int], list[str]]:
     counts: Counter[int] = Counter()
     errors: list[str] = []
 
@@ -67,7 +84,7 @@ def validate_label_file(label_path: Path, split: str) -> tuple[Counter[int], lis
             errors.append(f"[{split}] {label_path}:{line_number} contains non-numeric data")
             continue
 
-        if class_id not in CLASS_NAMES:
+        if class_id not in class_names:
             errors.append(f"[{split}] {label_path}:{line_number} unknown class_id {class_id}")
             continue
 
@@ -91,14 +108,19 @@ def audit(dataset_dir: Path) -> int:
     if not dataset_dir.exists():
         print(f"Dataset directory not found: {dataset_dir}")
         return 2
+    try:
+        class_names = load_class_names(dataset_dir)
+    except Exception as exc:
+        print(str(exc))
+        return 2
 
     all_counts: Counter[int] = Counter()
     split_image_counts: Counter[str] = Counter()
     errors: list[str] = []
 
     for split in SPLITS:
-        image_dir = dataset_dir / "images" / split
-        label_dir = dataset_dir / "labels" / split
+        image_dir = dataset_dir / split / "images"
+        label_dir = dataset_dir / split / "labels"
 
         if not image_dir.exists():
             errors.append(f"Missing image directory: {image_dir}")
@@ -124,6 +146,7 @@ def audit(dataset_dir: Path) -> int:
             counts, label_errors = validate_label_file(
                 label_path_for(dataset_dir, split, image),
                 split,
+                class_names,
             )
             all_counts.update(counts)
             errors.extend(label_errors)
@@ -137,7 +160,7 @@ def audit(dataset_dir: Path) -> int:
         print(f"- {split}: {split_image_counts[split]}")
     print()
     print("Labels by class:")
-    for class_id, class_name in CLASS_NAMES.items():
+    for class_id, class_name in class_names.items():
         print(f"- {class_id} {class_name}: {all_counts[class_id]}")
 
     if errors:

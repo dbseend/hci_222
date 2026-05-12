@@ -134,6 +134,15 @@ Use a local dart-define file so you do not have to pass URL/key every run.
 .env/supabase.dev.json
 ```
 
+Required keys:
+```json
+{
+  "SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+  "SUPABASE_ANON_KEY": "YOUR_PUBLISHABLE_OR_ANON_KEY",
+  "TRUEPRICE_API_BASE_URL": "http://YOUR_BACKEND_HOST:8000"
+}
+```
+
 2. Run with file:
 ```bash
 flutter run --dart-define-from-file=.env/supabase.dev.json
@@ -143,6 +152,8 @@ flutter run --dart-define-from-file=.env/supabase.dev.json
 ```text
 Flutter (Supabase Dev)
 ```
+
+The VS Code launch config already loads `.env/supabase.dev.json`, so backend URL changes only need edits in that local ignored file.
 
 ## Verify
 ```bash

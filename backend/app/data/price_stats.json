@@ -1,5 +1,49 @@
 [
   {
+    "product_id": "apple",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 55,
+    "median_price": 52,
+    "min_price": 38,
+    "max_price": 75,
+    "stddev_price": 10,
+    "sample_count": 24
+  },
+  {
+    "product_id": "avocado",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 95,
+    "median_price": 90,
+    "min_price": 70,
+    "max_price": 140,
+    "stddev_price": 18,
+    "sample_count": 16
+  },
+  {
+    "product_id": "blueberry",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 180,
+    "median_price": 170,
+    "min_price": 130,
+    "max_price": 240,
+    "stddev_price": 35,
+    "sample_count": 12
+  },
+  {
+    "product_id": "fruit",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 60,
+    "median_price": 58,
+    "min_price": 25,
+    "max_price": 140,
+    "stddev_price": 24,
+    "sample_count": 30
+  },
+  {
     "product_id": "tomato",
     "region": "cairo",
     "currency": "EGP",
@@ -9,6 +53,72 @@
     "max_price": 28,
     "stddev_price": 4,
     "sample_count": 42
+  },
+  {
+    "product_id": "cherry",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 160,
+    "median_price": 150,
+    "min_price": 110,
+    "max_price": 230,
+    "stddev_price": 32,
+    "sample_count": 14
+  },
+  {
+    "product_id": "kiwi",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 85,
+    "median_price": 82,
+    "min_price": 60,
+    "max_price": 120,
+    "stddev_price": 15,
+    "sample_count": 20
+  },
+  {
+    "product_id": "mango",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 70,
+    "median_price": 68,
+    "min_price": 45,
+    "max_price": 110,
+    "stddev_price": 14,
+    "sample_count": 28
+  },
+  {
+    "product_id": "orange",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 35,
+    "median_price": 33,
+    "min_price": 24,
+    "max_price": 52,
+    "stddev_price": 7,
+    "sample_count": 30
+  },
+  {
+    "product_id": "rockmelon",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 42,
+    "median_price": 40,
+    "min_price": 28,
+    "max_price": 65,
+    "stddev_price": 9,
+    "sample_count": 18
+  },
+  {
+    "product_id": "strawberry",
+    "region": "cairo",
+    "currency": "EGP",
+    "avg_price": 90,
+    "median_price": 85,
+    "min_price": 60,
+    "max_price": 130,
+    "stddev_price": 18,
+    "sample_count": 22
   },
   {
     "product_id": "camel_doll",

@@ -22,11 +22,27 @@ These folders are intentionally ignored and must not be committed.
 
 ## Common Commands
 
-Build the current open fruit YOLO dataset:
+Build the current multi-class fruit YOLO dataset:
 
 ```bash
 python3 ml/scripts/build_open_fruit_camel_dataset.py
 ```
+
+Collect a strict-license camel plush/toy review set:
+
+```bash
+python3 -B ml/scripts/collect_open_camel_plush_dataset.py --target 40 --per-query 80
+```
+
+Build a weak-labeled camel plush YOLO bootstrap dataset from the reviewed seed:
+
+```bash
+python3 -B ml/scripts/build_camel_plush_bootstrap_yolo.py
+```
+
+See `ml/CAMEL_PLUSH_DATA_PIPELINE.md` before labeling or training. The output is
+license-filtered review/bootstrap data. Manual bounding boxes are still required
+for real detector quality.
 
 Audit a YOLO dataset:
 
@@ -43,5 +59,5 @@ ml/notebooks/train_trueprice_yolo_colab.ipynb
 Upload the local zip when the notebook asks for it:
 
 ```text
-dataset_open_v1/yolo_fruit_only.zip
+dataset_open_v1/yolo_multiclass_fruit.zip
 ```

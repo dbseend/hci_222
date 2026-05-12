@@ -2,12 +2,13 @@
 
 from fastapi import FastAPI
 
-from app.api import price, products
+from app.api import price, products, scan
 
 app = FastAPI(title="TruePrice API", version="0.1.0")
 
 app.include_router(products.router)
 app.include_router(price.router)
+app.include_router(scan.router)
 
 
 @app.get("/health")

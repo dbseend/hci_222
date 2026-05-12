@@ -3,8 +3,16 @@
 Build the new MVP object-detection dataset:
 
 Classes:
-0 fruit
-1 camel_doll
+0 tomato
+1 apple
+2 avocado
+3 blueberry
+4 cherry
+5 kiwi
+6 mango
+7 orange
+8 rockmelon
+9 strawberry
 
 Open train-ready fruit sources:
 - Tomato Detection, CC0 1.0
@@ -27,7 +35,35 @@ ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "dataset_open_v1"
 OUT = BASE / "yolo"
 SEED = 222
-CLASSES = ["fruit", "camel_doll"]
+CLASSES = [
+    "tomato",
+    "apple",
+    "avocado",
+    "blueberry",
+    "cherry",
+    "kiwi",
+    "mango",
+    "orange",
+    "rockmelon",
+    "strawberry",
+]
+CLASS_TO_ID = {class_name: index for index, class_name in enumerate(CLASSES)}
+SOURCE_CLASS_TO_TARGET = {
+    "tomato": "tomato",
+    "breaking stage": "tomato",
+    "reddish": "tomato",
+    "riped": "tomato",
+    "unriped": "tomato",
+    "apple": "apple",
+    "avocado": "avocado",
+    "blueberry": "blueberry",
+    "cherry": "cherry",
+    "kiwi": "kiwi",
+    "mango": "mango",
+    "orange": "orange",
+    "rockmelon": "rockmelon",
+    "strawberry": "strawberry",
+}
 
 SPLITS = ["train", "valid", "test"]
 SPLIT_RATIOS = {"train": 0.7, "valid": 0.2, "test": 0.1}
@@ -87,16 +123,20 @@ def reset_output() -> None:
     (OUT / "unlabeled_review" / "cherry_tomato").mkdir(parents=True, exist_ok=True)
 
 
-def yolo_lines_from_supervisely(ann_path: Path, include_classes: set[str]) -> tuple[list[str], dict[str, int]]:
+def yolo_lines_from_supervisely(ann_path: Path, include_classes: set[str]) -> tuple[list[str], dict[str, int], dict[str, int]]:
     ann = json.loads(ann_path.read_text(encoding="utf-8"))
     width = float(ann["size"]["width"])
     height = float(ann["size"]["height"])
     lines: list[str] = []
-    counts: dict[str, int] = {}
+    source_counts: dict[str, int] = {}
+    target_counts: dict[str, int] = {}
 
     for obj in ann.get("objects", []):
         class_name = obj.get("classTitle", "")
         if class_name not in include_classes:
+            continue
+        target_class = SOURCE_CLASS_TO_TARGET.get(class_name)
+        if target_class is None:
             continue
         exterior = obj.get("points", {}).get("exterior", [])
         if len(exterior) != 2:
@@ -114,9 +154,11 @@ def yolo_lines_from_supervisely(ann_path: Path, include_classes: set[str]) -> tu
         cy = (y_min + y_max) / 2.0 / height
         bw = box_w / width
         bh = box_h / height
-        lines.append(f"0 {cx:.6f} {cy:.6f} {bw:.6f} {bh:.6f}")
-        counts[class_name] = counts.get(class_name, 0) + 1
-    return lines, counts
+        class_id = CLASS_TO_ID[target_class]
+        lines.append(f"{class_id} {cx:.6f} {cy:.6f} {bw:.6f} {bh:.6f}")
+        source_counts[class_name] = source_counts.get(class_name, 0) + 1
+        target_counts[target_class] = target_counts.get(target_class, 0) + 1
+    return lines, source_counts, target_counts
 
 
 def collect_single_source(source: dict) -> list[tuple[Path, Path, str]]:
@@ -146,9 +188,9 @@ def split_records(records: list[tuple[Path, Path, str]]) -> dict[str, list[tuple
 
 
 def copy_records(records: list[tuple[Path, Path, str]], split: str, include_classes: set[str], source_name: str) -> dict:
-    stats = {"images": 0, "boxes": 0, "source_class_boxes": {}}
+    stats = {"images": 0, "boxes": 0, "source_class_boxes": {}, "target_class_boxes": {}}
     for image_path, ann_path, _ in records:
-        lines, class_counts = yolo_lines_from_supervisely(ann_path, include_classes)
+        lines, source_class_counts, target_class_counts = yolo_lines_from_supervisely(ann_path, include_classes)
         if not lines:
             continue
         out_stem = f"{source_name}_{image_path.stem}"
@@ -158,17 +200,24 @@ def copy_records(records: list[tuple[Path, Path, str]], split: str, include_clas
         out_label.write_text("\n".join(lines) + "\n", encoding="utf-8")
         stats["images"] += 1
         stats["boxes"] += len(lines)
-        for class_name, count in class_counts.items():
+        for class_name, count in source_class_counts.items():
             stats["source_class_boxes"][class_name] = stats["source_class_boxes"].get(class_name, 0) + count
+        for class_name, count in target_class_counts.items():
+            stats["target_class_boxes"][class_name] = stats["target_class_boxes"].get(class_name, 0) + count
     return stats
 
 
 def merge_stats(target: dict, split: str, source_stats: dict) -> None:
-    split_stats = target.setdefault(split, {"images": 0, "boxes": 0, "source_class_boxes": {}})
+    split_stats = target.setdefault(
+        split,
+        {"images": 0, "boxes": 0, "source_class_boxes": {}, "target_class_boxes": {}},
+    )
     split_stats["images"] += source_stats["images"]
     split_stats["boxes"] += source_stats["boxes"]
     for class_name, count in source_stats["source_class_boxes"].items():
         split_stats["source_class_boxes"][class_name] = split_stats["source_class_boxes"].get(class_name, 0) + count
+    for class_name, count in source_stats["target_class_boxes"].items():
+        split_stats["target_class_boxes"][class_name] = split_stats["target_class_boxes"].get(class_name, 0) + count
 
 
 def build_dataset() -> dict:
@@ -224,48 +273,44 @@ def copy_review_sets() -> dict:
 
 
 def write_data_yaml() -> None:
-    two_class_content = f"""path: {OUT}
+    names = "[" + ", ".join(f"'{class_name}'" for class_name in CLASSES) + "]"
+    multiclass_content = f"""path: {OUT}
 train: train/images
 val: valid/images
 test: test/images
 
 nc: {len(CLASSES)}
-names: ['fruit', 'camel_doll']
+names: {names}
 """
-    fruit_only_content = f"""path: {OUT}
-train: train/images
-val: valid/images
-test: test/images
-
-nc: 1
-names: ['fruit']
-"""
-    (OUT / "data.yaml").write_text(two_class_content, encoding="utf-8")
-    (OUT / "data_fruit_only.yaml").write_text(fruit_only_content, encoding="utf-8")
+    (OUT / "data.yaml").write_text(multiclass_content, encoding="utf-8")
+    (OUT / "data_multiclass_fruit.yaml").write_text(multiclass_content, encoding="utf-8")
 
 
 def write_docs(summary: dict) -> None:
     total_images = sum(v["images"] for v in summary["splits"].values())
     total_boxes = sum(v["boxes"] for v in summary["splits"].values())
     source_boxes: dict[str, int] = {}
+    target_boxes: dict[str, int] = {}
     for split_data in summary["splits"].values():
         for name, count in split_data["source_class_boxes"].items():
             source_boxes[name] = source_boxes.get(name, 0) + count
+        for name, count in split_data["target_class_boxes"].items():
+            target_boxes[name] = target_boxes.get(name, 0) + count
 
     lines = [
         "# Open Fruit + Camel Doll Dataset v1",
         "",
         "## Core Judgment",
         "",
-        "This dataset uses a two-class MVP schema: `fruit` and `camel_doll`.",
-        "All open fruit labels are remapped into the single `fruit` class.",
-        "The `camel_doll` class is present in `data.yaml`, but still needs labeled boxes before training a final two-class model.",
+        "This dataset uses a multi-class fruit schema for product-level recognition.",
+        "Tomato maturity labels are remapped into `tomato`; deepNIR fruit classes keep their original product classes.",
+        "`camel_doll` remains an unlabeled review set and is not included in this training YAML.",
         "",
         "## Train-Ready Counts",
         "",
-        f"- fruit images: {total_images}",
-        f"- fruit boxes: {total_boxes}",
-        "- camel_doll boxes: 0",
+        f"- images: {total_images}",
+        f"- boxes: {total_boxes}",
+        f"- classes: {', '.join(CLASSES)}",
         "",
         "## Split Counts",
         "",
@@ -279,7 +324,16 @@ def write_docs(summary: dict) -> None:
         "",
         "## Source Class Coverage",
         "",
-        "| original class | boxes mapped to fruit |",
+        "| target class | boxes |",
+        "| --- | ---: |",
+    ])
+    for name, count in sorted(target_boxes.items(), key=lambda x: (-x[1], x[0])):
+        lines.append(f"| {name} | {count} |")
+    lines.extend([
+        "",
+        "## Original Source Class Coverage",
+        "",
+        "| original class | boxes |",
         "| --- | ---: |",
     ])
     for name, count in sorted(source_boxes.items(), key=lambda x: (-x[1], x[0])):
@@ -296,7 +350,7 @@ def write_docs(summary: dict) -> None:
         "",
         "## Next Step",
         "",
-        "Train `fruit` first, then add manually labeled camel doll images and retrain with both classes.",
+        "Train `data_multiclass_fruit.yaml`, then replace `backend/models/best.pt` with the new model.",
     ])
     (OUT / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

@@ -11,9 +11,10 @@ class ScanImageCaptured extends ScanEvent {
   final File image;
   const ScanImageCaptured(this.image);
 
-  // File itself is not equatable — use path + lastModified for identity
+  // Avoid sync file metadata reads here: camera/gallery temp files can disappear
+  // before bloc observers or tests read props.
   @override
-  List<Object?> get props => [image.path, image.lastModifiedSync()];
+  List<Object?> get props => [image.path];
 }
 
 class ScanReset extends ScanEvent {

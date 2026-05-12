@@ -11,7 +11,29 @@ def test_list_products_contains_yolo_classes() -> None:
 
     assert response.status_code == 200
     product_ids = {item["product_id"] for item in response.json()}
-    assert {"tomato", "camel_doll"}.issubset(product_ids)
+    assert {
+        "apple",
+        "avocado",
+        "blueberry",
+        "camel_doll",
+        "cherry",
+        "fruit",
+        "kiwi",
+        "mango",
+        "orange",
+        "rockmelon",
+        "strawberry",
+        "tomato",
+    }.issubset(product_ids)
+
+
+def test_read_price_stats_for_multiclass_fruit() -> None:
+    response = client.get("/api/v1/products/apple/price-stats?region=cairo")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["product_id"] == "apple"
+    assert body["avg_price"] == 55
 
 
 def test_read_price_stats_for_tomato() -> None:

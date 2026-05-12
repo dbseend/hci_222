@@ -1,9 +1,69 @@
 [
   {
+    "product_id": "apple",
+    "display_name": "Apple",
+    "unit": "kg",
+    "aliases": ["apple", "apples"]
+  },
+  {
+    "product_id": "avocado",
+    "display_name": "Avocado",
+    "unit": "kg",
+    "aliases": ["avocado", "avocados"]
+  },
+  {
+    "product_id": "blueberry",
+    "display_name": "Blueberry",
+    "unit": "kg",
+    "aliases": ["blueberry", "blueberries"]
+  },
+  {
+    "product_id": "fruit",
+    "display_name": "Fruit",
+    "unit": "kg",
+    "aliases": ["fruit", "fruits", "mixed fruit"]
+  },
+  {
     "product_id": "tomato",
     "display_name": "Tomato",
     "unit": "kg",
     "aliases": ["tomato", "tomatoes", "tomatoes_single"]
+  },
+  {
+    "product_id": "cherry",
+    "display_name": "Cherry",
+    "unit": "kg",
+    "aliases": ["cherry", "cherries"]
+  },
+  {
+    "product_id": "kiwi",
+    "display_name": "Kiwi",
+    "unit": "kg",
+    "aliases": ["kiwi", "kiwis"]
+  },
+  {
+    "product_id": "mango",
+    "display_name": "Mango",
+    "unit": "kg",
+    "aliases": ["mango", "mangoes"]
+  },
+  {
+    "product_id": "orange",
+    "display_name": "Orange",
+    "unit": "kg",
+    "aliases": ["orange", "oranges"]
+  },
+  {
+    "product_id": "rockmelon",
+    "display_name": "Rockmelon",
+    "unit": "kg",
+    "aliases": ["rockmelon", "melon", "cantaloupe"]
+  },
+  {
+    "product_id": "strawberry",
+    "display_name": "Strawberry",
+    "unit": "kg",
+    "aliases": ["strawberry", "strawberries"]
   },
   {
     "product_id": "camel_doll",
