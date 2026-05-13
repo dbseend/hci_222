@@ -334,17 +334,18 @@ class _FeedCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (card.imagePath != null && card.imagePath!.isNotEmpty) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 160,
-                  child: _FeedImage(imagePath: card.imagePath!),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: double.infinity,
+                height: 160,
+                child: _FeedImage(
+                  imagePath: card.imagePath,
+                  productName: card.productName,
                 ),
               ),
-              const SizedBox(height: 12),
-            ],
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -417,35 +418,84 @@ class _FeedCard extends StatelessWidget {
 }
 
 class _FeedImage extends StatelessWidget {
-  final String imagePath;
+  final String? imagePath;
+  final String productName;
 
-  const _FeedImage({required this.imagePath});
+  const _FeedImage({required this.imagePath, required this.productName});
 
   @override
   Widget build(BuildContext context) {
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    final path = imagePath?.trim();
+    if (path == null || path.isEmpty) {
+      return _defaultImage();
+    }
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
       return Image.network(
-        imagePath,
+        path,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _brokenImage(),
+        errorBuilder: (context, error, stackTrace) => _defaultImage(),
       );
     }
 
-    if (imagePath.startsWith('/')) {
+    if (path.startsWith('/')) {
       return Image.file(
-        File(imagePath),
+        File(path),
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _brokenImage(),
+        errorBuilder: (context, error, stackTrace) => _defaultImage(),
       );
     }
 
-    return _brokenImage();
+    return _defaultImage();
   }
 
-  Widget _brokenImage() {
+  Widget _defaultImage() {
     return Container(
-      color: Colors.grey.shade200,
-      child: const Icon(Icons.broken_image_outlined),
+      key: const ValueKey('community-default-image'),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF3EE),
+        border: Border.all(color: const Color(0xFFD7E7DC)),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            right: -20,
+            top: -24,
+            child: Icon(
+              Icons.shopping_basket_outlined,
+              size: 112,
+              color: AppColors.primary.withValues(alpha: 0.12),
+            ),
+          ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.image_outlined,
+                  size: 36,
+                  color: AppColors.primary.withValues(alpha: 0.74),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: const Text(
+                    'Purchase photo',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -5,7 +5,6 @@ class ApiEndpoints {
   );
 
   static const String detectObject = '/scan/detect-object';
-  static const String extractPrice = '/scan/extract-price';
   static const String priceCompare = '/api/v1/price/compare';
   static const String submitPrice = '/prices/submit';
   static const String marketsNearby = '/markets/nearby';

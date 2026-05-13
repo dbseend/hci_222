@@ -126,4 +126,12 @@ void main() {
     expect(find.text('5 results'), findsOneWidget);
     expect(find.text('Lemons 5 pcs'), findsOneWidget);
   });
+
+  testWidgets('shows default images for posts without photos', (tester) async {
+    await seedCommunityPosts();
+    await tester.pumpWidget(const MaterialApp(home: CommunityScreen()));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const ValueKey('community-default-image')), findsWidgets);
+  });
 }

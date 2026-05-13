@@ -10,6 +10,7 @@ from app.models.scan_history import ScanHistoryUploadResponse
 
 SCAN_HISTORY_BUCKET = "scan-history-images"
 COMMUNITY_IMAGES_BUCKET = "community-images"
+SCAN_HISTORY_SIGNED_URL_SECONDS = 60 * 60
 
 
 class SupabaseBackendUnavailable(RuntimeError):
@@ -61,8 +62,42 @@ def save_scan_history_image(
     return ScanHistoryUploadResponse(
         id=str(row.get("id", "")),
         image_path=str(row.get("image_path", object_path)),
+        image_url=_signed_url(
+            client,
+            SCAN_HISTORY_BUCKET,
+            str(row.get("image_path", object_path)),
+        ),
         created_at=str(row.get("created_at", "")),
     )
+
+
+def list_scan_history_images(
+    *,
+    client_user_id: str,
+    limit: int = 50,
+) -> list[ScanHistoryUploadResponse]:
+    client = get_supabase_client()
+    response = (
+        client.table("scan_histories")
+        .select("id, image_path, created_at")
+        .eq("client_user_id", client_user_id)
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+
+    items: list[ScanHistoryUploadResponse] = []
+    for row in _rows(response):
+        image_path = str(row.get("image_path", ""))
+        items.append(
+            ScanHistoryUploadResponse(
+                id=str(row.get("id", "")),
+                image_path=image_path,
+                image_url=_signed_url(client, SCAN_HISTORY_BUCKET, image_path),
+                created_at=str(row.get("created_at", "")),
+            )
+        )
+    return items
 
 
 def create_community_post(
@@ -181,6 +216,30 @@ def _public_url(client, bucket: str, path: str) -> str:
         return str(client.storage.from_(bucket).get_public_url(path))
     except Exception:
         return path
+
+
+def _signed_url(client, bucket: str, path: str) -> str | None:
+    if not path:
+        return None
+    try:
+        response = client.storage.from_(bucket).create_signed_url(
+            path,
+            SCAN_HISTORY_SIGNED_URL_SECONDS,
+        )
+    except Exception:
+        return None
+
+    if isinstance(response, str):
+        return response
+    if isinstance(response, dict):
+        value = (
+            response.get("signedURL")
+            or response.get("signedUrl")
+            or response.get("signed_url")
+        )
+        return str(value) if value else None
+    value = getattr(response, "signed_url", None) or getattr(response, "signedURL", None)
+    return str(value) if value else None
 
 
 def _rows(response) -> list[dict]:

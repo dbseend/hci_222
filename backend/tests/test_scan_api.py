@@ -6,10 +6,12 @@ from app.api import scan
 from app.main import app
 from app.models.detection import DetectionResponse
 from app.models.scan_history import ScanHistoryUploadResponse
+from app.services import object_detector
 from app.services.object_detector import (
     CLASS_TO_PRODUCT_ID,
     ObjectDetectorUnavailable,
     ObjectNotDetected,
+    ZeroShotObjectDetector,
 )
 
 
@@ -54,6 +56,21 @@ def test_detect_object_returns_detection(monkeypatch) -> None:
     }
 
 
+def test_default_detector_returns_mock_without_model(monkeypatch) -> None:
+    monkeypatch.delenv("TRUEPRICE_DETECTOR_MODE", raising=False)
+    object_detector.get_detector.cache_clear()
+
+    try:
+        detector = object_detector.get_detector()
+        result = detector.detect(image_bytes=b"fake-image", filename="scan.jpg")
+    finally:
+        object_detector.get_detector.cache_clear()
+
+    assert result.product_id == "tomato"
+    assert result.name_kr == "Tomato"
+    assert result.confidence == 0.93
+
+
 def test_detect_object_logs_detection_result(monkeypatch, caplog) -> None:
     monkeypatch.setattr(scan, "get_detector", lambda: FakeDetector())
     caplog.set_level(logging.INFO, logger="app.api.scan")
@@ -93,6 +110,7 @@ def test_save_scan_history_uploads_image(monkeypatch) -> None:
         return ScanHistoryUploadResponse(
             id="history-1",
             image_path="client-1/capture.jpg",
+            image_url="https://example.test/signed/capture.jpg",
             created_at="2026-05-13T00:00:00Z",
         )
 
@@ -106,9 +124,40 @@ def test_save_scan_history_uploads_image(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json()["image_path"] == "client-1/capture.jpg"
+    assert response.json()["image_url"] == "https://example.test/signed/capture.jpg"
     assert calls["image_bytes"] == b"fake-image"
     assert calls["filename"] == "capture.jpg"
     assert calls["client_user_id"] == "client-1"
+
+
+def test_list_scan_history_returns_signed_urls(monkeypatch) -> None:
+    calls = {}
+
+    def fake_list_scan_history_images(**kwargs):
+        calls.update(kwargs)
+        return [
+            ScanHistoryUploadResponse(
+                id="history-1",
+                image_path="client-1/capture.jpg",
+                image_url="https://example.test/signed/capture.jpg",
+                created_at="2026-05-13T00:00:00Z",
+            )
+        ]
+
+    monkeypatch.setattr(scan, "list_scan_history_images", fake_list_scan_history_images)
+
+    response = client.get("/scan/history", params={"client_user_id": "client-1"})
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": "history-1",
+            "image_path": "client-1/capture.jpg",
+            "image_url": "https://example.test/signed/capture.jpg",
+            "created_at": "2026-05-13T00:00:00Z",
+        }
+    ]
+    assert calls == {"client_user_id": "client-1", "limit": 50}
 
 
 def test_detect_object_returns_404_when_no_object(monkeypatch) -> None:
@@ -141,3 +190,59 @@ def test_detect_object_returns_503_when_detector_unavailable(monkeypatch) -> Non
 
 def test_legacy_fruit_class_is_not_reported_as_tomato() -> None:
     assert CLASS_TO_PRODUCT_ID["fruit"] == "fruit"
+
+
+def test_zero_shot_detector_maps_camel_toy_label_to_camel_doll() -> None:
+    calls = {}
+
+    def fake_pipeline(image, candidate_labels):
+        calls["image"] = image
+        calls["candidate_labels"] = candidate_labels
+        return [
+            {"label": "fruit", "score": 0.41},
+            {"label": "stuffed camel toy", "score": 0.82},
+        ]
+
+    detector = ZeroShotObjectDetector(
+        inference_pipeline=fake_pipeline,
+        image_loader=lambda image_bytes: f"image:{len(image_bytes)}",
+    )
+
+    result = detector.detect(image_bytes=b"fake-image", filename="camel.jpg")
+
+    assert result.product_id == "camel_doll"
+    assert result.name_kr == "Camel Doll"
+    assert result.confidence == 0.82
+    assert result.detected_price is None
+    assert calls["image"] == "image:10"
+    assert "stuffed camel toy" in calls["candidate_labels"]
+
+
+def test_zero_shot_detector_rejects_low_confidence_prediction() -> None:
+    detector = ZeroShotObjectDetector(
+        inference_pipeline=lambda image, candidate_labels: [{"label": "camel doll", "score": 0.12}],
+        image_loader=lambda image_bytes: object(),
+    )
+
+    try:
+        detector.detect(
+            image_bytes=b"fake-image",
+            filename="camel.jpg",
+            confidence_threshold=0.25,
+        )
+    except ObjectNotDetected as exc:
+        assert "below threshold" in str(exc)
+    else:
+        raise AssertionError("Expected ObjectNotDetected")
+
+
+def test_get_detector_supports_zero_shot_mode(monkeypatch) -> None:
+    monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "zero_shot")
+    object_detector.get_detector.cache_clear()
+
+    try:
+        detector = object_detector.get_detector()
+    finally:
+        object_detector.get_detector.cache_clear()
+
+    assert isinstance(detector, ZeroShotObjectDetector)

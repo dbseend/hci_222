@@ -1,9 +1,9 @@
 // detection_result.dart
 // Purpose: Model that carries the output of the product-detection step (camera → AI).
 //          Contains the recognized product identity, Arabic name, confidence score,
-//          and optionally a price read from the price tag in the camera frame.
-// Mock→Real migration: replace DetectionResult.mock() with DetectionResult.fromJson(res.data)
-//                      once the YOLO/detection backend endpoint is available.
+//          and a nullable price field kept only for API compatibility.
+// Web-only mock still uses DetectionResult.mock(); mobile calls the backend
+// /scan/detect-object endpoint, which currently returns backend mock detections.
 // TODO(next-dev): Add 'unit' field (kg / pcs / bunch) from the API response
 //                 so PriceInputScreen can pre-select the correct unit chip.
 
@@ -34,7 +34,7 @@ class DetectionResult {
     );
   }
 
-  // Mock result until the on-device YOLO model is wired up.
+  // Web fallback result when File upload is unavailable.
   static DetectionResult mock() => const DetectionResult(
     productId: 'fruit',
     productName: 'Fruit',

@@ -3,5 +3,7 @@ uvicorn
 pytest
 httpx
 python-multipart
-ultralytics
 supabase
+torch
+transformers
+pillow

@@ -301,7 +301,7 @@ class _ScanViewState extends State<_ScanView> {
                           CircularProgressIndicator(color: AppColors.scanLine),
                           SizedBox(height: 16),
                           Text(
-                            '[DEMO] Loading sample price data...',
+                            'Detecting product...',
                             style: TextStyle(color: Colors.white, fontSize: 14),
                           ),
                         ],

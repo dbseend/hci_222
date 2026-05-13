@@ -30,9 +30,35 @@ Open:
 http://127.0.0.1:8000/docs
 ```
 
-## Object Detection Model
+## Object Detection
 
-Keep trained model artifacts local-only under:
+`POST /scan/detect-object` supports `mock`, `zero_shot`, and `yolo` detector
+modes. Use `zero_shot` for the current MVP: Flutter uploads the image, FastAPI
+classifies it with text prompts, and the response returns only the product
+identity. OCR is intentionally not part of this flow.
+
+```bash
+# ../.env
+TRUEPRICE_DETECTOR_MODE=zero_shot
+TRUEPRICE_ZERO_SHOT_MODEL=google/owlvit-base-patch32
+```
+
+The current zero-shot product prompts map to:
+
+```text
+fruit, camel_doll
+```
+
+`mock` mode remains available for offline UI demos. It returns a catalog product
+using filename hints when available, otherwise it returns `tomato`.
+
+```bash
+# ../.env
+TRUEPRICE_DETECTOR_MODE=mock
+```
+
+Optional YOLO mode is still available for local experiments, but it is no longer
+required for normal app execution. Keep trained model artifacts local-only under:
 
 ```text
 backend/models/best.pt
@@ -40,20 +66,18 @@ backend/models/best_float32.tflite
 backend/models/results.csv
 ```
 
-`POST /scan/detect-object` uses `backend/models/best.pt` by default. The
-current supported YOLO product classes are:
-
-```text
-tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry
-```
-
-Legacy single-class `fruit` models still map to `tomato` so the old MVP model
-does not break during transition. To use a different model path:
+To run YOLO mode, install `ultralytics` manually and set:
 
 ```bash
-# Edit ../.env:
-# TRUEPRICE_YOLO_MODEL_PATH=/path/to/best.pt
-uvicorn app.main:app --reload
+# ../.env
+TRUEPRICE_DETECTOR_MODE=yolo
+TRUEPRICE_YOLO_MODEL_PATH=/path/to/best.pt
+```
+
+The currently supported YOLO product classes are:
+
+```text
+tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry, camel_doll
 ```
 
 For physical phone testing, run the API on the Mac's LAN interface:
@@ -84,7 +108,7 @@ posts:
 TRUEPRICE_API_BASE_URL=http://YOUR_BACKEND_HOST:8000
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
-TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
+TRUEPRICE_DETECTOR_MODE=mock
 ```
 
 Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter or any client-side config.
@@ -95,6 +119,7 @@ Server-owned Supabase endpoints:
 
 ```text
 POST /scan/history
+GET  /scan/history?client_user_id=<anonymous-id>
 GET  /api/v1/community/feed
 POST /api/v1/community/posts
 ```

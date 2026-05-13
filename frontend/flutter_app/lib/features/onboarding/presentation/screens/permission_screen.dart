@@ -29,11 +29,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
 
   // List of (icon, title, description) tuples for each requested permission.
   static const _permissions = [
-    (
-      Icons.camera_alt,
-      'Camera',
-      'Required to scan products and recognize price tags',
-    ),
+    (Icons.camera_alt, 'Camera', 'Required to scan products'),
     (
       Icons.location_on,
       'Location',

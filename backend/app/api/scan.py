@@ -9,7 +9,11 @@ from app.services.object_detector import (
     ObjectNotDetected,
     get_detector,
 )
-from app.services.supabase_backend import SupabaseBackendUnavailable, save_scan_history_image
+from app.services.supabase_backend import (
+    SupabaseBackendUnavailable,
+    list_scan_history_images,
+    save_scan_history_image,
+)
 
 
 router = APIRouter(prefix="/scan", tags=["scan"])
@@ -78,6 +82,23 @@ async def save_history(
             filename=image.filename or "scan.jpg",
             content_type=image.content_type or "image/jpeg",
             client_user_id=client_user_id,
+        )
+    except SupabaseBackendUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/history", response_model=list[ScanHistoryUploadResponse])
+async def list_history(
+    client_user_id: str,
+    limit: int = 50,
+) -> list[ScanHistoryUploadResponse]:
+    if not client_user_id.strip():
+        raise HTTPException(status_code=400, detail="client_user_id is required")
+
+    try:
+        return list_scan_history_images(
+            client_user_id=client_user_id,
+            limit=max(1, min(limit, 100)),
         )
     except SupabaseBackendUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
