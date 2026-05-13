@@ -6,6 +6,7 @@ import 'package:trueprice/core/utils/price_classifier.dart';
 import 'package:trueprice/features/market_map/presentation/models/market_location.dart';
 import 'package:trueprice/features/market_map/presentation/utils/market_marker_builder.dart';
 import 'package:trueprice/features/scan/presentation/screens/price_input_screen.dart';
+import 'package:trueprice/features/scan/presentation/screens/scan_screen.dart';
 import 'package:trueprice/features/scan/data/models/price_comparison.dart';
 import 'package:trueprice/features/scan/data/models/region_stats.dart';
 import 'package:trueprice/features/onboarding/presentation/screens/permission_screen.dart';
@@ -187,6 +188,38 @@ void main() {
         expect(find.text('Camera permission required'), findsOneWidget);
       },
     );
+  });
+
+  group('Camera pinch zoom', () {
+    test('calculates pinch zoom within device bounds', () {
+      expect(
+        calculatePinchZoom(
+          baseZoom: 2.0,
+          scale: 1.5,
+          minZoom: 1.0,
+          maxZoom: 4.0,
+        ),
+        3.0,
+      );
+      expect(
+        calculatePinchZoom(
+          baseZoom: 2.0,
+          scale: 0.25,
+          minZoom: 1.0,
+          maxZoom: 4.0,
+        ),
+        1.0,
+      );
+      expect(
+        calculatePinchZoom(
+          baseZoom: 3.0,
+          scale: 2.0,
+          minZoom: 1.0,
+          maxZoom: 4.0,
+        ),
+        4.0,
+      );
+    });
   });
 
   group('Market marker builder', () {

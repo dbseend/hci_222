@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trueprice/features/scan/data/models/detection_result.dart';
 import 'package:trueprice/features/scan/data/repositories/scan_history_repository.dart';
 
 void main() {
@@ -93,6 +94,50 @@ void main() {
       expect(items, hasLength(1));
       expect(items.single.remoteImagePath, 'client-1/capture.jpg');
       expect(items.single.imageUrl, 'https://example.test/signed/capture.jpg');
+      expect(items.single.hasDetectionCache, isTrue);
+      expect(items.single.detectionResult?.productId, 'tomato');
+      expect(items.single.hasQuotedPrice, isTrue);
+      expect(items.single.quotedUnitPriceEgp, 65);
+    });
+
+    test('updates remote history detection and quoted price', () async {
+      final tempRoot = await Directory.systemTemp.createTemp(
+        'scan-history-patch',
+      );
+      addTearDown(() async => tempRoot.delete(recursive: true));
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('anonymous_user_id', 'client-1');
+      final adapter = _RemoteHistoryAdapter();
+      final repo = ScanHistoryRepositoryImpl(
+        prefsProvider: () async => prefs,
+        directoryProvider: () async => tempRoot,
+        dio: Dio(BaseOptions(baseUrl: 'http://127.0.0.1:8000'))
+          ..httpClientAdapter = adapter,
+      );
+
+      final item = (await repo.getHistory()).single;
+      await repo.updateDetection(
+        historyId: item.id,
+        result: const DetectionResult(
+          productId: 'tomato',
+          productName: 'Tomato',
+          productNameAr: 'طماطم',
+          confidence: 0.91,
+        ),
+      );
+      await repo.updateQuotedPrice(
+        historyId: item.id,
+        totalPrice: 130,
+        quantity: 2,
+        unit: 'kg',
+        unitPrice: 65,
+      );
+
+      expect(adapter.patchPaths, [
+        '/scan/history/history-1/detection',
+        '/scan/history/history-1/price',
+      ]);
     });
 
     test('resolves remote history image into a local file', () async {
@@ -147,6 +192,8 @@ class _ConnectionErrorAdapter implements HttpClientAdapter {
 }
 
 class _RemoteHistoryAdapter implements HttpClientAdapter {
+  final List<String> patchPaths = [];
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -161,9 +208,47 @@ class _RemoteHistoryAdapter implements HttpClientAdapter {
     "id": "history-1",
     "image_path": "client-1/capture.jpg",
     "image_url": "https://example.test/signed/capture.jpg",
+    "detected_product_code": "tomato",
+    "detected_product_name": "Tomato",
+    "detected_product_name_ar": "طماطم",
+    "detection_confidence": 0.91,
+    "detected_price_egp": null,
+    "quoted_total_price_egp": 130,
+    "quoted_quantity": 2,
+    "quoted_unit": "kg",
+    "quoted_unit_price_egp": 65,
     "created_at": "2026-05-13T00:00:00Z"
   }
 ]
+''',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    }
+
+    if (options.method == 'PATCH' &&
+        (options.path == '/scan/history/history-1/detection' ||
+            options.path == '/scan/history/history-1/price')) {
+      patchPaths.add(options.path);
+      return ResponseBody.fromString(
+        '''
+{
+  "id": "history-1",
+  "image_path": "client-1/capture.jpg",
+  "image_url": "https://example.test/signed/capture.jpg",
+  "detected_product_code": "tomato",
+  "detected_product_name": "Tomato",
+  "detected_product_name_ar": "طماطم",
+  "detection_confidence": 0.91,
+  "detected_price_egp": null,
+  "quoted_total_price_egp": 130,
+  "quoted_quantity": 2,
+  "quoted_unit": "kg",
+  "quoted_unit_price_egp": 65,
+  "created_at": "2026-05-13T00:00:00Z"
+}
 ''',
         200,
         headers: {

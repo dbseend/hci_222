@@ -23,6 +23,7 @@ class PriceAnalysisScreen extends StatelessWidget {
   final double inputPrice;
   final double? detectedPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const PriceAnalysisScreen({
     super.key,
@@ -31,6 +32,7 @@ class PriceAnalysisScreen extends StatelessWidget {
     this.productId = 'tomato',
     this.detectedPrice,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -51,6 +53,7 @@ class PriceAnalysisScreen extends StatelessWidget {
         inputPrice: inputPrice,
         detectedPrice: detectedPrice,
         capturedImagePath: capturedImagePath,
+        historyId: historyId,
       ),
     );
   }
@@ -62,6 +65,7 @@ class _PriceAnalysisView extends StatelessWidget {
   final double inputPrice;
   final double? detectedPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const _PriceAnalysisView({
     required this.productName,
@@ -69,6 +73,7 @@ class _PriceAnalysisView extends StatelessWidget {
     required this.inputPrice,
     this.detectedPrice,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -86,6 +91,7 @@ class _PriceAnalysisView extends StatelessWidget {
               detectedPrice: detectedPrice,
               inputPrice: inputPrice,
               capturedImagePath: capturedImagePath,
+              historyId: historyId,
             ),
           ),
         ),
@@ -260,6 +266,7 @@ class _PriceAnalysisView extends StatelessWidget {
                   detectedPrice: detectedPrice,
                   finalPrice: inputPrice,
                   capturedImagePath: capturedImagePath,
+                  historyId: historyId,
                 ),
               );
             },
@@ -275,6 +282,7 @@ class _PriceAnalysisView extends StatelessWidget {
                 detectedPrice: detectedPrice,
                 inputPrice: inputPrice,
                 capturedImagePath: capturedImagePath,
+                historyId: historyId,
               ),
             ),
             style: OutlinedButton.styleFrom(

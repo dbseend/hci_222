@@ -8,12 +8,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/services/user_id_service.dart';
+import '../models/detection_result.dart';
 import '../models/scan_history_item.dart';
 
 abstract class ScanHistoryRepository {
   Future<String?> addCapturedImage(File image);
   Future<List<ScanHistoryItem>> getHistory();
   Future<File> resolveImageFile(ScanHistoryItem item);
+  Future<void> updateDetection({
+    String? historyId,
+    String? imagePath,
+    required DetectionResult result,
+  });
+  Future<void> updateQuotedPrice({
+    String? historyId,
+    String? imagePath,
+    required double totalPrice,
+    required double quantity,
+    required String unit,
+    required double unitPrice,
+  });
   Future<void> clearHistory();
 }
 
@@ -123,6 +137,101 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
   }
 
   @override
+  Future<void> updateDetection({
+    String? historyId,
+    String? imagePath,
+    required DetectionResult result,
+  }) async {
+    final item = await _findHistoryItem(
+      historyId: historyId,
+      imagePath: imagePath,
+    );
+    final remoteId =
+        historyId ??
+        ((item?.remoteImagePath?.isNotEmpty ?? false) ? item?.id : null);
+    if (item == null && (remoteId == null || remoteId.isEmpty)) return;
+
+    ScanHistoryItem? updated;
+    if (item != null) {
+      updated = item.copyWith(detectionResult: result);
+      await _replaceLocalItem(item, updated);
+    }
+
+    if (remoteId == null || remoteId.isEmpty) return;
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.scanHistoryDetection(remoteId),
+        data: result.toJson(),
+      );
+      final data = response.data;
+      if (data != null && item != null && updated != null) {
+        await _replaceLocalItem(
+          updated,
+          ScanHistoryItem.fromApiJson(
+            data,
+          ).copyWith(imagePath: updated.imagePath),
+        );
+      }
+    } catch (_) {
+      // Local history remains usable if backend cache update fails.
+    }
+  }
+
+  @override
+  Future<void> updateQuotedPrice({
+    String? historyId,
+    String? imagePath,
+    required double totalPrice,
+    required double quantity,
+    required String unit,
+    required double unitPrice,
+  }) async {
+    final item = await _findHistoryItem(
+      historyId: historyId,
+      imagePath: imagePath,
+    );
+    final remoteId =
+        historyId ??
+        ((item?.remoteImagePath?.isNotEmpty ?? false) ? item?.id : null);
+    if (item == null && (remoteId == null || remoteId.isEmpty)) return;
+
+    ScanHistoryItem? updated;
+    if (item != null) {
+      updated = item.copyWith(
+        quotedTotalPriceEgp: totalPrice,
+        quotedQuantity: quantity,
+        quotedUnit: unit,
+        quotedUnitPriceEgp: unitPrice,
+      );
+      await _replaceLocalItem(item, updated);
+    }
+
+    if (remoteId == null || remoteId.isEmpty) return;
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.scanHistoryPrice(remoteId),
+        data: {
+          'quoted_total_price_egp': totalPrice,
+          'quoted_quantity': quantity,
+          'quoted_unit': unit,
+          'quoted_unit_price_egp': unitPrice,
+        },
+      );
+      final data = response.data;
+      if (data != null && item != null && updated != null) {
+        await _replaceLocalItem(
+          updated,
+          ScanHistoryItem.fromApiJson(
+            data,
+          ).copyWith(imagePath: updated.imagePath),
+        );
+      }
+    } catch (_) {
+      // Local history remains usable if backend cache update fails.
+    }
+  }
+
+  @override
   Future<void> clearHistory() async {
     final items = await _getLocalHistory();
     for (final item in items) {
@@ -168,6 +277,42 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
     final prefs = await _prefsProvider();
     final raw = jsonEncode(items.map((e) => e.toJson()).toList());
     await prefs.setString(_storageKey, raw);
+  }
+
+  Future<ScanHistoryItem?> _findHistoryItem({
+    String? historyId,
+    String? imagePath,
+  }) async {
+    final items = await _getLocalHistory();
+    for (final item in items) {
+      if (historyId != null && historyId.isNotEmpty && item.id == historyId) {
+        return item;
+      }
+      if (imagePath != null &&
+          imagePath.isNotEmpty &&
+          item.imagePath == imagePath) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _replaceLocalItem(
+    ScanHistoryItem original,
+    ScanHistoryItem updated,
+  ) async {
+    final items = await _getLocalHistory();
+    final next =
+        items
+            .map(
+              (item) =>
+                  item.id == original.id || item.imagePath == original.imagePath
+                  ? updated
+                  : item,
+            )
+            .toList()
+          ..sort((a, b) => b.capturedAt.compareTo(a.capturedAt));
+    await _save(next);
   }
 
   Future<ScanHistoryItem?> _uploadHistoryImage(File image) async {

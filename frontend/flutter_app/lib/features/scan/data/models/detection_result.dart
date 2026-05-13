@@ -34,6 +34,14 @@ class DetectionResult {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'product_id': productId,
+    'name_kr': productName,
+    'name_ar': productNameAr,
+    'confidence': confidence,
+    'detected_price': detectedPrice,
+  };
+
   // Web fallback result when File upload is unavailable.
   static DetectionResult mock() => const DetectionResult(
     productId: 'fruit',

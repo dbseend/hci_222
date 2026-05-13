@@ -6,10 +6,7 @@
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "preLaunchTask": "Generate Flutter dart defines",
-      "toolArgs": [
-        "--dart-define-from-file=.dart_tool/trueprice_dart_defines.json"
-      ]
+      "preLaunchTask": "Generate Flutter env constants"
     }
   ]
 }

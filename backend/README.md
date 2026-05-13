@@ -33,32 +33,33 @@ http://127.0.0.1:8000/docs
 ## Object Detection
 
 `POST /scan/detect-object` supports `mock`, `zero_shot`, and `yolo` detector
-modes. Use `zero_shot` for the current MVP: Flutter uploads the image, FastAPI
-classifies it with text prompts, and the response returns only the product
-identity. OCR is intentionally not part of this flow.
+modes. Use `yolo` for the current MVP when `backend/models/best.pt` is present:
+Flutter uploads the image, FastAPI runs YOLO inference, and the response returns
+only the product identity. OCR is intentionally not part of this flow.
 
 ```bash
 # ../.env
-TRUEPRICE_DETECTOR_MODE=zero_shot
-TRUEPRICE_ZERO_SHOT_MODEL=google/owlvit-base-patch32
+TRUEPRICE_DETECTOR_MODE=yolo
+TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
 ```
 
-The current zero-shot product prompts map to:
+Current `backend/models/best.pt` classes:
 
 ```text
-fruit, camel_doll
+tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry
 ```
 
-`mock` mode remains available for offline UI demos. It returns a catalog product
-using filename hints when available, otherwise it returns `tomato`.
+`camel_doll` and `cherry_tomato` are supported by the API catalog, but require a
+new YOLO training run before they can be detected by `best.pt`.
+
+`mock` mode remains available for offline UI demos. It returns a catalog product using filename hints when available, otherwise it returns `tomato`.
 
 ```bash
 # ../.env
 TRUEPRICE_DETECTOR_MODE=mock
 ```
 
-Optional YOLO mode is still available for local experiments, but it is no longer
-required for normal app execution. Keep trained model artifacts local-only under:
+Keep trained model artifacts local-only under:
 
 ```text
 backend/models/best.pt
@@ -66,18 +67,19 @@ backend/models/best_float32.tflite
 backend/models/results.csv
 ```
 
-To run YOLO mode, install `ultralytics` manually and set:
+To run zero-shot fallback instead, install `transformers`, `torch`, and `pillow`,
+then set:
 
 ```bash
 # ../.env
-TRUEPRICE_DETECTOR_MODE=yolo
-TRUEPRICE_YOLO_MODEL_PATH=/path/to/best.pt
+TRUEPRICE_DETECTOR_MODE=zero_shot
+TRUEPRICE_ZERO_SHOT_MODEL=google/owlvit-base-patch32
 ```
 
-The currently supported YOLO product classes are:
+The API catalog supports:
 
 ```text
-tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry, camel_doll
+tomato, cherry_tomato, apple, avocado, banana, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry, camel_doll
 ```
 
 For physical phone testing, run the API on the Mac's LAN interface:
@@ -120,8 +122,16 @@ Server-owned Supabase endpoints:
 ```text
 POST /scan/history
 GET  /scan/history?client_user_id=<anonymous-id>
+PATCH /scan/history/{history_id}/detection
+PATCH /scan/history/{history_id}/price
 GET  /api/v1/community/feed
 POST /api/v1/community/posts
+```
+
+Before using cached scan detection/price history, apply:
+
+```sql
+-- backend/supabase/scan_history_cache.sql
 ```
 
 ## Example

@@ -14,9 +14,11 @@ def test_list_products_contains_yolo_classes() -> None:
     assert {
         "apple",
         "avocado",
+        "banana",
         "blueberry",
         "camel_doll",
         "cherry",
+        "cherry_tomato",
         "fruit",
         "kiwi",
         "mango",
@@ -34,6 +36,24 @@ def test_read_price_stats_for_multiclass_fruit() -> None:
     body = response.json()
     assert body["product_id"] == "apple"
     assert body["avg_price"] == 55
+
+
+def test_read_price_stats_for_banana_fixed_mvp_seed() -> None:
+    response = client.get("/api/v1/products/banana/price-stats?region=cairo")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["product_id"] == "banana"
+    assert body["avg_price"] == 45
+
+
+def test_read_price_stats_for_cherry_tomato_fixed_mvp_seed() -> None:
+    response = client.get("/api/v1/products/cherry_tomato/price-stats?region=cairo")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["product_id"] == "cherry_tomato"
+    assert body["avg_price"] == 45
 
 
 def test_read_price_stats_for_tomato() -> None:

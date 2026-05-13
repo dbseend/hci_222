@@ -12,6 +12,12 @@
     "aliases": ["avocado", "avocados"]
   },
   {
+    "product_id": "banana",
+    "display_name": "Banana",
+    "unit": "kg",
+    "aliases": ["banana", "bananas"]
+  },
+  {
     "product_id": "blueberry",
     "display_name": "Blueberry",
     "unit": "kg",
@@ -34,6 +40,12 @@
     "display_name": "Cherry",
     "unit": "kg",
     "aliases": ["cherry", "cherries"]
+  },
+  {
+    "product_id": "cherry_tomato",
+    "display_name": "Cherry Tomato",
+    "unit": "kg",
+    "aliases": ["cherry tomato", "cherry tomatoes", "grape tomato", "grape tomatoes"]
   },
   {
     "product_id": "kiwi",

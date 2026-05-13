@@ -50,3 +50,6 @@ app.*.map.json
 # Local runtime secrets
 /.env/supabase.dev.json
 .vercel
+
+# Generated local Flutter env constants
+/lib/core/constants/generated_env.dart

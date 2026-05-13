@@ -3,7 +3,11 @@ import logging
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.models.detection import DetectionResponse
-from app.models.scan_history import ScanHistoryUploadResponse
+from app.models.scan_history import (
+    ScanHistoryDetectionUpdate,
+    ScanHistoryPriceUpdate,
+    ScanHistoryUploadResponse,
+)
 from app.services.object_detector import (
     ObjectDetectorUnavailable,
     ObjectNotDetected,
@@ -13,6 +17,8 @@ from app.services.supabase_backend import (
     SupabaseBackendUnavailable,
     list_scan_history_images,
     save_scan_history_image,
+    update_scan_history_detection,
+    update_scan_history_price,
 )
 
 
@@ -67,7 +73,11 @@ async def detect_object(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@router.post("/history", response_model=ScanHistoryUploadResponse)
+@router.post(
+    "/history",
+    response_model=ScanHistoryUploadResponse,
+    response_model_exclude_none=True,
+)
 async def save_history(
     image: UploadFile = File(...),
     client_user_id: str = Form(...),
@@ -87,7 +97,11 @@ async def save_history(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@router.get("/history", response_model=list[ScanHistoryUploadResponse])
+@router.get(
+    "/history",
+    response_model=list[ScanHistoryUploadResponse],
+    response_model_exclude_none=True,
+)
 async def list_history(
     client_user_id: str,
     limit: int = 50,
@@ -100,5 +114,41 @@ async def list_history(
             client_user_id=client_user_id,
             limit=max(1, min(limit, 100)),
         )
+    except SupabaseBackendUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.patch(
+    "/history/{history_id}/detection",
+    response_model=ScanHistoryUploadResponse,
+    response_model_exclude_none=True,
+)
+async def update_history_detection(
+    history_id: str,
+    payload: ScanHistoryDetectionUpdate,
+) -> ScanHistoryUploadResponse:
+    if not history_id.strip():
+        raise HTTPException(status_code=400, detail="history_id is required")
+
+    try:
+        return update_scan_history_detection(history_id=history_id, payload=payload)
+    except SupabaseBackendUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.patch(
+    "/history/{history_id}/price",
+    response_model=ScanHistoryUploadResponse,
+    response_model_exclude_none=True,
+)
+async def update_history_price(
+    history_id: str,
+    payload: ScanHistoryPriceUpdate,
+) -> ScanHistoryUploadResponse:
+    if not history_id.strip():
+        raise HTTPException(status_code=400, detail="history_id is required")
+
+    try:
+        return update_scan_history_price(history_id=history_id, payload=payload)
     except SupabaseBackendUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

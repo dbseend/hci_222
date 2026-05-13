@@ -15,6 +15,7 @@ class FinalPriceScreen extends StatelessWidget {
   final double finalPrice;
   final double? detectedPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const FinalPriceScreen({
     super.key,
@@ -23,6 +24,7 @@ class FinalPriceScreen extends StatelessWidget {
     this.productId = 'tomato',
     this.detectedPrice,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -35,6 +37,7 @@ class FinalPriceScreen extends StatelessWidget {
         finalPrice: finalPrice,
         detectedPrice: detectedPrice,
         capturedImagePath: capturedImagePath,
+        historyId: historyId,
       ),
     );
   }
@@ -46,6 +49,7 @@ class _FinalPriceView extends StatefulWidget {
   final double finalPrice;
   final double? detectedPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const _FinalPriceView({
     required this.productName,
@@ -53,6 +57,7 @@ class _FinalPriceView extends StatefulWidget {
     required this.finalPrice,
     this.detectedPrice,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -132,6 +137,7 @@ class _FinalPriceViewState extends State<_FinalPriceView>
                 detectedPrice: widget.detectedPrice,
                 inputPrice: widget.finalPrice,
                 capturedImagePath: widget.capturedImagePath,
+                historyId: widget.historyId,
               ),
             ),
           ),

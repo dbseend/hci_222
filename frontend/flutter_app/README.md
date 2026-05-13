@@ -142,16 +142,16 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
 TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
 ```
 
-2. Generate Flutter-only dart defines:
+2. Generate Flutter-only env constants:
 ```bash
 cd ../..
 python3 scripts/generate_flutter_defines.py
 cd frontend/flutter_app
 ```
 
-3. Run with the generated Flutter file:
+3. Run Flutter normally:
 ```bash
-flutter run --dart-define-from-file=.dart_tool/trueprice_dart_defines.json
+flutter run
 ```
 
 4. In VS Code, select launch config:
@@ -160,7 +160,7 @@ Flutter (Supabase Dev)
 ```
 
 The VS Code launch config runs the generate task automatically. Supabase
-credentials stay backend-only and are not copied into Flutter dart defines.
+credentials stay backend-only and are not copied into Flutter generated env.
 
 ## Verify
 ```bash

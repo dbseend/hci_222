@@ -60,6 +60,7 @@ final router = GoRouter(
                   productId: e.productId,
                   detectedPrice: e.detectedPrice,
                   capturedImagePath: e.capturedImagePath,
+                  historyId: e.historyId,
                 );
               },
             ),
@@ -73,6 +74,7 @@ final router = GoRouter(
                   detectedPrice: e.detectedPrice,
                   initialInputPrice: e.inputPrice,
                   capturedImagePath: e.capturedImagePath,
+                  historyId: e.historyId,
                 );
               },
             ),
@@ -86,6 +88,7 @@ final router = GoRouter(
                   inputPrice: e.inputPrice,
                   detectedPrice: e.detectedPrice,
                   capturedImagePath: e.capturedImagePath,
+                  historyId: e.historyId,
                 );
               },
             ),
@@ -99,6 +102,7 @@ final router = GoRouter(
                   finalPrice: e.finalPrice,
                   detectedPrice: e.detectedPrice,
                   capturedImagePath: e.capturedImagePath,
+                  historyId: e.historyId,
                 );
               },
             ),

@@ -47,6 +47,23 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
   Future<void> _detectFromHistory(ScanHistoryItem item) async {
     if (_detectingId != null) return;
 
+    final cached = item.detectionResult;
+    if (cached != null) {
+      final routeData = ScanRouteData(
+        productName: cached.productName,
+        productId: cached.productId,
+        detectedPrice: cached.detectedPrice,
+        inputPrice: item.quotedUnitPriceEgp ?? 0,
+        capturedImagePath: item.imagePath.isNotEmpty ? item.imagePath : null,
+        historyId: item.id,
+      );
+      context.go(
+        item.hasQuotedPrice ? '/scan/analysis' : '/scan/stats',
+        extra: routeData,
+      );
+      return;
+    }
+
     setState(() => _detectingId = item.id);
     try {
       final image = await _repo.resolveImageFile(item);
@@ -56,6 +73,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
         lat: pos.lat,
         lon: pos.lon,
       );
+      await _repo.updateDetection(historyId: item.id, result: result);
       if (!mounted) return;
       context.go(
         '/scan/stats',
@@ -64,6 +82,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
           productId: result.productId,
           detectedPrice: result.detectedPrice,
           capturedImagePath: image.path,
+          historyId: item.id,
         ),
       );
     } catch (e) {
@@ -140,11 +159,16 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
                         child: _HistoryImage(item: item),
                       ),
                     ),
-                    title: const Text(
-                      'Captured from camera',
+                    title: Text(
+                      item.detectionResult?.productName ??
+                          'Captured from camera',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: Text('Saved at ${_format(item.capturedAt)}'),
+                    subtitle: Text(
+                      item.hasQuotedPrice
+                          ? 'Saved price ${item.quotedUnitPriceEgp!.toStringAsFixed(0)} EGP · ${_format(item.capturedAt)}'
+                          : 'Saved at ${_format(item.capturedAt)}',
+                    ),
                     trailing: isDetecting
                         ? const SizedBox(
                             width: 22,

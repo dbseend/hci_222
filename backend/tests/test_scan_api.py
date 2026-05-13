@@ -56,8 +56,8 @@ def test_detect_object_returns_detection(monkeypatch) -> None:
     }
 
 
-def test_default_detector_returns_mock_without_model(monkeypatch) -> None:
-    monkeypatch.delenv("TRUEPRICE_DETECTOR_MODE", raising=False)
+def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
+    monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "mock")
     object_detector.get_detector.cache_clear()
 
     try:
@@ -160,6 +160,81 @@ def test_list_scan_history_returns_signed_urls(monkeypatch) -> None:
     assert calls == {"client_user_id": "client-1", "limit": 50}
 
 
+def test_update_scan_history_detection(monkeypatch) -> None:
+    calls = {}
+
+    def fake_update_scan_history_detection(**kwargs):
+        calls.update(kwargs)
+        return ScanHistoryUploadResponse(
+            id="history-1",
+            image_path="client-1/capture.jpg",
+            image_url="https://example.test/signed/capture.jpg",
+            created_at="2026-05-13T00:00:00Z",
+            detected_product_code="tomato",
+            detected_product_name="Tomato",
+            detected_product_name_ar="طماطم",
+            detection_confidence=0.91,
+            detected_price_egp=None,
+        )
+
+    monkeypatch.setattr(scan, "update_scan_history_detection", fake_update_scan_history_detection)
+
+    response = client.patch(
+        "/scan/history/history-1/detection",
+        json={
+            "product_id": "tomato",
+            "name_kr": "Tomato",
+            "name_ar": "طماطم",
+            "confidence": 0.91,
+            "detected_price": None,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["detected_product_code"] == "tomato"
+    assert calls["history_id"] == "history-1"
+    assert calls["payload"].product_id == "tomato"
+
+
+def test_update_scan_history_price(monkeypatch) -> None:
+    calls = {}
+
+    def fake_update_scan_history_price(**kwargs):
+        calls.update(kwargs)
+        return ScanHistoryUploadResponse(
+            id="history-1",
+            image_path="client-1/capture.jpg",
+            image_url="https://example.test/signed/capture.jpg",
+            created_at="2026-05-13T00:00:00Z",
+            detected_product_code="tomato",
+            detected_product_name="Tomato",
+            detected_product_name_ar="طماطم",
+            detection_confidence=0.91,
+            detected_price_egp=None,
+            quoted_total_price_egp=130,
+            quoted_quantity=2,
+            quoted_unit="kg",
+            quoted_unit_price_egp=65,
+        )
+
+    monkeypatch.setattr(scan, "update_scan_history_price", fake_update_scan_history_price)
+
+    response = client.patch(
+        "/scan/history/history-1/price",
+        json={
+            "quoted_total_price_egp": 130,
+            "quoted_quantity": 2,
+            "quoted_unit": "kg",
+            "quoted_unit_price_egp": 65,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["quoted_unit_price_egp"] == 65
+    assert calls["history_id"] == "history-1"
+    assert calls["payload"].quoted_unit_price_egp == 65
+
+
 def test_detect_object_returns_404_when_no_object(monkeypatch) -> None:
     monkeypatch.setattr(scan, "get_detector", lambda: FakeDetector(error=ObjectNotDetected("No object detected")))
 
@@ -190,6 +265,55 @@ def test_detect_object_returns_503_when_detector_unavailable(monkeypatch) -> Non
 
 def test_legacy_fruit_class_is_not_reported_as_tomato() -> None:
     assert CLASS_TO_PRODUCT_ID["fruit"] == "fruit"
+
+
+def test_zero_shot_detector_maps_specific_fruit_label_to_specific_product() -> None:
+    calls = {}
+
+    def fake_pipeline(image, candidate_labels):
+        calls["candidate_labels"] = candidate_labels
+        return [
+            {"label": "apple", "score": 0.74},
+            {"label": "orange", "score": 0.42},
+        ]
+
+    detector = ZeroShotObjectDetector(
+        inference_pipeline=fake_pipeline,
+        image_loader=lambda image_bytes: object(),
+    )
+
+    result = detector.detect(image_bytes=b"fake-image", filename="apple.jpg")
+
+    assert result.product_id == "apple"
+    assert result.name_kr == "Apple"
+    assert result.confidence == 0.74
+    assert "fruit" not in calls["candidate_labels"]
+
+
+def test_zero_shot_detector_maps_banana_to_catalog_product() -> None:
+    detector = ZeroShotObjectDetector(
+        inference_pipeline=lambda image, candidate_labels: [{"label": "banana", "score": 0.81}],
+        image_loader=lambda image_bytes: object(),
+    )
+
+    result = detector.detect(image_bytes=b"fake-image", filename="banana.jpg")
+
+    assert result.product_id == "banana"
+    assert result.name_kr == "Banana"
+    assert result.detected_price is None
+
+
+def test_zero_shot_detector_maps_cherry_tomato_to_catalog_product() -> None:
+    detector = ZeroShotObjectDetector(
+        inference_pipeline=lambda image, candidate_labels: [{"label": "cherry tomatoes", "score": 0.79}],
+        image_loader=lambda image_bytes: object(),
+    )
+
+    result = detector.detect(image_bytes=b"fake-image", filename="cherry_tomato.jpg")
+
+    assert result.product_id == "cherry_tomato"
+    assert result.name_kr == "Cherry Tomato"
+    assert result.detected_price is None
 
 
 def test_zero_shot_detector_maps_camel_toy_label_to_camel_doll() -> None:

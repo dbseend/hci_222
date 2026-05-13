@@ -39,6 +39,10 @@ class _ScanViewState extends State<_ScanView> {
   bool _hasCameraPermission = true;
   String? _cameraError;
   bool _flashOn = false;
+  double _minZoom = 1.0;
+  double _maxZoom = 1.0;
+  double _currentZoom = 1.0;
+  double _zoomAtGestureStart = 1.0;
   String? _latestCapturedImagePath;
 
   @override
@@ -88,6 +92,10 @@ class _ScanViewState extends State<_ScanView> {
 
       await controller.initialize().timeout(_cameraInitTimeout);
       await controller.setFlashMode(FlashMode.off);
+      final minZoom = await controller.getMinZoomLevel();
+      final maxZoom = await controller.getMaxZoomLevel();
+      final initialZoom = minZoom.clamp(minZoom, maxZoom).toDouble();
+      await controller.setZoomLevel(initialZoom);
 
       if (!mounted) {
         await controller.dispose();
@@ -98,6 +106,11 @@ class _ScanViewState extends State<_ScanView> {
         _cameraController = controller;
         _hasCameraPermission = true;
         _isInitializingCamera = false;
+        _flashOn = false;
+        _minZoom = minZoom;
+        _maxZoom = maxZoom;
+        _currentZoom = initialZoom;
+        _zoomAtGestureStart = initialZoom;
       });
     } catch (e) {
       if (!mounted) return;
@@ -159,6 +172,44 @@ class _ScanViewState extends State<_ScanView> {
     setState(() => _flashOn = next);
   }
 
+  Future<void> _setZoomLevel(double zoom) async {
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final nextZoom = zoom.clamp(_minZoom, _maxZoom).toDouble();
+    if ((nextZoom - _currentZoom).abs() < 0.01) return;
+
+    try {
+      if (!mounted) return;
+      setState(() => _currentZoom = nextZoom);
+      await controller.setZoomLevel(nextZoom);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to change zoom. ($e)'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
+  void _handleZoomScaleStart(ScaleStartDetails details) {
+    _zoomAtGestureStart = _currentZoom;
+  }
+
+  void _handleZoomScaleUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount < 2 || _maxZoom <= _minZoom) return;
+
+    final nextZoom = calculatePinchZoom(
+      baseZoom: _zoomAtGestureStart,
+      scale: details.scale,
+      minZoom: _minZoom,
+      maxZoom: _maxZoom,
+    );
+    unawaited(_setZoomLevel(nextZoom));
+  }
+
   Future<void> _pickAndScan(ImageSource source) async {
     _latestCapturedImagePath = null;
 
@@ -197,9 +248,16 @@ class _ScanViewState extends State<_ScanView> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ScanBloc, ScanState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is ScanDetected) {
           context.read<ScanBloc>().add(const ScanReset());
+          if (_latestCapturedImagePath != null) {
+            await _historyRepo.updateDetection(
+              imagePath: _latestCapturedImagePath,
+              result: state.result,
+            );
+            if (!context.mounted) return;
+          }
           context.go(
             '/scan/stats',
             extra: ScanRouteData(
@@ -234,26 +292,6 @@ class _ScanViewState extends State<_ScanView> {
               fit: StackFit.expand,
               children: [
                 _buildCameraLayer(context),
-
-                // Scan overlay frame
-                Center(
-                  child: Container(
-                    width: 260,
-                    height: 260,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.scanLine, width: 2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Stack(
-                      children: [
-                        _corner(Alignment.topLeft, true, true),
-                        _corner(Alignment.topRight, true, false),
-                        _corner(Alignment.bottomLeft, false, true),
-                        _corner(Alignment.bottomRight, false, false),
-                      ],
-                    ),
-                  ),
-                ),
 
                 // Top AppBar
                 Positioned(
@@ -368,32 +406,6 @@ class _ScanViewState extends State<_ScanView> {
     );
   }
 
-  Widget _corner(Alignment align, bool top, bool left) {
-    return Align(
-      alignment: align,
-      child: Container(
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          border: Border(
-            top: top
-                ? const BorderSide(color: AppColors.scanLine, width: 3)
-                : BorderSide.none,
-            bottom: !top
-                ? const BorderSide(color: AppColors.scanLine, width: 3)
-                : BorderSide.none,
-            left: left
-                ? const BorderSide(color: AppColors.scanLine, width: 3)
-                : BorderSide.none,
-            right: !left
-                ? const BorderSide(color: AppColors.scanLine, width: 3)
-                : BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildCameraLayer(BuildContext context) {
     final controller = _cameraController;
 
@@ -461,13 +473,30 @@ class _ScanViewState extends State<_ScanView> {
     final size = MediaQuery.sizeOf(context);
     final scale = 1 / (controller.value.aspectRatio * size.aspectRatio);
 
-    return ClipRect(
-      child: Transform.scale(
-        scale: scale < 1 ? 1 : scale,
-        child: Center(child: CameraPreview(controller)),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onScaleStart: _handleZoomScaleStart,
+      onScaleUpdate: _handleZoomScaleUpdate,
+      child: ClipRect(
+        child: Transform.scale(
+          scale: scale < 1 ? 1 : scale,
+          child: Center(child: CameraPreview(controller)),
+        ),
       ),
     );
   }
+}
+
+@visibleForTesting
+double calculatePinchZoom({
+  required double baseZoom,
+  required double scale,
+  required double minZoom,
+  required double maxZoom,
+}) {
+  final safeMin = minZoom <= maxZoom ? minZoom : maxZoom;
+  final safeMax = maxZoom >= minZoom ? maxZoom : minZoom;
+  return (baseZoom * scale).clamp(safeMin, safeMax).toDouble();
 }
 
 class _CameraMessage extends StatelessWidget {

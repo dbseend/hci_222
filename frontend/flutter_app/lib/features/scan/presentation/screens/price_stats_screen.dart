@@ -16,6 +16,7 @@ class PriceStatsScreen extends StatelessWidget {
   final String productId;
   final double? detectedPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const PriceStatsScreen({
     super.key,
@@ -23,6 +24,7 @@ class PriceStatsScreen extends StatelessWidget {
     this.productId = 'tomato',
     this.detectedPrice,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -44,6 +46,7 @@ class PriceStatsScreen extends StatelessWidget {
         productId: productId,
         detectedPrice: detectedPrice,
         capturedImagePath: capturedImagePath,
+        historyId: historyId,
       ),
     );
   }
@@ -54,12 +57,14 @@ class _PriceStatsView extends StatelessWidget {
   final String productId;
   final double? detectedPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const _PriceStatsView({
     required this.displayName,
     required this.productId,
     this.detectedPrice,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -164,6 +169,7 @@ class _PriceStatsView extends StatelessWidget {
                 productId: productId,
                 detectedPrice: detectedPrice,
                 capturedImagePath: capturedImagePath,
+                historyId: historyId,
               ),
             ),
             child: const Text("Enter Seller's Price"),

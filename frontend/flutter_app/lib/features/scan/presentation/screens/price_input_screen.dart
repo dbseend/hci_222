@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_display.dart';
+import '../../data/repositories/scan_history_repository.dart';
 import '../models/scan_route_data.dart';
 
 class PriceInputScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class PriceInputScreen extends StatefulWidget {
   final double? detectedPrice;
   final double initialInputPrice;
   final String? capturedImagePath;
+  final String? historyId;
 
   const PriceInputScreen({
     super.key,
@@ -27,6 +29,7 @@ class PriceInputScreen extends StatefulWidget {
     this.detectedPrice,
     this.initialInputPrice = 0,
     this.capturedImagePath,
+    this.historyId,
   });
 
   @override
@@ -106,8 +109,17 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
   }
 
   // ── Navigation ───────────────────────────────────────────────────
-  void _analyze() {
+  Future<void> _analyze() async {
     if (!_hasInput) return;
+    await ScanHistoryRepositoryImpl().updateQuotedPrice(
+      historyId: widget.historyId,
+      imagePath: widget.capturedImagePath,
+      totalPrice: _totalPrice,
+      quantity: _quantity,
+      unit: _selectedUnit.key,
+      unitPrice: _perUnitPrice,
+    );
+    if (!mounted) return;
     // Pass the per-unit price so PriceAnalysisScreen can compare
     // it directly against the regional average (which is also per unit).
     context.go(
@@ -120,6 +132,7 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
         detectedPrice: widget.detectedPrice,
         inputPrice: _perUnitPrice, // EGP per kg / per pc
         capturedImagePath: widget.capturedImagePath,
+        historyId: widget.historyId,
       ),
     );
   }
@@ -151,6 +164,7 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
               productId: widget.productId,
               detectedPrice: widget.detectedPrice,
               capturedImagePath: widget.capturedImagePath,
+              historyId: widget.historyId,
             ),
           ),
         ),
