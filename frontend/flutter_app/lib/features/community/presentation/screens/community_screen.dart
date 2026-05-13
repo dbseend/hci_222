@@ -6,7 +6,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import '../../../../core/services/supabase_service.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_display.dart';
 import '../../../../core/utils/price_classifier.dart';
@@ -438,21 +437,6 @@ class _FeedImage extends StatelessWidget {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => _brokenImage(),
       );
-    }
-
-    if (SupabaseService.isInitialized) {
-      try {
-        final signedUrl = SupabaseService.client.storage
-            .from('community-images')
-            .getPublicUrl(imagePath);
-        return Image.network(
-          signedUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _brokenImage(),
-        );
-      } catch (_) {
-        return _brokenImage();
-      }
     }
 
     return _brokenImage();

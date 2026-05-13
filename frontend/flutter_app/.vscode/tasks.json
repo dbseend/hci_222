@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Generate Flutter dart defines",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "../../scripts/generate_flutter_defines.py"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

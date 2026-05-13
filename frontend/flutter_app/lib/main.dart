@@ -6,11 +6,9 @@
 import 'package:flutter/material.dart';
 import 'app/app.dart';
 import 'core/services/exchange_rate_service.dart';
-import 'core/services/supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SupabaseService.initializeFromDartDefine();
   await ExchangeRateService().loadEgpToKrwOnceOnAppLaunch();
   runApp(const TruePriceApp());
 }

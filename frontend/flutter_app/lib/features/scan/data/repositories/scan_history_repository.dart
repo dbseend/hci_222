@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/services/user_id_service.dart';
 import '../models/scan_history_item.dart';
 
 abstract class ScanHistoryRepository {
@@ -55,6 +59,7 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
     }
 
     await _save(trimmed);
+    await _uploadHistoryImage(copied);
     return copied.path;
   }
 
@@ -104,6 +109,24 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
     final prefs = await _prefsProvider();
     final raw = jsonEncode(items.map((e) => e.toJson()).toList());
     await prefs.setString(_storageKey, raw);
+  }
+
+  Future<void> _uploadHistoryImage(File image) async {
+    try {
+      final clientUserId = await UserIdService.getOrCreate();
+      final formData = FormData.fromMap({
+        'client_user_id': clientUserId,
+        'image': await MultipartFile.fromFile(
+          image.path,
+          filename: image.uri.pathSegments.isNotEmpty
+              ? image.uri.pathSegments.last
+              : 'scan.jpg',
+        ),
+      });
+      await DioClient.instance.post(ApiEndpoints.scanHistory, data: formData);
+    } catch (_) {
+      // Keep local history even if remote history sync is unavailable.
+    }
   }
 
   String _fileExtension(String path) {

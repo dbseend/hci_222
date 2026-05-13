@@ -1,8 +1,8 @@
-import os
 import tempfile
 from functools import lru_cache
 from pathlib import Path
 
+from app.core.env import PROJECT_ROOT, env_value
 from app.models.detection import DetectionResponse
 from app.services.catalog_service import get_product
 
@@ -115,9 +115,12 @@ class YoloObjectDetector:
 
 
 def _model_path_from_env() -> Path:
-    configured = os.getenv("TRUEPRICE_YOLO_MODEL_PATH")
+    configured = env_value("TRUEPRICE_YOLO_MODEL_PATH")
     if configured:
-        return Path(configured).expanduser().resolve()
+        path = Path(configured).expanduser()
+        if not path.is_absolute():
+            path = PROJECT_ROOT / path
+        return path.resolve()
     return DEFAULT_MODEL_PATH
 
 

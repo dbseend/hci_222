@@ -126,34 +126,41 @@ In Xcode:
 5. Run.
 ```
 
-## Supabase Local Setup
-Use a local dart-define file so you do not have to pass URL/key every run.
+## Local Env Setup
+Use one project env file as the source of truth.
 
-1. Fill local secret file (git-ignored):
+1. Fill the project env file (git-ignored):
 ```text
-.env/supabase.dev.json
+../../.env
 ```
 
 Required keys:
-```json
-{
-  "SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
-  "SUPABASE_ANON_KEY": "YOUR_PUBLISHABLE_OR_ANON_KEY",
-  "TRUEPRICE_API_BASE_URL": "http://YOUR_BACKEND_HOST:8000"
-}
-```
-
-2. Run with file:
 ```bash
-flutter run --dart-define-from-file=.env/supabase.dev.json
+TRUEPRICE_API_BASE_URL=http://YOUR_BACKEND_HOST:8000
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
+TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
 ```
 
-3. In VS Code, select launch config:
+2. Generate Flutter-only dart defines:
+```bash
+cd ../..
+python3 scripts/generate_flutter_defines.py
+cd frontend/flutter_app
+```
+
+3. Run with the generated Flutter file:
+```bash
+flutter run --dart-define-from-file=.dart_tool/trueprice_dart_defines.json
+```
+
+4. In VS Code, select launch config:
 ```text
 Flutter (Supabase Dev)
 ```
 
-The VS Code launch config already loads `.env/supabase.dev.json`, so backend URL changes only need edits in that local ignored file.
+The VS Code launch config runs the generate task automatically. Supabase
+credentials stay backend-only and are not copied into Flutter dart defines.
 
 ## Verify
 ```bash

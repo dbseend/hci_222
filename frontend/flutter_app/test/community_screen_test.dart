@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:trueprice/core/services/supabase_service.dart';
 import 'package:trueprice/features/community/presentation/screens/community_screen.dart';
 
 void main() {
@@ -11,7 +10,6 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    SupabaseService.resetForTest();
   });
 
   Finder textFieldWithLabel(String label) {

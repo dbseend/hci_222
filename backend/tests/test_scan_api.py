@@ -1,8 +1,11 @@
+import logging
+
 from fastapi.testclient import TestClient
 
 from app.api import scan
 from app.main import app
 from app.models.detection import DetectionResponse
+from app.models.scan_history import ScanHistoryUploadResponse
 from app.services.object_detector import (
     CLASS_TO_PRODUCT_ID,
     ObjectDetectorUnavailable,
@@ -51,6 +54,25 @@ def test_detect_object_returns_detection(monkeypatch) -> None:
     }
 
 
+def test_detect_object_logs_detection_result(monkeypatch, caplog) -> None:
+    monkeypatch.setattr(scan, "get_detector", lambda: FakeDetector())
+    caplog.set_level(logging.INFO, logger="app.api.scan")
+
+    response = client.post(
+        "/scan/detect-object",
+        files={"image": ("scan.jpg", b"fake-image", "image/jpeg")},
+        data={"lat": "30.0444", "lon": "31.2357"},
+    )
+
+    assert response.status_code == 200
+    assert "object_detection_result" in caplog.text
+    assert "product_id=tomato" in caplog.text
+    assert "confidence=0.91" in caplog.text
+    assert "filename=scan.jpg" in caplog.text
+    assert "lat=30.0444" in caplog.text
+    assert "lon=31.2357" in caplog.text
+
+
 def test_detect_object_rejects_empty_upload(monkeypatch) -> None:
     monkeypatch.setattr(scan, "get_detector", lambda: FakeDetector())
 
@@ -61,6 +83,32 @@ def test_detect_object_rejects_empty_upload(monkeypatch) -> None:
     )
 
     assert response.status_code == 400
+
+
+def test_save_scan_history_uploads_image(monkeypatch) -> None:
+    calls = {}
+
+    def fake_save_scan_history_image(**kwargs):
+        calls.update(kwargs)
+        return ScanHistoryUploadResponse(
+            id="history-1",
+            image_path="client-1/capture.jpg",
+            created_at="2026-05-13T00:00:00Z",
+        )
+
+    monkeypatch.setattr(scan, "save_scan_history_image", fake_save_scan_history_image)
+
+    response = client.post(
+        "/scan/history",
+        files={"image": ("capture.jpg", b"fake-image", "image/jpeg")},
+        data={"client_user_id": "client-1"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["image_path"] == "client-1/capture.jpg"
+    assert calls["image_bytes"] == b"fake-image"
+    assert calls["filename"] == "capture.jpg"
+    assert calls["client_user_id"] == "client-1"
 
 
 def test_detect_object_returns_404_when_no_object(monkeypatch) -> None:

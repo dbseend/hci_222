@@ -51,7 +51,9 @@ Legacy single-class `fruit` models still map to `tomato` so the old MVP model
 does not break during transition. To use a different model path:
 
 ```bash
-TRUEPRICE_YOLO_MODEL_PATH=/path/to/best.pt uvicorn app.main:app --reload
+# Edit ../.env:
+# TRUEPRICE_YOLO_MODEL_PATH=/path/to/best.pt
+uvicorn app.main:app --reload
 ```
 
 For physical phone testing, run the API on the Mac's LAN interface:
@@ -63,8 +65,38 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 Then run Flutter with the Mac's local IP address:
 
 ```bash
-flutter run \
-  --dart-define=TRUEPRICE_API_BASE_URL=http://<mac-lan-ip>:8000
+# Edit ../.env:
+# TRUEPRICE_API_BASE_URL=http://<mac-lan-ip>:8000
+python3 ../scripts/generate_flutter_defines.py
+cd ../frontend/flutter_app
+flutter run --dart-define-from-file=.dart_tool/trueprice_dart_defines.json
+```
+
+## Supabase Server-Side Integration
+
+Flutter no longer connects to Supabase directly. Database and Storage writes
+are handled by FastAPI. Set backend-only Supabase credentials in the single
+local env file before running endpoints that write scan history or community
+posts:
+
+```bash
+# ../.env
+TRUEPRICE_API_BASE_URL=http://YOUR_BACKEND_HOST:8000
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
+TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
+```
+
+Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter or any client-side config.
+`scripts/generate_flutter_defines.py` only copies `TRUEPRICE_API_BASE_URL` into
+Flutter's generated `.dart_tool/trueprice_dart_defines.json`.
+
+Server-owned Supabase endpoints:
+
+```text
+POST /scan/history
+GET  /api/v1/community/feed
+POST /api/v1/community/posts
 ```
 
 ## Example
