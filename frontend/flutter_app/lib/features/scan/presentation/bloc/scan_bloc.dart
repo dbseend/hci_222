@@ -7,12 +7,10 @@ import 'scan_state.dart';
 
 class ScanBloc extends Bloc<ScanEvent, ScanState> {
   final ScanRepository _repo;
-  final LocationService _location;
 
-  ScanBloc({ScanRepository? repo, LocationService? location})
-      : _repo = repo ?? ScanRepositoryImpl(),
-        _location = location ?? LocationService(),
-        super(const ScanInitial()) {
+  ScanBloc({ScanRepository? repo})
+    : _repo = repo ?? ScanRepositoryImpl(),
+      super(const ScanInitial()) {
     on<ScanImageCaptured>(_onImageCaptured);
     on<ScanWebMockRequested>(_onWebMock);
     on<ScanReset>(_onReset);
@@ -24,7 +22,7 @@ class ScanBloc extends Bloc<ScanEvent, ScanState> {
   ) async {
     emit(const ScanProcessing());
     try {
-      final pos = await _location.getCurrentLocation();
+      const pos = LatLon.defaultLocation;
       final result = await _repo.detectObject(
         image: event.image,
         lat: pos.lat,

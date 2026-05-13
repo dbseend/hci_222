@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -61,7 +62,7 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
 
     final copied = await image.copy(copiedPath);
 
-    final current = await getHistory();
+    final current = await _getLocalHistory();
     final localItem = ScanHistoryItem(
       id: id,
       imagePath: copied.path,
@@ -81,23 +82,57 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
 
     await _save(trimmed);
 
-    final uploaded = await _uploadHistoryImage(copied);
-    if (uploaded != null) {
-      final synced = trimmed
-          .map(
-            (item) => item.id == id
-                ? item.copyWith(
-                    id: uploaded.id.isNotEmpty ? uploaded.id : item.id,
-                    remoteImagePath: uploaded.remoteImagePath,
-                    imageUrl: uploaded.imageUrl,
-                  )
-                : item,
-          )
-          .toList();
-      await _save(synced);
-    }
+    unawaited(
+      _syncUploadedHistoryItem(
+        localId: id,
+        localImagePath: copied.path,
+        image: copied,
+      ),
+    );
 
     return copied.path;
+  }
+
+  Future<void> _syncUploadedHistoryItem({
+    required String localId,
+    required String localImagePath,
+    required File image,
+  }) async {
+    final uploaded = await _uploadHistoryImage(image);
+    if (uploaded != null) {
+      final current = await _findHistoryItem(
+        historyId: localId,
+        imagePath: localImagePath,
+      );
+      if (current == null) return;
+
+      final synced = uploaded.copyWith(
+        imagePath: current.imagePath,
+        capturedAt: current.capturedAt,
+        detectionResult: current.detectionResult,
+        quotedTotalPriceEgp: current.quotedTotalPriceEgp,
+        quotedQuantity: current.quotedQuantity,
+        quotedUnit: current.quotedUnit,
+        quotedUnitPriceEgp: current.quotedUnitPriceEgp,
+      );
+      await _replaceLocalItem(current, synced);
+
+      final detection = current.detectionResult;
+      if (detection != null && synced.id.isNotEmpty) {
+        unawaited(updateDetection(historyId: synced.id, result: detection));
+      }
+      if (current.hasQuotedPrice && synced.id.isNotEmpty) {
+        unawaited(
+          updateQuotedPrice(
+            historyId: synced.id,
+            totalPrice: current.quotedTotalPriceEgp!,
+            quantity: current.quotedQuantity ?? 1,
+            unit: current.quotedUnit ?? 'kg',
+            unitPrice: current.quotedUnitPriceEgp!,
+          ),
+        );
+      }
+    }
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -72,6 +73,40 @@ void main() {
 
       final items = await repo.getHistory();
       expect(items.length, 2);
+    });
+
+    test('does not wait for remote history upload before returning', () async {
+      final tempRoot = await Directory.systemTemp.createTemp(
+        'scan-history-background-upload',
+      );
+      addTearDown(() async => tempRoot.delete(recursive: true));
+
+      final source = File('${tempRoot.path}/source.jpg')
+        ..writeAsBytesSync([1, 2, 3]);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('anonymous_user_id', 'client-1');
+      final adapter = _DelayedUploadAdapter();
+      final repo = ScanHistoryRepositoryImpl(
+        prefsProvider: () async => prefs,
+        directoryProvider: () async => tempRoot,
+        dio: Dio(BaseOptions(baseUrl: 'http://127.0.0.1:8000'))
+          ..httpClientAdapter = adapter,
+      );
+
+      final path = await repo
+          .addCapturedImage(source)
+          .timeout(const Duration(milliseconds: 100));
+
+      expect(path, isNotNull);
+      expect(await File(path!).exists(), isTrue);
+      for (var i = 0; i < 10 && !adapter.uploadStarted; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+      expect(adapter.uploadStarted, isTrue);
+      expect(adapter.uploadCompleted, isFalse);
+
+      adapter.completeUpload();
+      await Future<void>.delayed(const Duration(milliseconds: 1));
     });
 
     test('loads remote scan history with signed image url', () async {
@@ -264,6 +299,49 @@ class _RemoteHistoryAdapter implements HttpClientAdapter {
         200,
         headers: {
           Headers.contentTypeHeader: ['image/jpeg'],
+        },
+      );
+    }
+
+    throw DioException.connectionError(
+      requestOptions: options,
+      reason: 'Unexpected request',
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _DelayedUploadAdapter implements HttpClientAdapter {
+  final _uploadCompleter = Completer<void>();
+  bool uploadStarted = false;
+  bool uploadCompleted = false;
+
+  void completeUpload() => _uploadCompleter.complete();
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.method == 'POST' && options.path == '/scan/history') {
+      uploadStarted = true;
+      await _uploadCompleter.future;
+      uploadCompleted = true;
+      return ResponseBody.fromString(
+        '''
+{
+  "id": "history-remote-1",
+  "image_path": "client-1/capture.jpg",
+  "image_url": "https://example.test/signed/capture.jpg",
+  "created_at": "2026-05-13T00:00:00Z"
+}
+''',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
         },
       );
     }

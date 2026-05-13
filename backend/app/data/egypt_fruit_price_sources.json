@@ -1,0 +1,54 @@
+{
+  "region": "cairo",
+  "currency": "EGP",
+  "unit_policy": "Fruit prices are normalized to EGP/kg unless product_catalog.json marks the product as piece.",
+  "updated_at": "2026-05-13",
+  "sources": [
+    {
+      "name": "Akhbarelyom - Obour wholesale fruit prices",
+      "url": "https://m.akhbarelyom.com/news/NewDetails/4820176/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A-",
+      "published_at": "2026-05-13",
+      "notes": "Wholesale Obour Market ranges. The article states retail markets usually add 3 to 5 EGP/kg, so retail min/max seeds add that spread."
+    },
+    {
+      "name": "Carrefour Egypt - Fruits category",
+      "url": "https://www.carrefouregypt.com/mafegy/en/c/FEGY1660100",
+      "observed_at": "2026-05-13",
+      "notes": "Online retail prices were normalized from listed package sizes such as 500g, 750g, 1kg, 2kg, and 125g."
+    },
+    {
+      "name": "ElObour Store - Fresh and bulk fruits",
+      "url": "https://elobour.store/",
+      "observed_at": "2026-05-13",
+      "notes": "Retail and bulk online store prices. Bulk crates/cartons were converted by the approximate weights shown in product names."
+    },
+    {
+      "name": "MVP synthetic completion",
+      "url": null,
+      "observed_at": "2026-05-13",
+      "notes": "Small synthetic samples fill sparse products needed by the detector MVP, especially cherry, cherry_tomato, blueberry, and pineapple."
+    }
+  ],
+  "normalization_examples": [
+    {
+      "product_id": "orange",
+      "raw": "Obour summer orange 10-14 EGP/kg wholesale plus 3-5 EGP/kg retail spread",
+      "normalized": "13-19 EGP/kg retail seed"
+    },
+    {
+      "product_id": "blueberry",
+      "raw": "Carrefour blueberry punnet 125g at 49.99 EGP",
+      "normalized": "399.9 EGP/kg"
+    },
+    {
+      "product_id": "banana",
+      "raw": "ElObour banana box approx. 18kg at 700 EGP",
+      "normalized": "38.9 EGP/kg"
+    },
+    {
+      "product_id": "apple",
+      "raw": "ElObour apple carton approx. 18kg at 1100-1200 EGP",
+      "normalized": "61.1-66.7 EGP/kg"
+    }
+  ]
+}

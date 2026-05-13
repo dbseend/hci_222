@@ -3,37 +3,25 @@
     "product_id": "apple",
     "display_name": "Apple",
     "unit": "kg",
-    "aliases": ["apple", "apples"]
+    "aliases": ["apple", "apples", "golden apple", "green apple", "red apple", "royal gala apple"]
   },
   {
     "product_id": "avocado",
     "display_name": "Avocado",
     "unit": "kg",
-    "aliases": ["avocado", "avocados"]
+    "aliases": ["avocado", "avocados", "imported avocado"]
   },
   {
     "product_id": "banana",
     "display_name": "Banana",
     "unit": "kg",
-    "aliases": ["banana", "bananas"]
+    "aliases": ["banana", "bananas", "balady banana", "imported banana"]
   },
   {
     "product_id": "blueberry",
     "display_name": "Blueberry",
     "unit": "kg",
-    "aliases": ["blueberry", "blueberries"]
-  },
-  {
-    "product_id": "fruit",
-    "display_name": "Fruit",
-    "unit": "kg",
-    "aliases": ["fruit", "fruits", "mixed fruit"]
-  },
-  {
-    "product_id": "tomato",
-    "display_name": "Tomato",
-    "unit": "kg",
-    "aliases": ["tomato", "tomatoes", "tomatoes_single"]
+    "aliases": ["blueberry", "blueberries", "blueberry punnet"]
   },
   {
     "product_id": "cherry",
@@ -48,34 +36,112 @@
     "aliases": ["cherry tomato", "cherry tomatoes", "grape tomato", "grape tomatoes"]
   },
   {
+    "product_id": "dates",
+    "display_name": "Dates",
+    "unit": "kg",
+    "aliases": ["dates", "fresh dates", "zaghloul dates", "medjool dates"]
+  },
+  {
+    "product_id": "fruit",
+    "display_name": "Fruit",
+    "unit": "kg",
+    "aliases": ["fruit", "fruits", "mixed fruit"]
+  },
+  {
+    "product_id": "grape",
+    "display_name": "Grape",
+    "unit": "kg",
+    "aliases": ["grape", "grapes", "red grape", "red grapes", "white grape", "white grapes", "black grape", "black grapes"]
+  },
+  {
+    "product_id": "grapefruit",
+    "display_name": "Grapefruit",
+    "unit": "kg",
+    "aliases": ["grapefruit", "grapefruits", "pink grapefruit"]
+  },
+  {
+    "product_id": "guava",
+    "display_name": "Guava",
+    "unit": "kg",
+    "aliases": ["guava", "guavas"]
+  },
+  {
     "product_id": "kiwi",
     "display_name": "Kiwi",
     "unit": "kg",
-    "aliases": ["kiwi", "kiwis"]
+    "aliases": ["kiwi", "kiwis", "kiwi fruit"]
+  },
+  {
+    "product_id": "lemon",
+    "display_name": "Lemon",
+    "unit": "kg",
+    "aliases": ["lemon", "lemons", "balady lemon", "adalia lemon"]
+  },
+  {
+    "product_id": "mandarin",
+    "display_name": "Mandarin",
+    "unit": "kg",
+    "aliases": ["mandarin", "mandarins", "tangerine", "tangerines", "clementine", "clementines"]
   },
   {
     "product_id": "mango",
     "display_name": "Mango",
     "unit": "kg",
-    "aliases": ["mango", "mangoes"]
+    "aliases": ["mango", "mangoes", "zebda mango", "balady mango", "sedika mango"]
   },
   {
     "product_id": "orange",
     "display_name": "Orange",
     "unit": "kg",
-    "aliases": ["orange", "oranges"]
+    "aliases": ["orange", "oranges", "navel orange", "summer orange", "juice orange"]
+  },
+  {
+    "product_id": "peach",
+    "display_name": "Peach",
+    "unit": "kg",
+    "aliases": ["peach", "peaches", "balady peach", "sokari peach"]
+  },
+  {
+    "product_id": "pineapple",
+    "display_name": "Pineapple",
+    "unit": "piece",
+    "aliases": ["pineapple", "pineapples", "whole pineapple"]
+  },
+  {
+    "product_id": "plum",
+    "display_name": "Plum",
+    "unit": "kg",
+    "aliases": ["plum", "plums", "red plum", "hollywood plum"]
+  },
+  {
+    "product_id": "pomegranate",
+    "display_name": "Pomegranate",
+    "unit": "kg",
+    "aliases": ["pomegranate", "pomegranates"]
   },
   {
     "product_id": "rockmelon",
-    "display_name": "Rockmelon",
+    "display_name": "Cantaloupe",
     "unit": "kg",
-    "aliases": ["rockmelon", "melon", "cantaloupe"]
+    "aliases": ["rockmelon", "melon", "cantaloupe", "sweet melon"]
   },
   {
     "product_id": "strawberry",
     "display_name": "Strawberry",
     "unit": "kg",
     "aliases": ["strawberry", "strawberries"]
+  },
+  {
+    "product_id": "tomato",
+    "display_name": "Tomato",
+    "unit": "kg",
+    "aliases": ["tomato", "tomatoes", "tomatoes_single", "balady tomato"]
+  },
+  {
+    "product_id": "watermelon",
+    "display_name": "Watermelon",
+    "unit": "kg",
+    "aliases": ["watermelon", "watermelons"]
   },
   {
     "product_id": "camel_doll",

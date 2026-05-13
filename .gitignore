@@ -36,6 +36,7 @@ outputs/
 runs/
 wandb/
 backend/models/
+supabase/.temp/
 
 # Local environment and secrets
 .env

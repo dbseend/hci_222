@@ -248,15 +248,16 @@ class _ScanViewState extends State<_ScanView> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ScanBloc, ScanState>(
-      listener: (context, state) async {
+      listener: (context, state) {
         if (state is ScanDetected) {
           context.read<ScanBloc>().add(const ScanReset());
           if (_latestCapturedImagePath != null) {
-            await _historyRepo.updateDetection(
-              imagePath: _latestCapturedImagePath,
-              result: state.result,
+            unawaited(
+              _historyRepo.updateDetection(
+                imagePath: _latestCapturedImagePath,
+                result: state.result,
+              ),
             );
-            if (!context.mounted) return;
           }
           context.go(
             '/scan/stats',

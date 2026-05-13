@@ -11,6 +11,7 @@ from app.services.object_detector import (
     CLASS_TO_PRODUCT_ID,
     ObjectDetectorUnavailable,
     ObjectNotDetected,
+    YoloObjectDetector,
     ZeroShotObjectDetector,
 )
 
@@ -35,6 +36,49 @@ class FakeDetector:
             confidence=0.91,
             detected_price=None,
         )
+
+
+class FakeScalar:
+    def __init__(self, value):
+        self.value = value
+
+    def item(self):
+        return self.value
+
+
+class FakeTensor:
+    def __init__(self, values):
+        self.values = values
+
+    def __getitem__(self, index):
+        return FakeScalar(self.values[index])
+
+    def argmax(self):
+        return FakeScalar(max(range(len(self.values)), key=self.values.__getitem__))
+
+
+class FakeBoxes:
+    def __init__(self, classes, confidences):
+        self.cls = FakeTensor(classes)
+        self.conf = FakeTensor(confidences)
+
+    def __len__(self):
+        return len(self.conf.values)
+
+
+class FakeYoloResult:
+    def __init__(self, names, boxes):
+        self.names = names
+        self.boxes = boxes
+
+
+class FakeYoloModel:
+    def __init__(self, names, classes, confidences):
+        self.names = names
+        self.boxes = FakeBoxes(classes, confidences)
+
+    def __call__(self, image_path, conf, verbose):
+        return [FakeYoloResult(self.names, self.boxes)]
 
 
 def test_detect_object_returns_detection(monkeypatch) -> None:
@@ -265,6 +309,48 @@ def test_detect_object_returns_503_when_detector_unavailable(monkeypatch) -> Non
 
 def test_legacy_fruit_class_is_not_reported_as_tomato() -> None:
     assert CLASS_TO_PRODUCT_ID["fruit"] == "fruit"
+
+
+def test_yolo_detector_uses_extra_model_when_it_has_best_detection(tmp_path) -> None:
+    fruit_model_path = tmp_path / "fruit.pt"
+    camel_model_path = tmp_path / "camel.pt"
+    fruit_model_path.write_bytes(b"fruit-model")
+    camel_model_path.write_bytes(b"camel-model")
+    models = {
+        fruit_model_path: FakeYoloModel(
+            names={0: "tomato"},
+            classes=[0],
+            confidences=[0.51],
+        ),
+        camel_model_path: FakeYoloModel(
+            names={0: "camel_doll"},
+            classes=[0],
+            confidences=[0.89],
+        ),
+    }
+
+    detector = YoloObjectDetector(
+        model_path=fruit_model_path,
+        extra_model_paths=[camel_model_path],
+        model_loader=lambda path: models[path],
+    )
+
+    result = detector.detect(
+        image_bytes=b"fake-image",
+        filename="scan.jpg",
+    )
+
+    assert result.product_id == "camel_doll"
+    assert result.name_kr == "Camel Doll"
+    assert result.confidence == 0.89
+
+
+def test_yolo_detector_does_not_load_extra_models_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("TRUEPRICE_YOLO_EXTRA_MODEL_PATHS", raising=False)
+
+    detector = YoloObjectDetector()
+
+    assert detector.extra_model_paths == ()
 
 
 def test_zero_shot_detector_maps_specific_fruit_label_to_specific_product() -> None:

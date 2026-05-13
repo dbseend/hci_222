@@ -1,10 +1,12 @@
 """FastAPI entrypoint for the TruePrice MVP backend."""
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.api import community, price, products, scan
+from app.services.object_detector import ObjectDetectorUnavailable, warm_up_detector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,7 +14,18 @@ logging.basicConfig(
 )
 logging.getLogger("app").setLevel(logging.INFO)
 
-app = FastAPI(title="TruePrice API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        warm_up_detector()
+        logging.getLogger("app").info("object_detector_warmed_up")
+    except ObjectDetectorUnavailable as exc:
+        logging.getLogger("app").warning("object_detector_warm_up_skipped reason=%s", exc)
+    yield
+
+
+app = FastAPI(title="TruePrice API", version="0.1.0", lifespan=lifespan)
 
 app.include_router(products.router)
 app.include_router(price.router)

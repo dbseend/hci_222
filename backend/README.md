@@ -2,8 +2,8 @@
 
 ## Scope
 
-YOLO inference runs on-device in the Flutter app. The backend owns product
-metadata, regional price references, and price comparison verdicts.
+The backend owns object detection, product metadata, regional price references,
+and price comparison verdicts.
 
 - `GET /api/v1/products`
 - `GET /api/v1/products/{product_id}`
@@ -33,24 +33,27 @@ http://127.0.0.1:8000/docs
 ## Object Detection
 
 `POST /scan/detect-object` supports `mock`, `zero_shot`, and `yolo` detector
-modes. Use `yolo` for the current MVP when `backend/models/best.pt` is present:
-Flutter uploads the image, FastAPI runs YOLO inference, and the response returns
-only the product identity. OCR is intentionally not part of this flow.
+modes. Use `yolo` for the current MVP when the unified local YOLO model is
+present: Flutter uploads the image, FastAPI runs YOLO inference, and the
+response returns only the product identity. OCR is intentionally not part of
+this flow.
 
 ```bash
 # ../.env
 TRUEPRICE_DETECTOR_MODE=yolo
 TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
+# Optional only when running separate fallback models.
+TRUEPRICE_YOLO_EXTRA_MODEL_PATHS=
 ```
 
 Current `backend/models/best.pt` classes:
 
 ```text
-tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry
+tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, strawberry, cherry_tomato, camel_doll
 ```
 
-`camel_doll` and `cherry_tomato` are supported by the API catalog, but require a
-new YOLO training run before they can be detected by `best.pt`.
+When `TRUEPRICE_YOLO_EXTRA_MODEL_PATHS` is set, the backend runs all configured
+YOLO models and returns the highest-confidence supported product detection.
 
 `mock` mode remains available for offline UI demos. It returns a catalog product using filename hints when available, otherwise it returns `tomato`.
 
@@ -63,6 +66,7 @@ Keep trained model artifacts local-only under:
 
 ```text
 backend/models/best.pt
+backend/models/best_camel_doll_only.pt
 backend/models/best_float32.tflite
 backend/models/results.csv
 ```
@@ -103,7 +107,7 @@ flutter run --dart-define-from-file=.dart_tool/trueprice_dart_defines.json
 Flutter no longer connects to Supabase directly. Database and Storage writes
 are handled by FastAPI. Set backend-only Supabase credentials in the single
 local env file before running endpoints that write scan history or community
-posts:
+posts, or read the live product/price catalog:
 
 ```bash
 # ../.env
@@ -127,6 +131,17 @@ PATCH /scan/history/{history_id}/price
 GET  /api/v1/community/feed
 POST /api/v1/community/posts
 ```
+
+Product and price endpoints now prefer Supabase as the source of truth:
+
+```text
+GET /api/v1/products
+GET /api/v1/products/{product_id}/price-stats
+POST /api/v1/price/compare
+```
+
+If Supabase is unavailable in local development, the backend falls back to
+`backend/app/data/product_catalog.json` and `backend/app/data/price_stats.json`.
 
 Before using cached scan detection/price history, apply:
 

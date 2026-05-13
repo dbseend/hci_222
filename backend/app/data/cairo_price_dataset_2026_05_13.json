@@ -1,0 +1,3275 @@
+{
+  "generated_at": "2026-05-13",
+  "observed_date": "2026-05-13",
+  "scope": "Cairo MVP seed prices for TruePrice",
+  "unit_policy": "kg for produce; pcs for whole pineapple and camel_doll. Package prices keep original quantity, while unit_price_egp normalizes for statistics.",
+  "products": [
+    {
+      "code": "apple",
+      "name": "Apple",
+      "default_unit": "kg",
+      "aliases": [
+        "apple",
+        "apples",
+        "golden apple",
+        "green apple",
+        "red apple",
+        "royal gala apple"
+      ]
+    },
+    {
+      "code": "avocado",
+      "name": "Avocado",
+      "default_unit": "kg",
+      "aliases": [
+        "avocado",
+        "avocados",
+        "imported avocado"
+      ]
+    },
+    {
+      "code": "banana",
+      "name": "Banana",
+      "default_unit": "kg",
+      "aliases": [
+        "banana",
+        "bananas",
+        "balady banana",
+        "imported banana"
+      ]
+    },
+    {
+      "code": "blueberry",
+      "name": "Blueberry",
+      "default_unit": "kg",
+      "aliases": [
+        "blueberry",
+        "blueberries",
+        "blueberry punnet"
+      ]
+    },
+    {
+      "code": "cherry",
+      "name": "Cherry",
+      "default_unit": "kg",
+      "aliases": [
+        "cherry",
+        "cherries"
+      ]
+    },
+    {
+      "code": "cherry_tomato",
+      "name": "Cherry Tomato",
+      "default_unit": "kg",
+      "aliases": [
+        "cherry tomato",
+        "cherry tomatoes",
+        "grape tomato",
+        "grape tomatoes"
+      ]
+    },
+    {
+      "code": "dates",
+      "name": "Dates",
+      "default_unit": "kg",
+      "aliases": [
+        "dates",
+        "fresh dates",
+        "zaghloul dates",
+        "medjool dates"
+      ]
+    },
+    {
+      "code": "fruit",
+      "name": "Fruit",
+      "default_unit": "kg",
+      "aliases": [
+        "fruit",
+        "fruits",
+        "mixed fruit"
+      ]
+    },
+    {
+      "code": "grape",
+      "name": "Grape",
+      "default_unit": "kg",
+      "aliases": [
+        "grape",
+        "grapes",
+        "red grape",
+        "red grapes",
+        "white grape",
+        "white grapes",
+        "black grape",
+        "black grapes"
+      ]
+    },
+    {
+      "code": "grapefruit",
+      "name": "Grapefruit",
+      "default_unit": "kg",
+      "aliases": [
+        "grapefruit",
+        "grapefruits",
+        "pink grapefruit"
+      ]
+    },
+    {
+      "code": "guava",
+      "name": "Guava",
+      "default_unit": "kg",
+      "aliases": [
+        "guava",
+        "guavas"
+      ]
+    },
+    {
+      "code": "kiwi",
+      "name": "Kiwi",
+      "default_unit": "kg",
+      "aliases": [
+        "kiwi",
+        "kiwis",
+        "kiwi fruit"
+      ]
+    },
+    {
+      "code": "lemon",
+      "name": "Lemon",
+      "default_unit": "kg",
+      "aliases": [
+        "lemon",
+        "lemons",
+        "balady lemon",
+        "adalia lemon"
+      ]
+    },
+    {
+      "code": "mandarin",
+      "name": "Mandarin",
+      "default_unit": "kg",
+      "aliases": [
+        "mandarin",
+        "mandarins",
+        "tangerine",
+        "tangerines",
+        "clementine",
+        "clementines"
+      ]
+    },
+    {
+      "code": "mango",
+      "name": "Mango",
+      "default_unit": "kg",
+      "aliases": [
+        "mango",
+        "mangoes",
+        "zebda mango",
+        "balady mango",
+        "sedika mango"
+      ]
+    },
+    {
+      "code": "orange",
+      "name": "Orange",
+      "default_unit": "kg",
+      "aliases": [
+        "orange",
+        "oranges",
+        "navel orange",
+        "summer orange",
+        "juice orange"
+      ]
+    },
+    {
+      "code": "peach",
+      "name": "Peach",
+      "default_unit": "kg",
+      "aliases": [
+        "peach",
+        "peaches",
+        "balady peach",
+        "sokari peach"
+      ]
+    },
+    {
+      "code": "pineapple",
+      "name": "Pineapple",
+      "default_unit": "pcs",
+      "aliases": [
+        "pineapple",
+        "pineapples",
+        "whole pineapple"
+      ]
+    },
+    {
+      "code": "plum",
+      "name": "Plum",
+      "default_unit": "kg",
+      "aliases": [
+        "plum",
+        "plums",
+        "red plum",
+        "hollywood plum"
+      ]
+    },
+    {
+      "code": "pomegranate",
+      "name": "Pomegranate",
+      "default_unit": "kg",
+      "aliases": [
+        "pomegranate",
+        "pomegranates"
+      ]
+    },
+    {
+      "code": "rockmelon",
+      "name": "Cantaloupe",
+      "default_unit": "kg",
+      "aliases": [
+        "rockmelon",
+        "melon",
+        "cantaloupe",
+        "sweet melon"
+      ]
+    },
+    {
+      "code": "strawberry",
+      "name": "Strawberry",
+      "default_unit": "kg",
+      "aliases": [
+        "strawberry",
+        "strawberries"
+      ]
+    },
+    {
+      "code": "tomato",
+      "name": "Tomato",
+      "default_unit": "kg",
+      "aliases": [
+        "tomato",
+        "tomatoes",
+        "tomatoes_single",
+        "balady tomato"
+      ]
+    },
+    {
+      "code": "watermelon",
+      "name": "Watermelon",
+      "default_unit": "kg",
+      "aliases": [
+        "watermelon",
+        "watermelons"
+      ]
+    },
+    {
+      "code": "camel_doll",
+      "name": "Camel Doll",
+      "default_unit": "pcs",
+      "aliases": [
+        "camel doll",
+        "camel souvenir",
+        "camel ornament"
+      ]
+    }
+  ],
+  "markets": [
+    {
+      "name": "Obour Wholesale Market",
+      "company_name": "Obour Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "lat": 30.229,
+      "lng": 31.476
+    },
+    {
+      "name": "Downtown Cairo Retail Market",
+      "company_name": null,
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "lat": 30.0444,
+      "lng": 31.2357
+    },
+    {
+      "name": "Maadi Online Grocery",
+      "company_name": "Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "lat": 29.9602,
+      "lng": 31.2569
+    },
+    {
+      "name": "Nasr City Online Grocery",
+      "company_name": "Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "lat": 30.0561,
+      "lng": 31.33
+    },
+    {
+      "name": "Khan el-Khalili Souvenir Market",
+      "company_name": null,
+      "city": "Cairo",
+      "district": "Khan el-Khalili",
+      "lat": 30.0478,
+      "lng": 31.2625
+    },
+    {
+      "name": "Giza Pyramid Souvenir Market",
+      "company_name": null,
+      "city": "Cairo",
+      "district": "Giza/Pyramids",
+      "lat": 29.9792,
+      "lng": 31.1342
+    }
+  ],
+  "sources": [
+    {
+      "name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "source_type": "web_scrape",
+      "url": "https://akhbarelyom.com/news/VideoDisplay/4820176/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A-",
+      "reliability_score": 0.78
+    },
+    {
+      "name": "Akhbarelyom Obour vegetable wholesale 2026-05-13",
+      "source_type": "web_scrape",
+      "url": "https://akhbarelyom.com/news/VideoDisplay/4820173/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%AE%D8%B6%D8%B1%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A",
+      "reliability_score": 0.78
+    },
+    {
+      "name": "Masrawy Obour market 2026-05-13",
+      "source_type": "web_scrape",
+      "url": "https://www.masrawy.com/news/news_economy/details/2026/5/13/2987317/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%AE%D8%B6%D8%B1%D9%88%D8%A7%D8%AA-%D9%88%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D9%81%D9%8A-%D8%B3%D9%88%D9%82-%D8%A7%D9%84%D8%B9%D8%A8%D9%88%D8%B1-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-%D8%A7%D8%B1%D8%AA%D9%81%D8%A7%D8%B9-%D8%A7%D9%84%D8%B7%D9%85%D8%A7%D8%B7%D9%85",
+      "reliability_score": 0.82
+    },
+    {
+      "name": "Cairo retail adjustment from Obour wholesale",
+      "source_type": "manual_seed",
+      "url": null,
+      "reliability_score": 0.66
+    },
+    {
+      "name": "Carrefour Egypt online retail",
+      "source_type": "web_scrape",
+      "url": "https://www.carrefouregypt.com/mafegy/en/c/FEGY1660000",
+      "reliability_score": 0.84
+    },
+    {
+      "name": "Talabat Mart Egypt online retail",
+      "source_type": "web_scrape",
+      "url": "https://www.talabat.com/egypt/talabat-mart",
+      "reliability_score": 0.76
+    },
+    {
+      "name": "Noon Egypt souvenir retail",
+      "source_type": "web_scrape",
+      "url": "https://www.noon.com/egypt-en/",
+      "reliability_score": 0.72
+    },
+    {
+      "name": "Diwan Egypt / PAF Dolls camel retail",
+      "source_type": "web_scrape",
+      "url": "https://diwanegypt.com/product/camel-doll/",
+      "reliability_score": 0.74
+    },
+    {
+      "name": "CAPMAS April 2026 CPI context",
+      "source_type": "government",
+      "url": "https://www.cbe.org.eg/en/news-publications/news/2026/04/09/14/47/cpi-press-release-march-2026",
+      "reliability_score": 0.9
+    },
+    {
+      "name": "MVP sparse-price completion",
+      "source_type": "manual_seed",
+      "url": null,
+      "reliability_score": 0.45
+    }
+  ],
+  "observations": [
+    {
+      "product_code": "tomato",
+      "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 12.5,
+      "unit_price_egp": 12.5,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الطماطم wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "tomato",
+      "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 22.5,
+      "unit_price_egp": 22.5,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الطماطم wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "tomato",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 18.5,
+      "unit_price_egp": 18.5,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "tomato retail-adjusted low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "tomato",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 25.0,
+      "unit_price_egp": 25.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.82,
+      "raw_product_name": "tomato Masrawy high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "tomato",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 18.75,
+      "unit_price_egp": 37.5,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Balady Tomatoes 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "tomato",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 99.99,
+      "unit_price_egp": 99.99,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Grade A Tomato 1 kg",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "tomato",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 19.95,
+      "unit_price_egp": 19.95,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Khodar.Com Tomato 1kg",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "cherry_tomato",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.25,
+      "total_price_egp": 71.95,
+      "unit_price_egp": 287.8,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Mafa Cherry Tomato 250g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "cherry_tomato",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 60.99,
+      "unit_price_egp": 121.98,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Cherry Tomato 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "cherry_tomato",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 70.0,
+      "unit_price_egp": 70.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.45,
+      "raw_product_name": "local cherry tomato manual retail seed",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "orange",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 10.0,
+      "unit_price_egp": 10.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "برتقال صيفي wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "orange",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 20.0,
+      "unit_price_egp": 20.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "برتقال أبوسرة wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "orange",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 17.0,
+      "unit_price_egp": 17.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "orange retail-adjusted mid",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "orange",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 25.0,
+      "unit_price_egp": 25.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "orange retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "lemon",
+      "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 17.0,
+      "unit_price_egp": 17.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الليمون wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "lemon",
+      "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 33.0,
+      "unit_price_egp": 33.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الليمون wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "lemon",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 38.0,
+      "unit_price_egp": 38.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "lemon retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "lemon",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 28.75,
+      "unit_price_egp": 57.5,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Fresh Source Lemon 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "banana",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 25.0,
+      "unit_price_egp": 25.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.82,
+      "raw_product_name": "موز بلدي wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "banana",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 35.0,
+      "unit_price_egp": 35.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "banana retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "banana",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 27.5,
+      "unit_price_egp": 55.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Balady Bananas 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "banana",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 45.95,
+      "unit_price_egp": 45.95,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Fresh Source Local Banana 1kg",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "banana",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 130.95,
+      "unit_price_egp": 130.95,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Khodar.Com Imported Banana 1kg",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "apple",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 15.0,
+      "unit_price_egp": 15.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "تفاح مصرى wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "apple",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 43.0,
+      "unit_price_egp": 43.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "تفاح مصرى wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "apple",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 55.0,
+      "unit_price_egp": 110.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Royal Gala Apples 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "apple",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 50.0,
+      "unit_price_egp": 100.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Golden Apple Medium 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "apple",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 110.75,
+      "unit_price_egp": 110.75,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Fresh Source Red Apple Imported 1kg",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grape",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 40.0,
+      "unit_price_egp": 40.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "العنب wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grape",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 60.0,
+      "unit_price_egp": 60.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "العنب wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grape",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 65.0,
+      "unit_price_egp": 65.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "grape retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grape",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 35.0,
+      "unit_price_egp": 35.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.82,
+      "raw_product_name": "grape Masrawy low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "guava",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 12.0,
+      "unit_price_egp": 12.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الجوافة wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "guava",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 34.0,
+      "unit_price_egp": 34.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الجوافة wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "guava",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 39.0,
+      "unit_price_egp": 39.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "guava retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "pomegranate",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 15.0,
+      "unit_price_egp": 15.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الرمان wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "pomegranate",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 35.0,
+      "unit_price_egp": 35.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الرمان wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "pomegranate",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 40.0,
+      "unit_price_egp": 40.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "pomegranate retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "strawberry",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 15.0,
+      "unit_price_egp": 15.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الفراولة wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "strawberry",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 25.0,
+      "unit_price_egp": 25.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الفراولة wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "strawberry",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 30.0,
+      "unit_price_egp": 30.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "strawberry retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "strawberry",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.45,
+      "total_price_egp": 119.95,
+      "unit_price_egp": 266.56,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "My Very Strawberries 450g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "rockmelon",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 9.0,
+      "unit_price_egp": 9.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الكانتلوب wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "rockmelon",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 18.0,
+      "unit_price_egp": 18.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.82,
+      "raw_product_name": "cantaloupe Masrawy high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "rockmelon",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 23.0,
+      "unit_price_egp": 23.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "cantaloupe retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "rockmelon",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 2,
+      "total_price_egp": 74.95,
+      "unit_price_egp": 37.48,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Fresh Source Cantaloupe 2kg",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "mango",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 20.0,
+      "unit_price_egp": 20.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "مانجو بلدية wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "mango",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 50.0,
+      "unit_price_egp": 50.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "مانجو زبدية wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "mango",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 55.0,
+      "unit_price_egp": 55.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "mango retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "peach",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 20.0,
+      "unit_price_egp": 20.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.82,
+      "raw_product_name": "خوخ بلدي wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "peach",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 40.0,
+      "unit_price_egp": 40.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.82,
+      "raw_product_name": "خوخ بلدي wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "peach",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 22.5,
+      "unit_price_egp": 45.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Peach 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "watermelon",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 7.0,
+      "unit_price_egp": 7.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.68,
+      "raw_product_name": "watermelon normalized low from whole fruit",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "watermelon",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 10.0,
+      "unit_price_egp": 10.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.68,
+      "raw_product_name": "watermelon normalized mid from whole fruit",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "watermelon",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 20.0,
+      "unit_price_egp": 20.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.62,
+      "raw_product_name": "watermelon retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "dates",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 24.0,
+      "unit_price_egp": 24.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.72,
+      "raw_product_name": "بلح ثلاجة wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "dates",
+      "source_name": "Masrawy Obour market 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 30.0,
+      "unit_price_egp": 30.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.72,
+      "raw_product_name": "بلح ثلاجة wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "dates",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 35.0,
+      "unit_price_egp": 35.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.62,
+      "raw_product_name": "dates retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grapefruit",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 9.0,
+      "unit_price_egp": 9.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الجريب فروت wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grapefruit",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 15.0,
+      "unit_price_egp": 15.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "الجريب فروت wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "grapefruit",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 20.0,
+      "unit_price_egp": 20.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "grapefruit retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "mandarin",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 12.0,
+      "unit_price_egp": 12.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "اليوسفي wholesale low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "mandarin",
+      "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13",
+      "market_name": "Obour Wholesale Market",
+      "city": "Cairo",
+      "district": "Obour",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 22.0,
+      "unit_price_egp": 22.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.78,
+      "raw_product_name": "اليوسفي wholesale high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "mandarin",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 27.0,
+      "unit_price_egp": 27.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.66,
+      "raw_product_name": "mandarin retail-adjusted high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "avocado",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 99.95,
+      "unit_price_egp": 199.9,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Pico Avocado Ripe 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "avocado",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 124.95,
+      "unit_price_egp": 249.9,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Fresh Source Imported Avocado 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "avocado",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 115.0,
+      "unit_price_egp": 230.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Imported Avocado 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "kiwi",
+      "source_name": "Carrefour Egypt online retail",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 84.98,
+      "unit_price_egp": 169.96,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.84,
+      "raw_product_name": "Kiwi 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "kiwi",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.25,
+      "total_price_egp": 45.95,
+      "unit_price_egp": 183.8,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Khodar.Com Imported Kiwi 250g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "kiwi",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.5,
+      "total_price_egp": 97.95,
+      "unit_price_egp": 195.9,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Fresh Source Imported Kiwi 500g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "blueberry",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.125,
+      "total_price_egp": 144.95,
+      "unit_price_egp": 1159.6,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "My Very Blueberries 125g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "blueberry",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "kg",
+      "quantity": 0.125,
+      "total_price_egp": 129.95,
+      "unit_price_egp": 1039.6,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.72,
+      "raw_product_name": "Hygiene Blueberries 125g",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "blueberry",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 0.125,
+      "total_price_egp": 49.99,
+      "unit_price_egp": 399.92,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "legacy Carrefour blueberry punnet 125g seed",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "pineapple",
+      "source_name": "Talabat Mart Egypt online retail",
+      "market_name": "Nasr City Online Grocery",
+      "city": "Cairo",
+      "district": "Nasr City",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 254.95,
+      "unit_price_egp": 254.95,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.76,
+      "raw_product_name": "Khodar.Com Sweet Pineapple Pc",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "pineapple",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 180.0,
+      "unit_price_egp": 180.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.45,
+      "raw_product_name": "whole pineapple manual retail seed",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "pineapple",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 220.0,
+      "unit_price_egp": 220.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.45,
+      "raw_product_name": "whole pineapple manual retail seed high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "cherry",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 180.0,
+      "unit_price_egp": 180.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "imported cherry sparse retail seed low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "cherry",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 220.0,
+      "unit_price_egp": 220.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "imported cherry sparse retail seed mid",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "cherry",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Maadi Online Grocery",
+      "city": "Cairo",
+      "district": "Maadi",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 260.0,
+      "unit_price_egp": 260.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "imported cherry sparse retail seed high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "plum",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 180.0,
+      "unit_price_egp": 180.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "plum sparse retail seed low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "plum",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 190.0,
+      "unit_price_egp": 190.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "plum sparse retail seed mid",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "plum",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 200.0,
+      "unit_price_egp": 200.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.42,
+      "raw_product_name": "plum sparse retail seed high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "fruit",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 25.0,
+      "unit_price_egp": 25.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.4,
+      "raw_product_name": "generic fruit basket sparse seed low",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "fruit",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 55.0,
+      "unit_price_egp": 55.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.4,
+      "raw_product_name": "generic fruit basket sparse seed mid",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "fruit",
+      "source_name": "MVP sparse-price completion",
+      "market_name": "Downtown Cairo Retail Market",
+      "city": "Cairo",
+      "district": "Downtown Cairo",
+      "unit": "kg",
+      "quantity": 1,
+      "total_price_egp": 90.0,
+      "unit_price_egp": 90.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.4,
+      "raw_product_name": "generic fruit basket sparse seed high",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "camel_doll",
+      "source_name": "Noon Egypt souvenir retail",
+      "market_name": "Giza Pyramid Souvenir Market",
+      "city": "Cairo",
+      "district": "Giza/Pyramids",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 684.0,
+      "unit_price_egp": 684.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.72,
+      "raw_product_name": "Camel Fur Plush Toy souvenir",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "camel_doll",
+      "source_name": "Diwan Egypt / PAF Dolls camel retail",
+      "market_name": "Khan el-Khalili Souvenir Market",
+      "city": "Cairo",
+      "district": "Khan el-Khalili",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 1100.0,
+      "unit_price_egp": 1100.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.74,
+      "raw_product_name": "Camel Doll PAF Dolls",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "camel_doll",
+      "source_name": "Noon Egypt souvenir retail",
+      "market_name": "Giza Pyramid Souvenir Market",
+      "city": "Cairo",
+      "district": "Giza/Pyramids",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 319.0,
+      "unit_price_egp": 319.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.7,
+      "raw_product_name": "Collecta Dromedary Camel figure",
+      "raw_payload": {}
+    },
+    {
+      "product_code": "camel_doll",
+      "source_name": "Cairo retail adjustment from Obour wholesale",
+      "market_name": "Khan el-Khalili Souvenir Market",
+      "city": "Cairo",
+      "district": "Khan el-Khalili",
+      "unit": "pcs",
+      "quantity": 1,
+      "total_price_egp": 250.0,
+      "unit_price_egp": 250.0,
+      "observed_at": "2026-05-13T09:00:00+00:00",
+      "verification_status": "approved",
+      "confidence_score": 0.5,
+      "raw_product_name": "small bazaar camel souvenir manual seed",
+      "raw_payload": {}
+    }
+  ],
+  "daily_price_stats": [
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "apple",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 75.75,
+      "median_price": 100.0,
+      "min_price": 15.0,
+      "max_price": 110.75,
+      "stddev_price": 39.37,
+      "p10_price": 15.0,
+      "p90_price": 110.75,
+      "sample_count": 5,
+      "distribution": [
+        {
+          "bucket_start": 15.0,
+          "bucket_end": 26.97,
+          "count": 1
+        },
+        {
+          "bucket_start": 26.97,
+          "bucket_end": 38.94,
+          "count": 0
+        },
+        {
+          "bucket_start": 38.94,
+          "bucket_end": 50.91,
+          "count": 1
+        },
+        {
+          "bucket_start": 50.91,
+          "bucket_end": 62.88,
+          "count": 0
+        },
+        {
+          "bucket_start": 62.88,
+          "bucket_end": 74.84,
+          "count": 0
+        },
+        {
+          "bucket_start": 74.84,
+          "bucket_end": 86.81,
+          "count": 0
+        },
+        {
+          "bucket_start": 86.81,
+          "bucket_end": 98.78,
+          "count": 0
+        },
+        {
+          "bucket_start": 98.78,
+          "bucket_end": 110.75,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "avocado",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 226.6,
+      "median_price": 230.0,
+      "min_price": 199.9,
+      "max_price": 249.9,
+      "stddev_price": 20.55,
+      "p10_price": 199.9,
+      "p90_price": 249.9,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 199.9,
+          "bucket_end": 206.15,
+          "count": 1
+        },
+        {
+          "bucket_start": 206.15,
+          "bucket_end": 212.4,
+          "count": 0
+        },
+        {
+          "bucket_start": 212.4,
+          "bucket_end": 218.65,
+          "count": 0
+        },
+        {
+          "bucket_start": 218.65,
+          "bucket_end": 224.9,
+          "count": 0
+        },
+        {
+          "bucket_start": 224.9,
+          "bucket_end": 231.15,
+          "count": 1
+        },
+        {
+          "bucket_start": 231.15,
+          "bucket_end": 237.4,
+          "count": 0
+        },
+        {
+          "bucket_start": 237.4,
+          "bucket_end": 243.65,
+          "count": 0
+        },
+        {
+          "bucket_start": 243.65,
+          "bucket_end": 249.9,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "banana",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 58.38,
+      "median_price": 45.95,
+      "min_price": 25.0,
+      "max_price": 130.95,
+      "stddev_price": 37.66,
+      "p10_price": 25.0,
+      "p90_price": 130.95,
+      "sample_count": 5,
+      "distribution": [
+        {
+          "bucket_start": 25.0,
+          "bucket_end": 38.24,
+          "count": 2
+        },
+        {
+          "bucket_start": 38.24,
+          "bucket_end": 51.49,
+          "count": 1
+        },
+        {
+          "bucket_start": 51.49,
+          "bucket_end": 64.73,
+          "count": 1
+        },
+        {
+          "bucket_start": 64.73,
+          "bucket_end": 77.97,
+          "count": 0
+        },
+        {
+          "bucket_start": 77.97,
+          "bucket_end": 91.22,
+          "count": 0
+        },
+        {
+          "bucket_start": 91.22,
+          "bucket_end": 104.46,
+          "count": 0
+        },
+        {
+          "bucket_start": 104.46,
+          "bucket_end": 117.71,
+          "count": 0
+        },
+        {
+          "bucket_start": 117.71,
+          "bucket_end": 130.95,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "blueberry",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 866.37,
+      "median_price": 1039.6,
+      "min_price": 399.92,
+      "max_price": 1159.6,
+      "stddev_price": 333.45,
+      "p10_price": 399.92,
+      "p90_price": 1159.6,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 399.92,
+          "bucket_end": 494.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 494.88,
+          "bucket_end": 589.84,
+          "count": 0
+        },
+        {
+          "bucket_start": 589.84,
+          "bucket_end": 684.8,
+          "count": 0
+        },
+        {
+          "bucket_start": 684.8,
+          "bucket_end": 779.76,
+          "count": 0
+        },
+        {
+          "bucket_start": 779.76,
+          "bucket_end": 874.72,
+          "count": 0
+        },
+        {
+          "bucket_start": 874.72,
+          "bucket_end": 969.68,
+          "count": 0
+        },
+        {
+          "bucket_start": 969.68,
+          "bucket_end": 1064.64,
+          "count": 1
+        },
+        {
+          "bucket_start": 1064.64,
+          "bucket_end": 1159.6,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "camel_doll",
+      "city": "Cairo",
+      "district": null,
+      "unit": "pcs",
+      "currency": "EGP",
+      "avg_price": 588.25,
+      "median_price": 501.5,
+      "min_price": 250.0,
+      "max_price": 1100.0,
+      "stddev_price": 338.37,
+      "p10_price": 250.0,
+      "p90_price": 1100.0,
+      "sample_count": 4,
+      "distribution": [
+        {
+          "bucket_start": 250.0,
+          "bucket_end": 356.25,
+          "count": 2
+        },
+        {
+          "bucket_start": 356.25,
+          "bucket_end": 462.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 462.5,
+          "bucket_end": 568.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 568.75,
+          "bucket_end": 675.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 675.0,
+          "bucket_end": 781.25,
+          "count": 1
+        },
+        {
+          "bucket_start": 781.25,
+          "bucket_end": 887.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 887.5,
+          "bucket_end": 993.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 993.75,
+          "bucket_end": 1100.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "cherry",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 220.0,
+      "median_price": 220.0,
+      "min_price": 180.0,
+      "max_price": 260.0,
+      "stddev_price": 32.66,
+      "p10_price": 180.0,
+      "p90_price": 260.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 180.0,
+          "bucket_end": 190.0,
+          "count": 1
+        },
+        {
+          "bucket_start": 190.0,
+          "bucket_end": 200.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 200.0,
+          "bucket_end": 210.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 210.0,
+          "bucket_end": 220.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 220.0,
+          "bucket_end": 230.0,
+          "count": 1
+        },
+        {
+          "bucket_start": 230.0,
+          "bucket_end": 240.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 240.0,
+          "bucket_end": 250.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 250.0,
+          "bucket_end": 260.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "cherry_tomato",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 159.93,
+      "median_price": 121.98,
+      "min_price": 70.0,
+      "max_price": 287.8,
+      "stddev_price": 92.88,
+      "p10_price": 70.0,
+      "p90_price": 287.8,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 70.0,
+          "bucket_end": 97.22,
+          "count": 1
+        },
+        {
+          "bucket_start": 97.22,
+          "bucket_end": 124.45,
+          "count": 1
+        },
+        {
+          "bucket_start": 124.45,
+          "bucket_end": 151.68,
+          "count": 0
+        },
+        {
+          "bucket_start": 151.68,
+          "bucket_end": 178.9,
+          "count": 0
+        },
+        {
+          "bucket_start": 178.9,
+          "bucket_end": 206.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 206.12,
+          "bucket_end": 233.35,
+          "count": 0
+        },
+        {
+          "bucket_start": 233.35,
+          "bucket_end": 260.58,
+          "count": 0
+        },
+        {
+          "bucket_start": 260.58,
+          "bucket_end": 287.8,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "dates",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 29.67,
+      "median_price": 30.0,
+      "min_price": 24.0,
+      "max_price": 35.0,
+      "stddev_price": 4.5,
+      "p10_price": 24.0,
+      "p90_price": 35.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 24.0,
+          "bucket_end": 25.38,
+          "count": 1
+        },
+        {
+          "bucket_start": 25.38,
+          "bucket_end": 26.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 26.75,
+          "bucket_end": 28.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 28.12,
+          "bucket_end": 29.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 29.5,
+          "bucket_end": 30.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 30.88,
+          "bucket_end": 32.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 32.25,
+          "bucket_end": 33.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 33.62,
+          "bucket_end": 35.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "fruit",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 56.67,
+      "median_price": 55.0,
+      "min_price": 25.0,
+      "max_price": 90.0,
+      "stddev_price": 26.56,
+      "p10_price": 25.0,
+      "p90_price": 90.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 25.0,
+          "bucket_end": 33.12,
+          "count": 1
+        },
+        {
+          "bucket_start": 33.12,
+          "bucket_end": 41.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 41.25,
+          "bucket_end": 49.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 49.38,
+          "bucket_end": 57.5,
+          "count": 1
+        },
+        {
+          "bucket_start": 57.5,
+          "bucket_end": 65.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 65.62,
+          "bucket_end": 73.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 73.75,
+          "bucket_end": 81.88,
+          "count": 0
+        },
+        {
+          "bucket_start": 81.88,
+          "bucket_end": 90.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "grape",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 50.0,
+      "median_price": 50.0,
+      "min_price": 35.0,
+      "max_price": 65.0,
+      "stddev_price": 12.75,
+      "p10_price": 35.0,
+      "p90_price": 65.0,
+      "sample_count": 4,
+      "distribution": [
+        {
+          "bucket_start": 35.0,
+          "bucket_end": 38.75,
+          "count": 1
+        },
+        {
+          "bucket_start": 38.75,
+          "bucket_end": 42.5,
+          "count": 1
+        },
+        {
+          "bucket_start": 42.5,
+          "bucket_end": 46.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 46.25,
+          "bucket_end": 50.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 50.0,
+          "bucket_end": 53.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 53.75,
+          "bucket_end": 57.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 57.5,
+          "bucket_end": 61.25,
+          "count": 1
+        },
+        {
+          "bucket_start": 61.25,
+          "bucket_end": 65.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "grapefruit",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 14.67,
+      "median_price": 15.0,
+      "min_price": 9.0,
+      "max_price": 20.0,
+      "stddev_price": 4.5,
+      "p10_price": 9.0,
+      "p90_price": 20.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 9.0,
+          "bucket_end": 10.38,
+          "count": 1
+        },
+        {
+          "bucket_start": 10.38,
+          "bucket_end": 11.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 11.75,
+          "bucket_end": 13.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 13.12,
+          "bucket_end": 14.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 14.5,
+          "bucket_end": 15.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 15.88,
+          "bucket_end": 17.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 17.25,
+          "bucket_end": 18.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 18.62,
+          "bucket_end": 20.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "guava",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 28.33,
+      "median_price": 34.0,
+      "min_price": 12.0,
+      "max_price": 39.0,
+      "stddev_price": 11.73,
+      "p10_price": 12.0,
+      "p90_price": 39.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 12.0,
+          "bucket_end": 15.38,
+          "count": 1
+        },
+        {
+          "bucket_start": 15.38,
+          "bucket_end": 18.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 18.75,
+          "bucket_end": 22.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 22.12,
+          "bucket_end": 25.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 25.5,
+          "bucket_end": 28.88,
+          "count": 0
+        },
+        {
+          "bucket_start": 28.88,
+          "bucket_end": 32.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 32.25,
+          "bucket_end": 35.62,
+          "count": 1
+        },
+        {
+          "bucket_start": 35.62,
+          "bucket_end": 39.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "kiwi",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 183.22,
+      "median_price": 183.8,
+      "min_price": 169.96,
+      "max_price": 195.9,
+      "stddev_price": 10.6,
+      "p10_price": 169.96,
+      "p90_price": 195.9,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 169.96,
+          "bucket_end": 173.2,
+          "count": 1
+        },
+        {
+          "bucket_start": 173.2,
+          "bucket_end": 176.44,
+          "count": 0
+        },
+        {
+          "bucket_start": 176.44,
+          "bucket_end": 179.69,
+          "count": 0
+        },
+        {
+          "bucket_start": 179.69,
+          "bucket_end": 182.93,
+          "count": 0
+        },
+        {
+          "bucket_start": 182.93,
+          "bucket_end": 186.17,
+          "count": 1
+        },
+        {
+          "bucket_start": 186.17,
+          "bucket_end": 189.42,
+          "count": 0
+        },
+        {
+          "bucket_start": 189.42,
+          "bucket_end": 192.66,
+          "count": 0
+        },
+        {
+          "bucket_start": 192.66,
+          "bucket_end": 195.9,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "lemon",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 36.38,
+      "median_price": 35.5,
+      "min_price": 17.0,
+      "max_price": 57.5,
+      "stddev_price": 14.45,
+      "p10_price": 17.0,
+      "p90_price": 57.5,
+      "sample_count": 4,
+      "distribution": [
+        {
+          "bucket_start": 17.0,
+          "bucket_end": 22.06,
+          "count": 1
+        },
+        {
+          "bucket_start": 22.06,
+          "bucket_end": 27.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 27.12,
+          "bucket_end": 32.19,
+          "count": 0
+        },
+        {
+          "bucket_start": 32.19,
+          "bucket_end": 37.25,
+          "count": 1
+        },
+        {
+          "bucket_start": 37.25,
+          "bucket_end": 42.31,
+          "count": 1
+        },
+        {
+          "bucket_start": 42.31,
+          "bucket_end": 47.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 47.38,
+          "bucket_end": 52.44,
+          "count": 0
+        },
+        {
+          "bucket_start": 52.44,
+          "bucket_end": 57.5,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "mandarin",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 20.33,
+      "median_price": 22.0,
+      "min_price": 12.0,
+      "max_price": 27.0,
+      "stddev_price": 6.24,
+      "p10_price": 12.0,
+      "p90_price": 27.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 12.0,
+          "bucket_end": 13.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 13.88,
+          "bucket_end": 15.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 15.75,
+          "bucket_end": 17.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 17.62,
+          "bucket_end": 19.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 19.5,
+          "bucket_end": 21.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 21.38,
+          "bucket_end": 23.25,
+          "count": 1
+        },
+        {
+          "bucket_start": 23.25,
+          "bucket_end": 25.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 25.12,
+          "bucket_end": 27.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "mango",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 41.67,
+      "median_price": 50.0,
+      "min_price": 20.0,
+      "max_price": 55.0,
+      "stddev_price": 15.46,
+      "p10_price": 20.0,
+      "p90_price": 55.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 20.0,
+          "bucket_end": 24.38,
+          "count": 1
+        },
+        {
+          "bucket_start": 24.38,
+          "bucket_end": 28.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 28.75,
+          "bucket_end": 33.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 33.12,
+          "bucket_end": 37.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 37.5,
+          "bucket_end": 41.88,
+          "count": 0
+        },
+        {
+          "bucket_start": 41.88,
+          "bucket_end": 46.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 46.25,
+          "bucket_end": 50.62,
+          "count": 1
+        },
+        {
+          "bucket_start": 50.62,
+          "bucket_end": 55.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "orange",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 18.0,
+      "median_price": 18.5,
+      "min_price": 10.0,
+      "max_price": 25.0,
+      "stddev_price": 5.43,
+      "p10_price": 10.0,
+      "p90_price": 25.0,
+      "sample_count": 4,
+      "distribution": [
+        {
+          "bucket_start": 10.0,
+          "bucket_end": 11.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 11.88,
+          "bucket_end": 13.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 13.75,
+          "bucket_end": 15.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 15.62,
+          "bucket_end": 17.5,
+          "count": 1
+        },
+        {
+          "bucket_start": 17.5,
+          "bucket_end": 19.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 19.38,
+          "bucket_end": 21.25,
+          "count": 1
+        },
+        {
+          "bucket_start": 21.25,
+          "bucket_end": 23.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 23.12,
+          "bucket_end": 25.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "peach",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 35.0,
+      "median_price": 40.0,
+      "min_price": 20.0,
+      "max_price": 45.0,
+      "stddev_price": 10.8,
+      "p10_price": 20.0,
+      "p90_price": 45.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 20.0,
+          "bucket_end": 23.12,
+          "count": 1
+        },
+        {
+          "bucket_start": 23.12,
+          "bucket_end": 26.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 26.25,
+          "bucket_end": 29.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 29.38,
+          "bucket_end": 32.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 32.5,
+          "bucket_end": 35.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 35.62,
+          "bucket_end": 38.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 38.75,
+          "bucket_end": 41.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 41.88,
+          "bucket_end": 45.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "pineapple",
+      "city": "Cairo",
+      "district": null,
+      "unit": "pcs",
+      "currency": "EGP",
+      "avg_price": 218.32,
+      "median_price": 220.0,
+      "min_price": 180.0,
+      "max_price": 254.95,
+      "stddev_price": 30.62,
+      "p10_price": 180.0,
+      "p90_price": 254.95,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 180.0,
+          "bucket_end": 189.37,
+          "count": 1
+        },
+        {
+          "bucket_start": 189.37,
+          "bucket_end": 198.74,
+          "count": 0
+        },
+        {
+          "bucket_start": 198.74,
+          "bucket_end": 208.11,
+          "count": 0
+        },
+        {
+          "bucket_start": 208.11,
+          "bucket_end": 217.47,
+          "count": 0
+        },
+        {
+          "bucket_start": 217.47,
+          "bucket_end": 226.84,
+          "count": 1
+        },
+        {
+          "bucket_start": 226.84,
+          "bucket_end": 236.21,
+          "count": 0
+        },
+        {
+          "bucket_start": 236.21,
+          "bucket_end": 245.58,
+          "count": 0
+        },
+        {
+          "bucket_start": 245.58,
+          "bucket_end": 254.95,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "plum",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 190.0,
+      "median_price": 190.0,
+      "min_price": 180.0,
+      "max_price": 200.0,
+      "stddev_price": 8.16,
+      "p10_price": 180.0,
+      "p90_price": 200.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 180.0,
+          "bucket_end": 182.5,
+          "count": 1
+        },
+        {
+          "bucket_start": 182.5,
+          "bucket_end": 185.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 185.0,
+          "bucket_end": 187.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 187.5,
+          "bucket_end": 190.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 190.0,
+          "bucket_end": 192.5,
+          "count": 1
+        },
+        {
+          "bucket_start": 192.5,
+          "bucket_end": 195.0,
+          "count": 0
+        },
+        {
+          "bucket_start": 195.0,
+          "bucket_end": 197.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 197.5,
+          "bucket_end": 200.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "pomegranate",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 30.0,
+      "median_price": 35.0,
+      "min_price": 15.0,
+      "max_price": 40.0,
+      "stddev_price": 10.8,
+      "p10_price": 15.0,
+      "p90_price": 40.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 15.0,
+          "bucket_end": 18.12,
+          "count": 1
+        },
+        {
+          "bucket_start": 18.12,
+          "bucket_end": 21.25,
+          "count": 0
+        },
+        {
+          "bucket_start": 21.25,
+          "bucket_end": 24.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 24.38,
+          "bucket_end": 27.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 27.5,
+          "bucket_end": 30.62,
+          "count": 0
+        },
+        {
+          "bucket_start": 30.62,
+          "bucket_end": 33.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 33.75,
+          "bucket_end": 36.88,
+          "count": 1
+        },
+        {
+          "bucket_start": 36.88,
+          "bucket_end": 40.0,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "rockmelon",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 21.87,
+      "median_price": 20.5,
+      "min_price": 9.0,
+      "max_price": 37.48,
+      "stddev_price": 10.31,
+      "p10_price": 9.0,
+      "p90_price": 37.48,
+      "sample_count": 4,
+      "distribution": [
+        {
+          "bucket_start": 9.0,
+          "bucket_end": 12.56,
+          "count": 1
+        },
+        {
+          "bucket_start": 12.56,
+          "bucket_end": 16.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 16.12,
+          "bucket_end": 19.68,
+          "count": 1
+        },
+        {
+          "bucket_start": 19.68,
+          "bucket_end": 23.24,
+          "count": 1
+        },
+        {
+          "bucket_start": 23.24,
+          "bucket_end": 26.8,
+          "count": 0
+        },
+        {
+          "bucket_start": 26.8,
+          "bucket_end": 30.36,
+          "count": 0
+        },
+        {
+          "bucket_start": 30.36,
+          "bucket_end": 33.92,
+          "count": 0
+        },
+        {
+          "bucket_start": 33.92,
+          "bucket_end": 37.48,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "strawberry",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 84.14,
+      "median_price": 27.5,
+      "min_price": 15.0,
+      "max_price": 266.56,
+      "stddev_price": 105.46,
+      "p10_price": 15.0,
+      "p90_price": 266.56,
+      "sample_count": 4,
+      "distribution": [
+        {
+          "bucket_start": 15.0,
+          "bucket_end": 46.45,
+          "count": 3
+        },
+        {
+          "bucket_start": 46.45,
+          "bucket_end": 77.89,
+          "count": 0
+        },
+        {
+          "bucket_start": 77.89,
+          "bucket_end": 109.34,
+          "count": 0
+        },
+        {
+          "bucket_start": 109.34,
+          "bucket_end": 140.78,
+          "count": 0
+        },
+        {
+          "bucket_start": 140.78,
+          "bucket_end": 172.22,
+          "count": 0
+        },
+        {
+          "bucket_start": 172.22,
+          "bucket_end": 203.67,
+          "count": 0
+        },
+        {
+          "bucket_start": 203.67,
+          "bucket_end": 235.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 235.12,
+          "bucket_end": 266.56,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "tomato",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 33.71,
+      "median_price": 22.5,
+      "min_price": 12.5,
+      "max_price": 99.99,
+      "stddev_price": 27.98,
+      "p10_price": 12.5,
+      "p90_price": 99.99,
+      "sample_count": 7,
+      "distribution": [
+        {
+          "bucket_start": 12.5,
+          "bucket_end": 23.44,
+          "count": 4
+        },
+        {
+          "bucket_start": 23.44,
+          "bucket_end": 34.37,
+          "count": 1
+        },
+        {
+          "bucket_start": 34.37,
+          "bucket_end": 45.31,
+          "count": 1
+        },
+        {
+          "bucket_start": 45.31,
+          "bucket_end": 56.24,
+          "count": 0
+        },
+        {
+          "bucket_start": 56.24,
+          "bucket_end": 67.18,
+          "count": 0
+        },
+        {
+          "bucket_start": 67.18,
+          "bucket_end": 78.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 78.12,
+          "bucket_end": 89.05,
+          "count": 0
+        },
+        {
+          "bucket_start": 89.05,
+          "bucket_end": 99.99,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "stat_date": "2026-05-13",
+      "product_code": "watermelon",
+      "city": "Cairo",
+      "district": null,
+      "unit": "kg",
+      "currency": "EGP",
+      "avg_price": 12.33,
+      "median_price": 10.0,
+      "min_price": 7.0,
+      "max_price": 20.0,
+      "stddev_price": 5.56,
+      "p10_price": 7.0,
+      "p90_price": 20.0,
+      "sample_count": 3,
+      "distribution": [
+        {
+          "bucket_start": 7.0,
+          "bucket_end": 8.62,
+          "count": 1
+        },
+        {
+          "bucket_start": 8.62,
+          "bucket_end": 10.25,
+          "count": 1
+        },
+        {
+          "bucket_start": 10.25,
+          "bucket_end": 11.88,
+          "count": 0
+        },
+        {
+          "bucket_start": 11.88,
+          "bucket_end": 13.5,
+          "count": 0
+        },
+        {
+          "bucket_start": 13.5,
+          "bucket_end": 15.12,
+          "count": 0
+        },
+        {
+          "bucket_start": 15.12,
+          "bucket_end": 16.75,
+          "count": 0
+        },
+        {
+          "bucket_start": 16.75,
+          "bucket_end": 18.38,
+          "count": 0
+        },
+        {
+          "bucket_start": 18.38,
+          "bucket_end": 20.0,
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "exchange_rates": [
+    {
+      "base_currency": "EGP",
+      "quote_currency": "KRW",
+      "rate": 28.1348,
+      "as_of_date": "2026-05-13",
+      "source": "currencyrate.today EGP/KRW 2026-05-13 07:00 UTC"
+    }
+  ]
+}
