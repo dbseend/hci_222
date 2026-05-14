@@ -440,7 +440,7 @@ def _normalize_class_name(class_name: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_detector():
-    mode = (env_value("TRUEPRICE_DETECTOR_MODE", "mock") or "mock").strip().lower()
+    mode = (env_value("TRUEPRICE_DETECTOR_MODE", "yolo") or "yolo").strip().lower()
     if mode == "zero_shot":
         return ZeroShotObjectDetector()
     if mode == "yolo":

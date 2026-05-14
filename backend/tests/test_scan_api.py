@@ -3,6 +3,7 @@ import logging
 from fastapi.testclient import TestClient
 
 from app.api import scan
+from app.core.env import load_env_file
 from app.main import app
 from app.models.detection import DetectionResponse
 from app.models.scan_history import ScanHistoryUploadResponse
@@ -131,6 +132,21 @@ def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
     assert result.product_id == "tomato"
     assert result.name_kr == "Tomato"
     assert result.confidence == 0.93
+
+
+def test_detector_defaults_to_yolo(monkeypatch, tmp_path) -> None:
+    monkeypatch.delenv("TRUEPRICE_DETECTOR_MODE", raising=False)
+    monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
+    load_env_file.cache_clear()
+    object_detector.get_detector.cache_clear()
+
+    try:
+        detector = object_detector.get_detector()
+    finally:
+        load_env_file.cache_clear()
+        object_detector.get_detector.cache_clear()
+
+    assert isinstance(detector, YoloObjectDetector)
 
 
 def test_detect_object_logs_detection_result(monkeypatch, caplog) -> None:
@@ -365,8 +381,13 @@ def test_yolo_detector_uses_extra_model_when_it_has_best_detection(tmp_path) -> 
 
 def test_yolo_detector_does_not_load_extra_models_by_default(monkeypatch) -> None:
     monkeypatch.delenv("TRUEPRICE_YOLO_EXTRA_MODEL_PATHS", raising=False)
+    monkeypatch.setenv("TRUEPRICE_ENV_FILE", "/tmp/trueprice_missing_test.env")
+    load_env_file.cache_clear()
 
-    detector = YoloObjectDetector()
+    try:
+        detector = YoloObjectDetector()
+    finally:
+        load_env_file.cache_clear()
 
     assert detector.extra_model_paths == ()
 
