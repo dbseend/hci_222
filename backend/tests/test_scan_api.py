@@ -121,6 +121,7 @@ def test_detect_object_allows_web_cors_preflight() -> None:
 
 def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
     monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "mock")
+    monkeypatch.setenv("TRUEPRICE_ALLOW_MOCK_DETECTOR", "true")
     object_detector.get_detector.cache_clear()
 
     try:
@@ -132,6 +133,22 @@ def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
     assert result.product_id == "tomato"
     assert result.name_kr == "Tomato"
     assert result.confidence == 0.93
+
+
+def test_mock_mode_without_explicit_allowance_uses_yolo(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "mock")
+    monkeypatch.delenv("TRUEPRICE_ALLOW_MOCK_DETECTOR", raising=False)
+    monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
+    load_env_file.cache_clear()
+    object_detector.get_detector.cache_clear()
+
+    try:
+        detector = object_detector.get_detector()
+    finally:
+        load_env_file.cache_clear()
+        object_detector.get_detector.cache_clear()
+
+    assert isinstance(detector, YoloObjectDetector)
 
 
 def test_detector_defaults_to_yolo(monkeypatch, tmp_path) -> None:

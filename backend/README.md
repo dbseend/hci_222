@@ -60,6 +60,7 @@ YOLO models and returns the highest-confidence supported product detection.
 ```bash
 # ../.env
 TRUEPRICE_DETECTOR_MODE=mock
+TRUEPRICE_ALLOW_MOCK_DETECTOR=true
 ```
 
 Keep trained model artifacts local-only under:
@@ -115,6 +116,7 @@ TRUEPRICE_API_BASE_URL=http://YOUR_BACKEND_HOST:8000
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
 TRUEPRICE_DETECTOR_MODE=mock
+TRUEPRICE_ALLOW_MOCK_DETECTOR=true
 ```
 
 Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter or any client-side config.

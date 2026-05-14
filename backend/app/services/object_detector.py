@@ -445,6 +445,13 @@ def get_detector():
         return ZeroShotObjectDetector()
     if mode == "yolo":
         return YoloObjectDetector()
+    mock_allowed = (
+        (env_value("TRUEPRICE_ALLOW_MOCK_DETECTOR") or "").strip().lower() == "true"
+    )
+    if mode == "mock" and mock_allowed:
+        return MockObjectDetector()
+    if mode == "mock":
+        return YoloObjectDetector()
     return MockObjectDetector()
 
 
