@@ -7,3 +7,4 @@ supabase
 torch
 transformers
 pillow
+ultralytics
