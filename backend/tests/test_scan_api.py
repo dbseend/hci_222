@@ -100,6 +100,24 @@ def test_detect_object_returns_detection(monkeypatch) -> None:
     }
 
 
+def test_detect_object_allows_web_cors_preflight() -> None:
+    response = client.options(
+        "/scan/detect-object",
+        headers={
+            "Origin": "https://web-one-gold-53.vercel.app",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert (
+        response.headers["access-control-allow-origin"]
+        == "https://web-one-gold-53.vercel.app"
+    )
+    assert "POST" in response.headers["access-control-allow-methods"]
+
+
 def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
     monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "mock")
     object_detector.get_detector.cache_clear()
