@@ -326,7 +326,9 @@ class YoloObjectDetector:
             from ultralytics import YOLO
         except ImportError as exc:
             raise ObjectDetectorUnavailable(
-                "ultralytics is not installed. Run `pip install -r backend/requirements.txt`."
+                "Failed to import ultralytics. Install backend Python dependencies "
+                "and required YOLO/OpenCV system libraries. "
+                f"Original error: {exc}"
             ) from exc
 
         return YOLO(str(model_path))
