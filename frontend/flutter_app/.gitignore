@@ -53,3 +53,6 @@ app.*.map.json
 
 # Generated local Flutter env constants
 /lib/core/constants/generated_env.dart
+
+# Generated local web API key config
+/web/maps_config.js

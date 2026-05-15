@@ -53,6 +53,12 @@ class _MarketMapScreenState extends State<MarketMapScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _moveToDefaultMarket() async {
     if (_mapController == null) return;
     await _mapController!.animateCamera(

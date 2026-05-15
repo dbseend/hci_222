@@ -52,21 +52,22 @@ class _ScanViewState extends State<_ScanView> {
   }
 
   Future<void> _initCamera() async {
-    if (kIsWeb) return;
-
     setState(() {
       _isInitializingCamera = true;
+      _hasCameraPermission = true;
       _cameraError = null;
     });
 
-    final status = await Permission.camera.status;
-    if (!status.isGranted) {
-      if (!mounted) return;
-      setState(() {
-        _hasCameraPermission = false;
-        _isInitializingCamera = false;
-      });
-      return;
+    if (!kIsWeb) {
+      final status = await Permission.camera.status;
+      if (!status.isGranted) {
+        if (!mounted) return;
+        setState(() {
+          _hasCameraPermission = false;
+          _isInitializingCamera = false;
+        });
+        return;
+      }
     }
 
     try {
@@ -91,11 +92,14 @@ class _ScanViewState extends State<_ScanView> {
       );
 
       await controller.initialize().timeout(_cameraInitTimeout);
-      await controller.setFlashMode(FlashMode.off);
-      final minZoom = await controller.getMinZoomLevel();
-      final maxZoom = await controller.getMaxZoomLevel();
+      if (!kIsWeb) {
+        await controller.setFlashMode(FlashMode.off);
+      }
+      final zoomBounds = await _readZoomBounds(controller);
+      final minZoom = zoomBounds.$1;
+      final maxZoom = zoomBounds.$2;
       final initialZoom = minZoom.clamp(minZoom, maxZoom).toDouble();
-      await controller.setZoomLevel(initialZoom);
+      await _trySetInitialZoom(controller, initialZoom);
 
       if (!mounted) {
         await controller.dispose();
@@ -116,20 +120,47 @@ class _ScanViewState extends State<_ScanView> {
       if (!mounted) return;
       setState(() {
         final timedOut = e is TimeoutException;
+        final permissionDenied =
+            e is CameraException &&
+            (e.code == 'CameraAccessDenied' ||
+                e.code == 'cameraAccessDenied' ||
+                e.code == 'NotAllowedError');
+        _hasCameraPermission = !permissionDenied;
         _cameraError = timedOut
             ? 'Camera startup timed out. Use Gallery/Manual mode or retry.'
+            : permissionDenied
+            ? 'Browser camera access was denied. Allow camera access from the address bar and retry.'
             : 'Failed to start camera. Please try again. ($e)';
         _isInitializingCamera = false;
       });
     }
   }
 
+  Future<(double, double)> _readZoomBounds(CameraController controller) async {
+    if (kIsWeb) return (1.0, 1.0);
+    try {
+      final minZoom = await controller.getMinZoomLevel();
+      final maxZoom = await controller.getMaxZoomLevel();
+      return (minZoom, maxZoom);
+    } catch (_) {
+      return (1.0, 1.0);
+    }
+  }
+
+  Future<void> _trySetInitialZoom(
+    CameraController controller,
+    double initialZoom,
+  ) async {
+    if (kIsWeb) return;
+    try {
+      await controller.setZoomLevel(initialZoom);
+    } catch (_) {
+      // Some camera backends do not expose zoom; scanning still works.
+    }
+  }
+
   Future<void> _captureAndScan() async {
     final controller = _cameraController;
-    if (kIsWeb) {
-      context.read<ScanBloc>().add(const ScanWebMockRequested());
-      return;
-    }
     if (controller == null || !controller.value.isInitialized) {
       ScaffoldMessenger.of(
         context,
@@ -141,16 +172,27 @@ class _ScanViewState extends State<_ScanView> {
     try {
       final image = await controller.takePicture();
       if (!mounted) return;
-      try {
-        _latestCapturedImagePath = await _historyRepo.addCapturedImage(
-          File(image.path),
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        if (!mounted) return;
+        context.read<ScanBloc>().add(
+          ScanImageBytesCaptured(
+            bytes: bytes,
+            filename: image.name.isNotEmpty ? image.name : 'web-camera.jpg',
+          ),
         );
-      } catch (_) {
-        // Do not block scan flow if history save fails.
-        _latestCapturedImagePath = null;
+      } else {
+        try {
+          _latestCapturedImagePath = await _historyRepo.addCapturedImage(
+            File(image.path),
+          );
+        } catch (_) {
+          // Do not block scan flow if history save fails.
+          _latestCapturedImagePath = null;
+        }
+        if (!mounted) return;
+        context.read<ScanBloc>().add(ScanImageCaptured(File(image.path)));
       }
-      if (!mounted) return;
-      context.read<ScanBloc>().add(ScanImageCaptured(File(image.path)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,6 +207,12 @@ class _ScanViewState extends State<_ScanView> {
   Future<void> _toggleFlash() async {
     final controller = _cameraController;
     if (controller == null || !controller.value.isInitialized) return;
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Flash is not available in web camera.')),
+      );
+      return;
+    }
 
     final next = !_flashOn;
     await controller.setFlashMode(next ? FlashMode.torch : FlashMode.off);
@@ -212,28 +260,18 @@ class _ScanViewState extends State<_ScanView> {
 
   Future<void> _pickAndScan(ImageSource source) async {
     _latestCapturedImagePath = null;
-
-    // Camera not supported on web — fall back to gallery
-    final effectiveSource = (kIsWeb && source == ImageSource.camera)
-        ? ImageSource.gallery
-        : source;
-
-    if (kIsWeb && source == ImageSource.camera) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('On web, please select an image from the gallery.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-
-    final picked = await _picker.pickImage(source: effectiveSource);
+    final picked = await _picker.pickImage(source: source);
     if (picked == null || !mounted) return;
 
-    // Web: XFile.path is a blob URL — File() cannot be used; handle via bytes
     if (kIsWeb) {
-      // On web, skip passing a File to ScanBloc and go straight to a mock result
-      context.read<ScanBloc>().add(const ScanWebMockRequested());
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      context.read<ScanBloc>().add(
+        ScanImageBytesCaptured(
+          bytes: bytes,
+          filename: picked.name.isNotEmpty ? picked.name : 'gallery.jpg',
+        ),
+      );
     } else {
       context.read<ScanBloc>().add(ScanImageCaptured(File(picked.path)));
     }
@@ -319,7 +357,7 @@ class _ScanViewState extends State<_ScanView> {
                           IconButton(
                             icon: Icon(
                               _flashOn ? Icons.flash_on : Icons.flash_off,
-                              color: Colors.white,
+                              color: kIsWeb ? Colors.white38 : Colors.white,
                             ),
                             onPressed: _toggleFlash,
                           ),
@@ -410,23 +448,26 @@ class _ScanViewState extends State<_ScanView> {
   Widget _buildCameraLayer(BuildContext context) {
     final controller = _cameraController;
 
-    if (kIsWeb) {
-      return _CameraMessage(
-        icon: Icons.photo_library,
-        title: 'Camera preview is not available on web',
-        message: 'Use Gallery to load a demo image.',
-        actionLabel: null,
-        onAction: null,
-      );
-    }
-
     if (!_hasCameraPermission) {
       return _CameraMessage(
         icon: Icons.lock_outline,
         title: 'Camera permission required',
-        message: 'Allow camera access in Settings to scan products here.',
-        actionLabel: 'Open Settings',
-        onAction: openAppSettings,
+        message: kIsWeb
+            ? 'Allow camera access from the browser address bar, then retry.'
+            : 'Allow camera access in Settings to scan products here.',
+        actionLabel: kIsWeb ? 'Retry camera' : 'Open Settings',
+        onAction: kIsWeb ? _initCamera : openAppSettings,
+        bottomActions: [
+          _CameraAction(
+            label: 'Open gallery',
+            onPressed: () => _pickAndScan(ImageSource.gallery),
+          ),
+          _CameraAction(
+            label: 'Enter price manually',
+            onPressed: () =>
+                context.go('/scan/input', extra: const ScanRouteData()),
+          ),
+        ],
       );
     }
 

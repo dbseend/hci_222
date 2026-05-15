@@ -1,8 +1,7 @@
 // tts_service.dart
 // Purpose: Singleton wrapper around flutter_tts for short text-to-speech playback.
 //          Used by PhraseScreen for Arabic phrases and scan results for verdict audio.
-// Note: flutter_tts is intentionally disabled on web in this app.
-//       The device must have the Arabic (ar-SA) language pack installed for
+// Note: The device/browser must have the Arabic (ar-SA) language pack installed for
 //       Arabic playback to work.
 // TODO(next-dev): Show a UI prompt guiding the user to install the Arabic TTS voice pack
 //                 if speakArabic() returns false on a non-web platform.
@@ -26,10 +25,6 @@ class TtsService {
 
   Future<void> _init() async {
     if (_initialized) return;
-    if (kIsWeb) {
-      _initialized = true;
-      return;
-    }
     try {
       _tts.setStartHandler(() {
         _startCompleter?.complete(true);
@@ -72,23 +67,31 @@ class TtsService {
     }
   }
 
-  /// Speaks [text]. Returns false on web or if the language pack is missing.
+  /// Speaks [text]. Returns false if playback cannot start or the language pack is missing.
   Future<bool> speak(String text, {String language = 'en-US'}) async {
-    if (kIsWeb) {
-      debugPrint('[TtsService] Web environment: TTS disabled');
-      return false;
-    }
     await _init();
     try {
       _lastError = null;
       await _tts.stop();
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
         await _tts.setSharedInstance(true);
       }
       final languageReady = await _configureLanguage(language);
       if (!languageReady) {
         _lastError = 'No TTS voice is available for $language';
         return false;
+      }
+      if (kIsWeb) {
+        await _tts
+            .speak(text)
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                _lastError = 'TTS did not start within 10 seconds';
+                return 0;
+              },
+            );
+        return _lastError == null;
       }
       final startCompleter = Completer<bool>();
       _startCompleter = startCompleter;
@@ -228,7 +231,6 @@ class TtsService {
   }
 
   Future<void> stop() async {
-    if (kIsWeb) return;
     try {
       await _tts.stop();
     } catch (e) {

@@ -12,6 +12,7 @@ class ScanBloc extends Bloc<ScanEvent, ScanState> {
     : _repo = repo ?? ScanRepositoryImpl(),
       super(const ScanInitial()) {
     on<ScanImageCaptured>(_onImageCaptured);
+    on<ScanImageBytesCaptured>(_onImageBytesCaptured);
     on<ScanWebMockRequested>(_onWebMock);
     on<ScanReset>(_onReset);
   }
@@ -25,6 +26,25 @@ class ScanBloc extends Bloc<ScanEvent, ScanState> {
       const pos = LatLon.defaultLocation;
       final result = await _repo.detectObject(
         image: event.image,
+        lat: pos.lat,
+        lon: pos.lon,
+      );
+      emit(ScanDetected(result));
+    } catch (e) {
+      emit(ScanError('Failed to detect product. Please try again.\n($e)'));
+    }
+  }
+
+  Future<void> _onImageBytesCaptured(
+    ScanImageBytesCaptured event,
+    Emitter<ScanState> emit,
+  ) async {
+    emit(const ScanProcessing());
+    try {
+      const pos = LatLon.defaultLocation;
+      final result = await _repo.detectObjectBytes(
+        imageBytes: event.bytes,
+        filename: event.filename,
         lat: pos.lat,
         lon: pos.lon,
       );
