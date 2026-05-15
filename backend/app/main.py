@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import community, price, products, scan
+from app.core.env import env_value
 from app.services.object_detector import ObjectDetectorUnavailable, warm_up_detector
 
 logging.basicConfig(
@@ -18,12 +19,24 @@ logging.getLogger("app").setLevel(logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        warm_up_detector()
-        logging.getLogger("app").info("object_detector_warmed_up")
-    except ObjectDetectorUnavailable as exc:
-        logging.getLogger("app").warning("object_detector_warm_up_skipped reason=%s", exc)
+    if _should_warm_up_detector():
+        try:
+            warm_up_detector()
+            logging.getLogger("app").info("object_detector_warmed_up")
+        except ObjectDetectorUnavailable as exc:
+            logging.getLogger("app").warning(
+                "object_detector_warm_up_skipped reason=%s",
+                exc,
+            )
+        except Exception:
+            logging.getLogger("app").exception("object_detector_warm_up_failed")
+    else:
+        logging.getLogger("app").info("object_detector_warm_up_disabled")
     yield
+
+
+def _should_warm_up_detector() -> bool:
+    return (env_value("TRUEPRICE_WARM_UP_DETECTOR") or "").strip().lower() == "true"
 
 
 app = FastAPI(title="TruePrice API", version="0.1.0", lifespan=lifespan)
