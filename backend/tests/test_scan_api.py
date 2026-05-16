@@ -10,6 +10,7 @@ from app.models.scan_history import ScanHistoryUploadResponse
 from app.services import object_detector
 from app.services.object_detector import (
     CLASS_TO_PRODUCT_ID,
+    MockObjectDetector,
     ObjectDetectorUnavailable,
     ObjectNotDetected,
     YoloObjectDetector,
@@ -133,6 +134,19 @@ def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
     assert result.product_id == "tomato"
     assert result.name_kr == "Tomato"
     assert result.confidence == 0.93
+
+
+def test_force_mock_detector_overrides_yolo_mode(monkeypatch) -> None:
+    monkeypatch.setenv("TRUEPRICE_FORCE_MOCK_DETECTOR", "true")
+    monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "yolo")
+    object_detector.get_detector.cache_clear()
+
+    try:
+        detector = object_detector.get_detector()
+    finally:
+        object_detector.get_detector.cache_clear()
+
+    assert isinstance(detector, MockObjectDetector)
 
 
 def test_mock_mode_without_explicit_allowance_uses_yolo(monkeypatch, tmp_path) -> None:
