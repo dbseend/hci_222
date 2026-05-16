@@ -4,7 +4,4 @@ pytest
 httpx
 python-multipart
 supabase
-torch
-transformers
 pillow
-ultralytics
