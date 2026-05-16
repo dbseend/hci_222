@@ -442,6 +442,12 @@ def _normalize_class_name(class_name: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_detector():
+    real_detector_enabled = (
+        (env_value("TRUEPRICE_ENABLE_REAL_DETECTOR") or "").strip().lower() == "true"
+    )
+    if not real_detector_enabled:
+        return MockObjectDetector()
+
     force_mock = (
         (env_value("TRUEPRICE_FORCE_MOCK_DETECTOR") or "").strip().lower() == "true"
     )
