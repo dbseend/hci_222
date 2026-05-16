@@ -3,13 +3,15 @@ import '../constants/api_endpoints.dart';
 
 class DioClient {
   static Dio? _instance;
+  static const Duration _connectTimeout = Duration(seconds: 30);
+  static const Duration _receiveTimeout = Duration(seconds: 45);
 
   static Dio get instance {
     _instance ??= Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: _connectTimeout,
+        receiveTimeout: _receiveTimeout,
       ),
     );
     return _instance!;
