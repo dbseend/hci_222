@@ -442,30 +442,6 @@ def _normalize_class_name(class_name: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_detector():
-    real_detector_enabled = (
-        (env_value("TRUEPRICE_ENABLE_REAL_DETECTOR") or "").strip().lower() == "true"
-    )
-    if not real_detector_enabled:
-        return MockObjectDetector()
-
-    force_mock = (
-        (env_value("TRUEPRICE_FORCE_MOCK_DETECTOR") or "").strip().lower() == "true"
-    )
-    if force_mock:
-        return MockObjectDetector()
-
-    mode = (env_value("TRUEPRICE_DETECTOR_MODE", "yolo") or "yolo").strip().lower()
-    if mode == "zero_shot":
-        return ZeroShotObjectDetector()
-    if mode == "yolo":
-        return YoloObjectDetector()
-    mock_allowed = (
-        (env_value("TRUEPRICE_ALLOW_MOCK_DETECTOR") or "").strip().lower() == "true"
-    )
-    if mode == "mock" and mock_allowed:
-        return MockObjectDetector()
-    if mode == "mock":
-        return YoloObjectDetector()
     return MockObjectDetector()
 
 
