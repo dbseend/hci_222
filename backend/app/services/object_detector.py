@@ -442,7 +442,22 @@ def _normalize_class_name(class_name: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_detector():
-    return MockObjectDetector()
+    if _env_flag("TRUEPRICE_FORCE_MOCK_DETECTOR"):
+        return MockObjectDetector()
+
+    mode = (env_value("TRUEPRICE_DETECTOR_MODE", "yolo") or "yolo").strip().lower()
+    if mode == "mock":
+        return MockObjectDetector()
+    if mode == "zero_shot":
+        return ZeroShotObjectDetector()
+    if mode == "yolo":
+        return YoloObjectDetector()
+
+    raise ObjectDetectorUnavailable(f"Unsupported TRUEPRICE_DETECTOR_MODE: {mode}")
+
+
+def _env_flag(name: str) -> bool:
+    return (env_value(name) or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def warm_up_detector() -> None:

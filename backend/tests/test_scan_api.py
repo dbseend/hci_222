@@ -136,7 +136,7 @@ def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
     assert result.confidence == 0.93
 
 
-def test_detector_uses_mock_even_when_yolo_mode_is_configured(monkeypatch) -> None:
+def test_force_mock_detector_overrides_yolo_mode(monkeypatch) -> None:
     monkeypatch.setenv("TRUEPRICE_FORCE_MOCK_DETECTOR", "true")
     monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "yolo")
     object_detector.get_detector.cache_clear()
@@ -165,9 +165,10 @@ def test_mock_mode_without_explicit_allowance_still_uses_mock(monkeypatch, tmp_p
     assert isinstance(detector, MockObjectDetector)
 
 
-def test_detector_defaults_to_mock(monkeypatch, tmp_path) -> None:
+def test_detector_defaults_to_yolo(monkeypatch, tmp_path) -> None:
     monkeypatch.delenv("TRUEPRICE_DETECTOR_MODE", raising=False)
     monkeypatch.delenv("TRUEPRICE_ENABLE_REAL_DETECTOR", raising=False)
+    monkeypatch.delenv("TRUEPRICE_FORCE_MOCK_DETECTOR", raising=False)
     monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
     load_env_file.cache_clear()
     object_detector.get_detector.cache_clear()
@@ -178,7 +179,7 @@ def test_detector_defaults_to_mock(monkeypatch, tmp_path) -> None:
         load_env_file.cache_clear()
         object_detector.get_detector.cache_clear()
 
-    assert isinstance(detector, MockObjectDetector)
+    assert isinstance(detector, YoloObjectDetector)
 
 
 def test_detect_object_logs_detection_result(monkeypatch, caplog) -> None:
@@ -517,8 +518,9 @@ def test_zero_shot_detector_rejects_low_confidence_prediction() -> None:
         raise AssertionError("Expected ObjectNotDetected")
 
 
-def test_get_detector_ignores_zero_shot_mode_for_mvp_mock(monkeypatch) -> None:
+def test_get_detector_uses_zero_shot_mode(monkeypatch) -> None:
     monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "zero_shot")
+    monkeypatch.delenv("TRUEPRICE_FORCE_MOCK_DETECTOR", raising=False)
     object_detector.get_detector.cache_clear()
 
     try:
@@ -526,4 +528,4 @@ def test_get_detector_ignores_zero_shot_mode_for_mvp_mock(monkeypatch) -> None:
     finally:
         object_detector.get_detector.cache_clear()
 
-    assert isinstance(detector, MockObjectDetector)
+    assert isinstance(detector, ZeroShotObjectDetector)

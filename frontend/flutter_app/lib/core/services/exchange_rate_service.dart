@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 
+import '../constants/generated_env.dart';
 import '../utils/currency_display.dart';
 
 class ExchangeRateService {
-  static const _endpoint = 'https://api.frankfurter.dev/v1/latest';
+  static const _endpoint = GeneratedEnv.truepriceExchangeRateApiUrl;
   static bool _didLoadAtAppLaunch = false;
 
   final Dio _dio;

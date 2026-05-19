@@ -25,10 +25,14 @@ def test_render_dart_env_uses_configured_api_base_url() -> None:
     module = _load_generate_flutter_defines_module()
 
     rendered = module._render_dart_env(
-        {"TRUEPRICE_API_BASE_URL": "https://hci-222.onrender.com"},
+        {
+            "TRUEPRICE_API_BASE_URL": "api-base-from-env",
+            "TRUEPRICE_EXCHANGE_RATE_API_URL": "exchange-rate-url-from-env",
+        },
     )
 
-    assert "https://hci-222.onrender.com" in rendered
+    assert "api-base-from-env" in rendered
+    assert "exchange-rate-url-from-env" in rendered
     assert "192.168.0.24" not in rendered
 
 
