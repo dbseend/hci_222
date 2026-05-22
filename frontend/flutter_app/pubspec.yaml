@@ -9,8 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
-
   # 상태 관리
   flutter_bloc: ^8.1.6
   equatable: ^2.0.5
@@ -42,9 +40,6 @@ dependencies:
   shared_preferences: ^2.2.3
   path_provider: ^2.1.5
 
-  # 이미지 캐시
-  cached_network_image: ^3.3.1
-
   # UUID (익명 사용자)
   uuid: ^4.3.3
 
@@ -54,8 +49,6 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  bloc_test: ^9.1.7
-  mocktail: ^1.0.4
 
 flutter:
   uses-material-design: true
