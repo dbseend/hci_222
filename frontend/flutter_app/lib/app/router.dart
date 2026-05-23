@@ -8,6 +8,8 @@
 //   ShellRoute (with AppBottomNavBar):
 //     /home              → HomeScreen
 //     /scan              → ScanMenuScreen
+//     /scan/camera       → ScanScreen
+//     /scan/search       → ProductSearchScreen
 //     /scan/stats        → PriceStatsScreen   (extra: productName, productId, detectedPrice?)
 //     /scan/input        → PriceInputScreen   (extra: productName, productId)
 //     /scan/analysis     → PriceAnalysisScreen(extra: productName, productId, inputPrice)
@@ -27,6 +29,8 @@ import '../features/onboarding/presentation/screens/permission_screen.dart';
 import '../features/onboarding/presentation/screens/intro_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/scan/presentation/screens/scan_menu_screen.dart';
+import '../features/scan/presentation/screens/scan_screen.dart';
+import '../features/scan/presentation/screens/product_search_screen.dart';
 import '../features/scan/presentation/screens/price_stats_screen.dart';
 import '../features/scan/presentation/screens/price_input_screen.dart';
 import '../features/scan/presentation/screens/price_analysis_screen.dart';
@@ -51,6 +55,11 @@ final router = GoRouter(
           path: '/scan',
           builder: (_, _) => const ScanMenuScreen(),
           routes: [
+            GoRoute(path: 'camera', builder: (_, _) => const ScanScreen()),
+            GoRoute(
+              path: 'search',
+              builder: (_, _) => const ProductSearchScreen(),
+            ),
             GoRoute(
               path: 'stats',
               builder: (_, s) {

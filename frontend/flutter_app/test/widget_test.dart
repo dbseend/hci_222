@@ -6,6 +6,7 @@ import 'package:trueprice/core/utils/price_classifier.dart';
 import 'package:trueprice/features/market_map/presentation/models/market_location.dart';
 import 'package:trueprice/features/market_map/presentation/utils/market_marker_builder.dart';
 import 'package:trueprice/features/scan/presentation/screens/price_input_screen.dart';
+import 'package:trueprice/features/scan/presentation/screens/scan_menu_screen.dart';
 import 'package:trueprice/features/scan/presentation/screens/scan_screen.dart';
 import 'package:trueprice/features/scan/data/models/price_comparison.dart';
 import 'package:trueprice/features/scan/data/models/region_stats.dart';
@@ -301,6 +302,17 @@ void main() {
   });
 
   group('ProductSearchSheet', () {
+    testWidgets('scan menu separates camera scan and product search', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: ScanMenuScreen()));
+
+      expect(find.text('Camera scan'), findsOneWidget);
+      expect(find.text('Product search'), findsOneWidget);
+      expect(find.text('Manual price input'), findsOneWidget);
+      expect(find.text('Scan history'), findsOneWidget);
+    });
+
     testWidgets('filters supported scan products and returns selection', (
       tester,
     ) async {

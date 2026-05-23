@@ -6,11 +6,15 @@ import '../../data/models/scannable_product.dart';
 class ProductSearchSheet extends StatefulWidget {
   final List<ScannableProduct> products;
   final ValueChanged<ScannableProduct> onSelected;
+  final bool showHandle;
+  final bool autofocus;
 
   const ProductSearchSheet({
     super.key,
     required this.products,
     required this.onSelected,
+    this.showHandle = true,
+    this.autofocus = true,
   });
 
   @override
@@ -43,20 +47,22 @@ class _ProductSearchSheetState extends State<ProductSearchSheet> {
           bottom: MediaQuery.viewInsetsOf(context).bottom + 20,
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: widget.showHandle ? MainAxisSize.min : MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.black26,
-                  borderRadius: BorderRadius.circular(2),
+            if (widget.showHandle) ...[
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
+              const SizedBox(height: 18),
+            ],
             const Text(
               'Search scannable product',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -69,7 +75,7 @@ class _ProductSearchSheetState extends State<ProductSearchSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _controller,
-              autofocus: true,
+              autofocus: widget.autofocus,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: 'Tomato, mango, camel doll...',
