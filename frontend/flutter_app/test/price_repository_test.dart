@@ -14,7 +14,7 @@ void main() {
       final stats = await repo.getStats(productId: 'tomato', lat: 0, lon: 0);
 
       expect(stats.productId, 'tomato');
-      expect(stats.avgPrice, 55);
+      expect(stats.avgPrice, 18.4);
       expect(stats.distribution, isNotEmpty);
     });
 
@@ -30,9 +30,9 @@ void main() {
 
         expect(comparison.productId, 'tomato');
         expect(comparison.userPrice, 65);
-        expect(comparison.avgPrice, 55);
-        expect(comparison.verdict, 'negotiable');
-        expect(comparison.message, contains('regional average'));
+        expect(comparison.avgPrice, 18.4);
+        expect(comparison.verdict, 'overpriced');
+        expect(comparison.message, contains('Cairo reference'));
       },
     );
   });

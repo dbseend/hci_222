@@ -11,6 +11,20 @@ from app.services.supabase_backend import SupabaseBackendUnavailable, get_supaba
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 DEFAULT_REGION = "cairo"
 logger = logging.getLogger(__name__)
+SUPPORTED_PRODUCT_IDS = {
+    "apple",
+    "avocado",
+    "blueberry",
+    "camel_doll",
+    "cherry",
+    "cherry_tomato",
+    "kiwi",
+    "mango",
+    "orange",
+    "rockmelon",
+    "strawberry",
+    "tomato",
+}
 
 
 @lru_cache(maxsize=1)
@@ -71,6 +85,8 @@ def _load_products_from_supabase() -> list[Product]:
         if not product_row.get("is_active", True):
             continue
         product = _product_from_db_row(product_row)
+        if product.product_id not in SUPPORTED_PRODUCT_IDS:
+            continue
         products_by_id.setdefault(product.product_id, product)
     products = sorted(products_by_id.values(), key=lambda item: item.product_id)
     if not products:
@@ -100,7 +116,11 @@ def _load_price_stats_from_supabase() -> list[PriceStats]:
     for row in _rows(response):
         product = row.get("products") or {}
         product_id = str(product.get("code") or "").strip().lower()
-        if not product_id or product_id in latest_by_product:
+        if (
+            not product_id
+            or product_id not in SUPPORTED_PRODUCT_IDS
+            or product_id in latest_by_product
+        ):
             continue
         latest_by_product[product_id] = _price_stats_from_db_row(row, product_id)
 
@@ -112,12 +132,20 @@ def _load_price_stats_from_supabase() -> list[PriceStats]:
 
 def _load_products_from_json() -> list[Product]:
     raw = json.loads((DATA_DIR / "product_catalog.json").read_text())
-    return [Product(**item) for item in raw]
+    return [
+        Product(**item)
+        for item in raw
+        if item["product_id"] in SUPPORTED_PRODUCT_IDS
+    ]
 
 
 def _load_price_stats_from_json() -> list[PriceStats]:
     raw = json.loads((DATA_DIR / "price_stats.json").read_text())
-    return [PriceStats(**item) for item in raw]
+    return [
+        PriceStats(**item)
+        for item in raw
+        if item["product_id"] in SUPPORTED_PRODUCT_IDS
+    ]
 
 
 def _product_from_db_row(row: dict[str, Any]) -> Product:

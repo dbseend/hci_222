@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/api_endpoints.dart';
 
 class DioClient {
   static Dio? _instance;
-  static const Duration _connectTimeout = Duration(seconds: 30);
-  static const Duration _receiveTimeout = Duration(seconds: 45);
+  static Duration get _connectTimeout =>
+      kIsWeb ? const Duration(seconds: 12) : const Duration(seconds: 30);
+  static Duration get _receiveTimeout =>
+      kIsWeb ? const Duration(seconds: 20) : const Duration(seconds: 45);
 
   static Dio get instance {
     _instance ??= Dio(

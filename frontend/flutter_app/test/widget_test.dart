@@ -9,8 +9,10 @@ import 'package:trueprice/features/scan/presentation/screens/price_input_screen.
 import 'package:trueprice/features/scan/presentation/screens/scan_screen.dart';
 import 'package:trueprice/features/scan/data/models/price_comparison.dart';
 import 'package:trueprice/features/scan/data/models/region_stats.dart';
+import 'package:trueprice/features/scan/data/models/scannable_product.dart';
 import 'package:trueprice/features/onboarding/presentation/screens/permission_screen.dart';
 import 'package:trueprice/features/scan/presentation/screens/final_price_screen.dart';
+import 'package:trueprice/features/scan/presentation/widgets/product_search_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
@@ -105,12 +107,15 @@ void main() {
   });
 
   group('RegionStats', () {
-    test('grapes mock uses baseline price distribution', () {
-      final stats = RegionStats.mock('p001');
+    test('local fallback uses product-specific Cairo reference prices', () {
+      final tomato = RegionStats.mock('tomato');
+      final mango = RegionStats.mock('mango');
 
-      expect(stats.productId, 'p001');
-      expect(stats.avgPrice, 55.0);
-      expect(stats.distribution, isNotEmpty);
+      expect(tomato.productId, 'tomato');
+      expect(tomato.avgPrice, 18.4);
+      expect(mango.avgPrice, 61.8);
+      expect(tomato.avgPrice, isNot(mango.avgPrice));
+      expect(tomato.distribution, isNotEmpty);
     });
 
     test('parses backend price stats and builds chart distribution', () {
@@ -135,6 +140,30 @@ void main() {
       expect(stats.sampleCount, 42);
       expect(stats.distribution.fold<int>(0, (sum, b) => sum + b.count), 42);
     });
+
+    test('estimated chart distribution peaks near the market center', () {
+      final stats = RegionStats.fromJson({
+        'product_id': 'tomato',
+        'region': 'cairo',
+        'currency': 'EGP',
+        'avg_price': 18.4,
+        'median_price': 15,
+        'min_price': 13,
+        'max_price': 30,
+        'stddev_price': 6.1,
+        'sample_count': 18,
+      });
+
+      final peak = stats.distribution.reduce(
+        (a, b) => a.count >= b.count ? a : b,
+      );
+      final peakCenter = (peak.start + peak.end) / 2;
+
+      expect(stats.distribution.length, 8);
+      expect(stats.distribution.fold<int>(0, (sum, b) => sum + b.count), 18);
+      expect(peakCenter, inInclusiveRange(13, 22));
+      expect(stats.distribution.every((b) => b.count >= 0), isTrue);
+    });
   });
 
   group('PriceComparison', () {
@@ -154,13 +183,14 @@ void main() {
         'sample_count': 42,
         'percent_diff': 25,
         'verdict': 'negotiable',
-        'message': 'Slightly above the local average (+25.0%).',
+        'message':
+            'Slightly above the Cairo reference (+25.0%). Try negotiating.',
       });
 
       expect(comparison.productId, 'tomato');
       expect(comparison.verdict, 'negotiable');
       expect(comparison.percentDiff, 25);
-      expect(comparison.message, contains('average'));
+      expect(comparison.message, contains('reference'));
     });
   });
 
@@ -267,6 +297,52 @@ void main() {
       expect(find.text('pcs'), findsOneWidget);
       expect(find.text('bunch'), findsNothing);
       expect(find.text('bundle'), findsNothing);
+    });
+  });
+
+  group('ProductSearchSheet', () {
+    testWidgets('filters supported scan products and returns selection', (
+      tester,
+    ) async {
+      ScannableProduct? selected;
+      const products = [
+        ScannableProduct(
+          productId: 'tomato',
+          displayName: 'Tomato',
+          nameAr: 'طماطم',
+          unit: 'kg',
+          aliases: ['tomatoes', 'balady tomato'],
+        ),
+        ScannableProduct(
+          productId: 'mango',
+          displayName: 'Mango',
+          nameAr: 'مانجو',
+          unit: 'kg',
+          aliases: ['mangoes'],
+        ),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProductSearchSheet(
+              products: products,
+              onSelected: (product) => selected = product,
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), 'tom');
+      await tester.pump();
+
+      expect(find.text('Tomato'), findsOneWidget);
+      expect(find.text('Mango'), findsNothing);
+
+      await tester.tap(find.text('Tomato'));
+      await tester.pump();
+
+      expect(selected?.productId, 'tomato');
     });
   });
 

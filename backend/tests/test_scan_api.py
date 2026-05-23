@@ -448,16 +448,16 @@ def test_zero_shot_detector_maps_specific_fruit_label_to_specific_product() -> N
     assert "fruit" not in calls["candidate_labels"]
 
 
-def test_zero_shot_detector_maps_banana_to_catalog_product() -> None:
+def test_zero_shot_detector_maps_avocado_to_catalog_product() -> None:
     detector = ZeroShotObjectDetector(
-        inference_pipeline=lambda image, candidate_labels: [{"label": "banana", "score": 0.81}],
+        inference_pipeline=lambda image, candidate_labels: [{"label": "avocado", "score": 0.81}],
         image_loader=lambda image_bytes: object(),
     )
 
-    result = detector.detect(image_bytes=b"fake-image", filename="banana.jpg")
+    result = detector.detect(image_bytes=b"fake-image", filename="avocado.jpg")
 
-    assert result.product_id == "banana"
-    assert result.name_kr == "Banana"
+    assert result.product_id == "avocado"
+    assert result.name_kr == "Avocado"
     assert result.detected_price is None
 
 

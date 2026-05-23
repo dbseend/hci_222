@@ -218,6 +218,14 @@ class _PriceAnalysisView extends StatelessWidget {
                   'Price Distribution',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Reference only: ${stats.sampleCount} recent Cairo web observations for negotiation',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceLight,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 PriceHistogramWidget(stats: stats, userPrice: inputPrice),
               ],

@@ -15,6 +15,6 @@ class PriceResultSpeech {
 
     return '$name is offered at ${CurrencyDisplay.formatEgp(offeredPrice)}. '
         '$verdict $delta. '
-        'The regional average is ${CurrencyDisplay.formatEgp(averagePrice)}.';
+        'The Cairo reference is ${CurrencyDisplay.formatEgp(averagePrice)}.';
   }
 }

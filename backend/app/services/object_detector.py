@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.env import PROJECT_ROOT, env_value
 from app.models.detection import DetectionResponse
-from app.services.catalog_service import get_product
+from app.services.catalog_service import SUPPORTED_PRODUCT_IDS, get_product
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -72,32 +72,18 @@ PRODUCT_AR_NAMES = {
 ZERO_SHOT_LABELS = (
     "apple",
     "avocado",
-    "banana",
     "blueberry",
     "cherry",
     "cherry tomato",
     "cherry tomatoes",
-    "dates",
     "grape tomato",
     "grape tomatoes",
-    "grape",
-    "grapes",
-    "grapefruit",
-    "guava",
     "kiwi",
-    "lemon",
-    "mandarin",
-    "tangerine",
     "mango",
     "orange",
-    "peach",
-    "pineapple",
-    "plum",
-    "pomegranate",
     "rockmelon",
     "cantaloupe",
     "strawberry",
-    "watermelon",
     "camel plush toy",
     "stuffed camel toy",
     "camel doll",
@@ -158,8 +144,8 @@ class MockObjectDetector:
 
         product_id = _mock_product_id(filename)
         product = get_product(product_id)
-        if product is None:
-            raise ObjectDetectorUnavailable(f"Mock product is not in catalog: {product_id}")
+        if product is None or product_id not in SUPPORTED_PRODUCT_IDS:
+            raise ObjectNotDetected(f"Unsupported product without price reference: {product_id}")
 
         return DetectionResponse(
             product_id=product.product_id,
@@ -215,8 +201,8 @@ class ZeroShotObjectDetector:
             raise ObjectNotDetected(f"Unsupported zero-shot label: {label}")
 
         product = get_product(product_id)
-        if product is None:
-            raise ObjectDetectorUnavailable(f"Detected product is not in catalog: {product_id}")
+        if product is None or product_id not in SUPPORTED_PRODUCT_IDS:
+            raise ObjectNotDetected(f"Unsupported product without price reference: {product_id}")
 
         return DetectionResponse(
             product_id=product.product_id,
@@ -295,8 +281,8 @@ class YoloObjectDetector:
             raise ObjectNotDetected(f"Unsupported detected class: {class_name}")
 
         product = get_product(product_id)
-        if product is None:
-            raise ObjectDetectorUnavailable(f"Detected product is not in catalog: {product_id}")
+        if product is None or product_id not in SUPPORTED_PRODUCT_IDS:
+            raise ObjectNotDetected(f"Unsupported product without price reference: {product_id}")
 
         return DetectionResponse(
             product_id=product.product_id,

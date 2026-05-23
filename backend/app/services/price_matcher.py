@@ -48,7 +48,7 @@ def _verdict(user_price: float, stats: PriceStats) -> Verdict:
 
 def _message(verdict: Verdict, percent_diff: float) -> str:
     if verdict == "safe":
-        return "At or below the local average."
+        return "At or below the Cairo reference. Use it as a negotiation guide."
     if verdict == "negotiable":
-        return f"Slightly above the local average ({percent_diff:+.1f}%)."
-    return f"Significantly above the local average ({percent_diff:+.1f}%)."
+        return f"Slightly above the Cairo reference ({percent_diff:+.1f}%). Try negotiating."
+    return f"High quote versus the Cairo reference ({percent_diff:+.1f}%). Negotiate strongly."

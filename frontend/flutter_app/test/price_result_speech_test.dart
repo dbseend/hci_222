@@ -15,7 +15,7 @@ void main() {
 
       expect(message, contains('Tomato'));
       expect(message, contains('18 EGP'));
-      expect(message, contains('Great price'));
+      expect(message, contains('Good reference price'));
       expect(message, contains('-10.0%'));
     });
 

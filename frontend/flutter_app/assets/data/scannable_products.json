@@ -1,0 +1,86 @@
+[
+  {
+    "product_id": "apple",
+    "display_name": "Apple",
+    "name_ar": "تفاح",
+    "unit": "kg",
+    "aliases": ["apple", "apples", "golden apple", "green apple", "red apple", "royal gala apple"]
+  },
+  {
+    "product_id": "avocado",
+    "display_name": "Avocado",
+    "name_ar": "أفوكادو",
+    "unit": "kg",
+    "aliases": ["avocado", "avocados", "imported avocado"]
+  },
+  {
+    "product_id": "blueberry",
+    "display_name": "Blueberry",
+    "name_ar": "توت أزرق",
+    "unit": "kg",
+    "aliases": ["blueberry", "blueberries", "blueberry punnet"]
+  },
+  {
+    "product_id": "camel_doll",
+    "display_name": "Camel Doll",
+    "name_ar": "دمية جمل",
+    "unit": "piece",
+    "aliases": ["camel doll", "camel souvenir", "camel ornament"]
+  },
+  {
+    "product_id": "cherry",
+    "display_name": "Cherry",
+    "name_ar": "كرز",
+    "unit": "kg",
+    "aliases": ["cherry", "cherries"]
+  },
+  {
+    "product_id": "cherry_tomato",
+    "display_name": "Cherry Tomato",
+    "name_ar": "طماطم كرزية",
+    "unit": "kg",
+    "aliases": ["cherry tomato", "cherry tomatoes", "grape tomato", "grape tomatoes"]
+  },
+  {
+    "product_id": "kiwi",
+    "display_name": "Kiwi",
+    "name_ar": "كيوي",
+    "unit": "kg",
+    "aliases": ["kiwi", "kiwis", "kiwi fruit"]
+  },
+  {
+    "product_id": "mango",
+    "display_name": "Mango",
+    "name_ar": "مانجو",
+    "unit": "kg",
+    "aliases": ["mango", "mangoes", "zebda mango", "balady mango", "sedika mango"]
+  },
+  {
+    "product_id": "orange",
+    "display_name": "Orange",
+    "name_ar": "برتقال",
+    "unit": "kg",
+    "aliases": ["orange", "oranges", "navel orange", "summer orange", "juice orange"]
+  },
+  {
+    "product_id": "rockmelon",
+    "display_name": "Cantaloupe",
+    "name_ar": "شمام",
+    "unit": "kg",
+    "aliases": ["rockmelon", "melon", "cantaloupe", "sweet melon"]
+  },
+  {
+    "product_id": "strawberry",
+    "display_name": "Strawberry",
+    "name_ar": "فراولة",
+    "unit": "kg",
+    "aliases": ["strawberry", "strawberries"]
+  },
+  {
+    "product_id": "tomato",
+    "display_name": "Tomato",
+    "name_ar": "طماطم",
+    "unit": "kg",
+    "aliases": ["tomato", "tomatoes", "tomatoes_single", "balady tomato"]
+  }
+]

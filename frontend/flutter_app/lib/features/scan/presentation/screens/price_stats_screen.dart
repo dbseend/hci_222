@@ -116,7 +116,7 @@ class _PriceStatsView extends StatelessWidget {
                   children: [
                     Expanded(child: _StatsRow('Min', stats.minPrice)),
                     Expanded(child: _StatsRow('Max', stats.maxPrice)),
-                    Expanded(child: _StatsRow('Mode', stats.modePrice)),
+                    Expanded(child: _StatsRow('Median', stats.modePrice)),
                   ],
                 ),
               ],
@@ -131,7 +131,7 @@ class _PriceStatsView extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Sample data: $totalCount entries (demo — not real regional data)',
+            'Reference only: $totalCount recent Cairo web observations for negotiation',
             style: const TextStyle(
               fontSize: 12,
               color: AppColors.onSurfaceLight,

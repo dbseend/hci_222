@@ -7,7 +7,7 @@ from app.services import catalog_service
 client = TestClient(app)
 
 
-def test_list_products_contains_yolo_classes() -> None:
+def test_list_products_contains_supported_price_reference_classes() -> None:
     response = client.get("/api/v1/products")
 
     assert response.status_code == 200
@@ -15,12 +15,10 @@ def test_list_products_contains_yolo_classes() -> None:
     assert {
         "apple",
         "avocado",
-        "banana",
         "blueberry",
         "camel_doll",
         "cherry",
         "cherry_tomato",
-        "fruit",
         "kiwi",
         "mango",
         "orange",
@@ -30,24 +28,13 @@ def test_list_products_contains_yolo_classes() -> None:
     }.issubset(product_ids)
 
 
-def test_list_products_contains_egypt_fruit_price_seed() -> None:
+def test_list_products_excludes_products_without_current_reference() -> None:
     response = client.get("/api/v1/products")
 
     assert response.status_code == 200
     product_ids = {item["product_id"] for item in response.json()}
-    assert {
-        "dates",
-        "grape",
-        "grapefruit",
-        "guava",
-        "lemon",
-        "mandarin",
-        "peach",
-        "pineapple",
-        "plum",
-        "pomegranate",
-        "watermelon",
-    }.issubset(product_ids)
+    assert "banana" not in product_ids
+    assert "watermelon" not in product_ids
 
 
 def test_every_catalog_product_has_cairo_price_stats() -> None:
@@ -72,12 +59,12 @@ def test_read_price_stats_for_multiclass_fruit() -> None:
     assert body["avg_price"] > 0
 
 
-def test_read_price_stats_for_banana_fixed_mvp_seed() -> None:
-    response = client.get("/api/v1/products/banana/price-stats?region=cairo")
+def test_read_price_stats_for_avocado_mvp_seed() -> None:
+    response = client.get("/api/v1/products/avocado/price-stats?region=cairo")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["product_id"] == "banana"
+    assert body["product_id"] == "avocado"
     assert body["avg_price"] > 0
 
 

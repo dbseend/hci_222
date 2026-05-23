@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 // region_stats.dart
 // Purpose: Models for the regional price statistics fetched from the backend
 //          (or served from mock data during development).
@@ -19,6 +21,24 @@ class PriceBucket {
     end: (json['bucket_end'] as num).toDouble(),
     count: json['count'] as int,
   );
+}
+
+class _FallbackPriceStats {
+  final double avgPrice;
+  final double medianPrice;
+  final double minPrice;
+  final double maxPrice;
+  final double stdDev;
+  final int sampleCount;
+
+  const _FallbackPriceStats({
+    required this.avgPrice,
+    required this.medianPrice,
+    required this.minPrice,
+    required this.maxPrice,
+    required this.stdDev,
+    required this.sampleCount,
+  });
 }
 
 class RegionStats {
@@ -50,6 +70,11 @@ class RegionStats {
     final avgPrice = (json['avg_price'] as num).toDouble();
     final minPrice = (json['min_price'] as num).toDouble();
     final maxPrice = (json['max_price'] as num).toDouble();
+    final medianPrice =
+        ((json['mode_price'] ?? json['median_price'] ?? avgPrice) as num)
+            .toDouble();
+    final stdDev = ((json['std_dev'] ?? json['stddev_price'] ?? 0) as num)
+        .toDouble();
     final sampleCount = (json['sample_count'] as num?)?.toInt() ?? 0;
     final distributionJson = json['distribution'];
 
@@ -58,13 +83,10 @@ class RegionStats {
       region: json['region'] as String? ?? 'cairo',
       currency: json['currency'] as String? ?? 'EGP',
       avgPrice: avgPrice,
-      modePrice:
-          ((json['mode_price'] ?? json['median_price'] ?? avgPrice) as num)
-              .toDouble(),
+      modePrice: medianPrice,
       maxPrice: maxPrice,
       minPrice: minPrice,
-      stdDev: ((json['std_dev'] ?? json['stddev_price'] ?? 0) as num)
-          .toDouble(),
+      stdDev: stdDev,
       sampleCount: sampleCount,
       distribution: distributionJson is List
           ? distributionJson
@@ -74,70 +96,199 @@ class RegionStats {
               minPrice: minPrice,
               maxPrice: maxPrice,
               avgPrice: avgPrice,
+              medianPrice: medianPrice,
+              stdDev: stdDev,
               sampleCount: sampleCount,
             ),
     );
   }
 
-  // Mock data for MVP. Units are product-specific:
-  // - p001: EGP/kg for grapes
-  // TODO(next-dev): Replace with RegionStats.fromJson() once the backend is connected
+  // Local fallback for MVP when the backend is unreachable.
+  // Keep this aligned with the Cairo reference seed used by the backend.
   static RegionStats mock(String productId) {
+    final fallback = _fallbackByProduct[productId] ?? _defaultFallback;
     return RegionStats(
       productId: productId,
-      sampleCount: 88,
-      avgPrice: 55.0,
-      modePrice: 50.0,
-      maxPrice: 80.0,
-      minPrice: 40.0,
-      stdDev: 10.0,
-      distribution: const [
-        PriceBucket(start: 40, end: 45, count: 4),
-        PriceBucket(start: 45, end: 50, count: 10),
-        PriceBucket(start: 50, end: 55, count: 20),
-        PriceBucket(start: 55, end: 60, count: 24),
-        PriceBucket(start: 60, end: 65, count: 16),
-        PriceBucket(start: 65, end: 70, count: 8),
-        PriceBucket(start: 70, end: 75, count: 4),
-        PriceBucket(start: 75, end: 80, count: 2),
-      ],
+      sampleCount: fallback.sampleCount,
+      avgPrice: fallback.avgPrice,
+      modePrice: fallback.medianPrice,
+      maxPrice: fallback.maxPrice,
+      minPrice: fallback.minPrice,
+      stdDev: fallback.stdDev,
+      distribution: _buildSyntheticDistribution(
+        minPrice: fallback.minPrice,
+        maxPrice: fallback.maxPrice,
+        avgPrice: fallback.avgPrice,
+        medianPrice: fallback.medianPrice,
+        stdDev: fallback.stdDev,
+        sampleCount: fallback.sampleCount,
+      ),
     );
   }
+
+  static const _defaultFallback = _FallbackPriceStats(
+    avgPrice: 55.0,
+    medianPrice: 50.0,
+    minPrice: 40.0,
+    maxPrice: 80.0,
+    stdDev: 10.0,
+    sampleCount: 88,
+  );
+
+  static const Map<String, _FallbackPriceStats> _fallbackByProduct = {
+    'apple': _FallbackPriceStats(
+      avgPrice: 85.2,
+      medianPrice: 94.0,
+      minPrice: 18.0,
+      maxPrice: 165.0,
+      stdDev: 37.9,
+      sampleCount: 36,
+    ),
+    'avocado': _FallbackPriceStats(
+      avgPrice: 203.3,
+      medianPrice: 230.0,
+      minPrice: 150.0,
+      maxPrice: 230.0,
+      stdDev: 37.7,
+      sampleCount: 10,
+    ),
+    'blueberry': _FallbackPriceStats(
+      avgPrice: 399.9,
+      medianPrice: 399.9,
+      minPrice: 350.0,
+      maxPrice: 430.0,
+      stdDev: 25.0,
+      sampleCount: 8,
+    ),
+    'camel_doll': _FallbackPriceStats(
+      avgPrice: 125.0,
+      medianPrice: 115.0,
+      minPrice: 80.0,
+      maxPrice: 180.0,
+      stdDev: 34.5,
+      sampleCount: 18,
+    ),
+    'cherry': _FallbackPriceStats(
+      avgPrice: 220.0,
+      medianPrice: 220.0,
+      minPrice: 180.0,
+      maxPrice: 260.0,
+      stdDev: 32.7,
+      sampleCount: 6,
+    ),
+    'cherry_tomato': _FallbackPriceStats(
+      avgPrice: 56.7,
+      medianPrice: 55.0,
+      minPrice: 45.0,
+      maxPrice: 70.0,
+      stdDev: 10.3,
+      sampleCount: 8,
+    ),
+    'kiwi': _FallbackPriceStats(
+      avgPrice: 172.2,
+      medianPrice: 200.0,
+      minPrice: 116.7,
+      maxPrice: 200.0,
+      stdDev: 39.3,
+      sampleCount: 8,
+    ),
+    'mango': _FallbackPriceStats(
+      avgPrice: 61.8,
+      medianPrice: 41.5,
+      minPrice: 23.0,
+      maxPrice: 175.0,
+      stdDev: 51.5,
+      sampleCount: 18,
+    ),
+    'orange': _FallbackPriceStats(
+      avgPrice: 22.5,
+      medianPrice: 20.0,
+      minPrice: 13.0,
+      maxPrice: 35.0,
+      stdDev: 7.2,
+      sampleCount: 32,
+    ),
+    'rockmelon': _FallbackPriceStats(
+      avgPrice: 21.5,
+      medianPrice: 22.5,
+      minPrice: 12.0,
+      maxPrice: 29.0,
+      stdDev: 6.3,
+      sampleCount: 16,
+    ),
+    'strawberry': _FallbackPriceStats(
+      avgPrice: 49.5,
+      medianPrice: 45.0,
+      minPrice: 18.0,
+      maxPrice: 90.0,
+      stdDev: 27.9,
+      sampleCount: 16,
+    ),
+    'tomato': _FallbackPriceStats(
+      avgPrice: 18.4,
+      medianPrice: 15.0,
+      minPrice: 13.0,
+      maxPrice: 30.0,
+      stdDev: 6.1,
+      sampleCount: 18,
+    ),
+  };
 
   static List<PriceBucket> _buildSyntheticDistribution({
     required double minPrice,
     required double maxPrice,
     required double avgPrice,
+    required double medianPrice,
+    required double stdDev,
     required int sampleCount,
   }) {
     if (sampleCount <= 0 || maxPrice <= minPrice) return const [];
 
     const bucketCount = 8;
     final width = (maxPrice - minPrice) / bucketCount;
+    final range = maxPrice - minPrice;
+    final centerPrice = (medianPrice * 0.6 + avgPrice * 0.4).clamp(
+      minPrice,
+      maxPrice,
+    );
+    final effectiveStdDev = (stdDev > 0 ? stdDev : range / 4)
+        .clamp(range / 10, range / 2)
+        .toDouble();
+
     final weights = List<double>.generate(bucketCount, (index) {
       final center = minPrice + width * (index + 0.5);
-      final distance = ((center - avgPrice).abs() / (maxPrice - minPrice))
-          .clamp(0.0, 1.0);
-      return 1.0 - distance;
+      final z = (center - centerPrice) / effectiveStdDev;
+      final normalWeight = math.exp(-0.5 * z * z);
+
+      // Keep tails visible so the graph communicates the observed min/max range,
+      // while still concentrating most samples near the market center.
+      return normalWeight + 0.03;
     });
     final totalWeight = weights.fold<double>(0, (sum, value) => sum + value);
 
-    var assigned = 0;
-    final buckets = <PriceBucket>[];
-    for (var i = 0; i < bucketCount; i++) {
-      final isLast = i == bucketCount - 1;
-      final count = isLast
-          ? sampleCount - assigned
-          : (sampleCount * weights[i] / totalWeight).round();
-      assigned += count;
-      buckets.add(
-        PriceBucket(
-          start: minPrice + width * i,
-          end: minPrice + width * (i + 1),
-          count: count,
-        ),
-      );
+    final exactCounts = weights
+        .map((weight) => sampleCount * weight / totalWeight)
+        .toList();
+    final counts = exactCounts.map((value) => value.floor()).toList();
+    var assigned = counts.fold<int>(0, (sum, value) => sum + value);
+
+    final remainderOrder = List<int>.generate(bucketCount, (index) => index)
+      ..sort((a, b) {
+        final aRemainder = exactCounts[a] - counts[a];
+        final bRemainder = exactCounts[b] - counts[b];
+        return bRemainder.compareTo(aRemainder);
+      });
+
+    for (var i = 0; assigned < sampleCount; i++, assigned++) {
+      counts[remainderOrder[i % bucketCount]] += 1;
     }
-    return buckets;
+
+    return List<PriceBucket>.generate(bucketCount, (index) {
+      return PriceBucket(
+        start: minPrice + width * index,
+        end: minPrice + width * (index + 1),
+        count: counts[index],
+      );
+    });
   }
 }

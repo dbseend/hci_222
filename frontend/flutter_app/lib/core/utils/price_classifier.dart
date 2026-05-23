@@ -134,20 +134,20 @@ class PriceClassifier {
   }
 
   static String priceDeltaLabel(double percent) {
-    if (percent.abs() < 0.05) return 'At regional average';
+    if (percent.abs() < 0.05) return 'At Cairo reference';
     final sign = percent > 0 ? '+' : '';
-    return '$sign${percent.toStringAsFixed(1)}% vs regional average';
+    return '$sign${percent.toStringAsFixed(1)}% vs Cairo reference';
   }
 
   /// Human-readable status message shown on the analysis screen.
   static String statusMessage(PriceStatus status, double percent) {
     switch (status) {
       case PriceStatus.safe:
-        return 'Great price! Below average.';
+        return 'Good reference price.';
       case PriceStatus.negotiable:
-        return 'Negotiate. ${percent.toStringAsFixed(0)}% above average.';
+        return 'Negotiate. ${percent.toStringAsFixed(0)}% above reference.';
       case PriceStatus.warning:
-        return 'Overpriced! ${percent.toStringAsFixed(0)}% above average.';
+        return 'High quote. ${percent.toStringAsFixed(0)}% above reference.';
     }
   }
 

@@ -9,10 +9,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/repositories/scan_history_repository.dart';
+import '../../data/repositories/scannable_product_repository.dart';
 import '../models/scan_route_data.dart';
 import '../bloc/scan_bloc.dart';
 import '../bloc/scan_event.dart';
 import '../bloc/scan_state.dart';
+import '../widgets/product_search_sheet.dart';
 
 class ScanScreen extends StatelessWidget {
   const ScanScreen({super.key});
@@ -34,6 +36,7 @@ class _ScanViewState extends State<_ScanView> {
   static const Duration _cameraInitTimeout = Duration(seconds: 8);
   final _picker = ImagePicker();
   final _historyRepo = ScanHistoryRepositoryImpl();
+  final _productRepo = ScannableProductRepository();
   CameraController? _cameraController;
   bool _isInitializingCamera = false;
   bool _hasCameraPermission = true;
@@ -277,6 +280,40 @@ class _ScanViewState extends State<_ScanView> {
     }
   }
 
+  Future<void> _openProductSearch() async {
+    try {
+      final products = await _productRepo.loadProducts();
+      if (!mounted) return;
+
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (sheetContext) => ProductSearchSheet(
+          products: products,
+          onSelected: (product) {
+            Navigator.of(sheetContext).pop();
+            context.go(
+              '/scan/stats',
+              extra: ScanRouteData(
+                productName: product.displayName,
+                productId: product.productId,
+              ),
+            );
+          },
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load searchable products. ($e)'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _cameraController?.dispose();
@@ -419,6 +456,12 @@ class _ScanViewState extends State<_ScanView> {
                                   small: true,
                                 ),
                                 _ScanButton(
+                                  icon: Icons.search,
+                                  label: 'Search',
+                                  onTap: _openProductSearch,
+                                  small: true,
+                                ),
+                                _ScanButton(
                                   icon: Icons.camera_alt,
                                   label: 'Scan',
                                   onTap: _captureAndScan,
@@ -458,6 +501,7 @@ class _ScanViewState extends State<_ScanView> {
         actionLabel: kIsWeb ? 'Retry camera' : 'Open Settings',
         onAction: kIsWeb ? _initCamera : openAppSettings,
         bottomActions: [
+          _CameraAction(label: 'Search product', onPressed: _openProductSearch),
           _CameraAction(
             label: 'Open gallery',
             onPressed: () => _pickAndScan(ImageSource.gallery),
@@ -489,6 +533,7 @@ class _ScanViewState extends State<_ScanView> {
         onAction: null,
         bottomActions: [
           _CameraAction(label: 'Retry camera', onPressed: _initCamera),
+          _CameraAction(label: 'Search product', onPressed: _openProductSearch),
           _CameraAction(
             label: 'Open gallery',
             onPressed: () => _pickAndScan(ImageSource.gallery),
