@@ -23,6 +23,9 @@ class PriceStats(BaseModel):
     max_price: float
     stddev_price: float
     sample_count: int
+    window_days: int | None = None
+    stat_date: str | None = None
+    data_source: str = "Cairo reference observations"
 
 
 class PriceCompareRequest(BaseModel):

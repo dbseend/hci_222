@@ -165,6 +165,27 @@ void main() {
       expect(peakCenter, inInclusiveRange(13, 22));
       expect(stats.distribution.every((b) => b.count >= 0), isTrue);
     });
+
+    test('parses price trust metadata from backend stats', () {
+      final stats = RegionStats.fromJson({
+        'product_id': 'tomato',
+        'region': 'cairo',
+        'currency': 'EGP',
+        'avg_price': 20,
+        'median_price': 19,
+        'min_price': 15,
+        'max_price': 28,
+        'stddev_price': 4,
+        'sample_count': 42,
+        'window_days': 14,
+        'stat_date': '2026-05-28',
+        'data_source': 'Talabat + traveler reports',
+      });
+
+      expect(stats.windowDays, 14);
+      expect(stats.lastUpdated, DateTime(2026, 5, 28));
+      expect(stats.dataSource, 'Talabat + traveler reports');
+    });
   });
 
   group('PriceComparison', () {
@@ -355,6 +376,42 @@ void main() {
       await tester.pump();
 
       expect(selected?.productId, 'tomato');
+    });
+  });
+
+  group('ScanRecoveryActions', () {
+    testWidgets('offers retry, search, and manual input actions', (
+      tester,
+    ) async {
+      var retried = false;
+      var searched = false;
+      var manual = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ScanRecoveryActions(
+              message: 'Failed to detect product.',
+              onRetry: () => retried = true,
+              onSearch: () => searched = true,
+              onManualInput: () => manual = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Product not recognized'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Search product'), findsOneWidget);
+      expect(find.text('Enter manually'), findsOneWidget);
+
+      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Search product'));
+      await tester.tap(find.text('Enter manually'));
+
+      expect(retried, isTrue);
+      expect(searched, isTrue);
+      expect(manual, isTrue);
     });
   });
 

@@ -51,6 +51,9 @@ class RegionStats {
   final double minPrice;
   final double stdDev;
   final int sampleCount;
+  final int? windowDays;
+  final DateTime? lastUpdated;
+  final String dataSource;
   final List<PriceBucket> distribution;
 
   const RegionStats({
@@ -63,6 +66,9 @@ class RegionStats {
     required this.minPrice,
     required this.stdDev,
     required this.sampleCount,
+    this.windowDays,
+    this.lastUpdated,
+    this.dataSource = 'Cairo reference observations',
     required this.distribution,
   });
 
@@ -76,6 +82,7 @@ class RegionStats {
     final stdDev = ((json['std_dev'] ?? json['stddev_price'] ?? 0) as num)
         .toDouble();
     final sampleCount = (json['sample_count'] as num?)?.toInt() ?? 0;
+    final statDate = json['stat_date'] as String?;
     final distributionJson = json['distribution'];
 
     return RegionStats(
@@ -88,6 +95,10 @@ class RegionStats {
       minPrice: minPrice,
       stdDev: stdDev,
       sampleCount: sampleCount,
+      windowDays: (json['window_days'] as num?)?.toInt(),
+      lastUpdated: statDate == null ? null : DateTime.tryParse(statDate),
+      dataSource:
+          (json['data_source'] as String?) ?? 'Cairo reference observations',
       distribution: distributionJson is List
           ? distributionJson
                 .map((e) => PriceBucket.fromJson(e as Map<String, dynamic>))
@@ -115,6 +126,8 @@ class RegionStats {
       maxPrice: fallback.maxPrice,
       minPrice: fallback.minPrice,
       stdDev: fallback.stdDev,
+      windowDays: 30,
+      dataSource: 'Local Cairo MVP fallback',
       distribution: _buildSyntheticDistribution(
         minPrice: fallback.minPrice,
         maxPrice: fallback.maxPrice,

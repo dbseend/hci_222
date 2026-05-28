@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_display.dart';
+import '../../../../core/utils/price_classifier.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../models/scan_route_data.dart';
 import '../../data/models/region_stats.dart';
@@ -101,6 +102,13 @@ class _PriceStatsView extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, RegionStats stats) {
     final totalCount = stats.distribution.fold(0, (s, b) => s + b.count);
+    final sampleCount = stats.sampleCount > 0 ? stats.sampleCount : totalCount;
+    final confidenceScore = PriceClassifier.confidenceScore(
+      sampleSize: sampleCount,
+      avg: stats.avgPrice,
+      stdDev: stats.stdDev,
+    );
+    final confidenceLevel = PriceClassifier.confidenceLevel(confidenceScore);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -121,6 +129,19 @@ class _PriceStatsView extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+
+          const SizedBox(height: 24),
+
+          _DataTrustCard(
+            sampleCount: sampleCount,
+            confidenceLabel: PriceClassifier.confidenceLabel(
+              confidenceLevel,
+              confidenceScore,
+            ),
+            dataSource: stats.dataSource,
+            windowDays: stats.windowDays,
+            lastUpdated: stats.lastUpdated,
           ),
 
           const SizedBox(height: 24),
@@ -173,6 +194,86 @@ class _PriceStatsView extends StatelessWidget {
               ),
             ),
             child: const Text("Enter Seller's Price"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DataTrustCard extends StatelessWidget {
+  final int sampleCount;
+  final String confidenceLabel;
+  final String dataSource;
+  final int? windowDays;
+  final DateTime? lastUpdated;
+
+  const _DataTrustCard({
+    required this.sampleCount,
+    required this.confidenceLabel,
+    required this.dataSource,
+    this.windowDays,
+    this.lastUpdated,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final updated = lastUpdated == null
+        ? null
+        : '${lastUpdated!.year}-${lastUpdated!.month.toString().padLeft(2, '0')}-${lastUpdated!.day.toString().padLeft(2, '0')}';
+    final details = [
+      '$sampleCount observations',
+      if (windowDays != null) 'last $windowDays days',
+      if (updated != null) 'updated $updated',
+    ].join(' · ');
+
+    return AppCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.verified_outlined,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  confidenceLabel,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  details,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceLight,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dataSource,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceLight,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

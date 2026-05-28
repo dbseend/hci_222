@@ -168,6 +168,9 @@ def _price_stats_from_db_row(row: dict[str, Any], product_id: str) -> PriceStats
         max_price=float(row.get("max_price_egp") or 0),
         stddev_price=float(row.get("stddev_price_egp") or 0),
         sample_count=int(row.get("sample_count") or 0),
+        window_days=_optional_int(row.get("window_days")),
+        stat_date=str(row.get("stat_date")) if row.get("stat_date") else None,
+        data_source="Talabat + traveler reports",
     )
 
 
@@ -178,3 +181,12 @@ def _rows(response) -> list[dict[str, Any]]:
     if data is None:
         return []
     return list(data)
+
+
+def _optional_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None

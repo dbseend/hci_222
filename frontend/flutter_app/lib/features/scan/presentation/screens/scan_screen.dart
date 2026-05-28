@@ -307,18 +307,8 @@ class _ScanViewState extends State<_ScanView> {
             ),
           );
         } else if (state is ScanError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.warning,
-              action: SnackBarAction(
-                label: 'Retry',
-                textColor: Colors.white,
-                onPressed: () =>
-                    context.read<ScanBloc>().add(const ScanReset()),
-              ),
-            ),
-          );
+          _showScanRecoverySheet(context, state.message);
+          context.read<ScanBloc>().add(const ScanReset());
         }
       },
       child: BlocBuilder<ScanBloc, ScanState>(
@@ -398,6 +388,13 @@ class _ScanViewState extends State<_ScanView> {
                         child: Column(
                           children: [
                             TextButton(
+                              onPressed: () => context.go('/scan/search'),
+                              child: const Text(
+                                'Search product instead',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                            TextButton(
                               onPressed: () => context.go(
                                 '/scan/input',
                                 extra: const ScanRouteData(),
@@ -445,6 +442,28 @@ class _ScanViewState extends State<_ScanView> {
     );
   }
 
+  void _showScanRecoverySheet(BuildContext context, String message) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => ScanRecoveryActions(
+        message: message,
+        onRetry: () {
+          Navigator.of(sheetContext).pop();
+          context.read<ScanBloc>().add(const ScanReset());
+        },
+        onSearch: () {
+          Navigator.of(sheetContext).pop();
+          context.go('/scan/search');
+        },
+        onManualInput: () {
+          Navigator.of(sheetContext).pop();
+          context.go('/scan/input', extra: const ScanRouteData());
+        },
+      ),
+    );
+  }
+
   Widget _buildCameraLayer(BuildContext context) {
     final controller = _cameraController;
 
@@ -461,6 +480,10 @@ class _ScanViewState extends State<_ScanView> {
           _CameraAction(
             label: 'Open gallery',
             onPressed: () => _pickAndScan(ImageSource.gallery),
+          ),
+          _CameraAction(
+            label: 'Search product',
+            onPressed: () => context.go('/scan/search'),
           ),
           _CameraAction(
             label: 'Enter price manually',
@@ -492,6 +515,10 @@ class _ScanViewState extends State<_ScanView> {
           _CameraAction(
             label: 'Open gallery',
             onPressed: () => _pickAndScan(ImageSource.gallery),
+          ),
+          _CameraAction(
+            label: 'Search product',
+            onPressed: () => context.go('/scan/search'),
           ),
           _CameraAction(
             label: 'Enter price manually',
@@ -622,6 +649,75 @@ class _CameraAction {
   final VoidCallback onPressed;
 
   const _CameraAction({required this.label, required this.onPressed});
+}
+
+class ScanRecoveryActions extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final VoidCallback onSearch;
+  final VoidCallback onManualInput;
+
+  const ScanRecoveryActions({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    required this.onSearch,
+    required this.onManualInput,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.search_off, color: AppColors.warning),
+                SizedBox(width: 8),
+                Text(
+                  'Product not recognized',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.onSurfaceLight,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 18),
+            ElevatedButton.icon(
+              onPressed: onSearch,
+              icon: const Icon(Icons.search),
+              label: const Text('Search product'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: onManualInput,
+              icon: const Icon(Icons.edit),
+              label: const Text('Enter manually'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ScanButton extends StatelessWidget {
