@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
           children: [
             const Text(
-              'Burası True Price',
+              'Price Lens',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

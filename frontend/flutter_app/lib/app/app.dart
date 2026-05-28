@@ -14,7 +14,7 @@ class TruePriceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Burası True Price',
+      title: 'Price Lens',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: ThemeData(

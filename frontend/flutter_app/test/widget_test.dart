@@ -413,6 +413,34 @@ void main() {
       expect(searched, isTrue);
       expect(manual, isTrue);
     });
+
+    testWidgets(
+      'scrolls long detection errors on short screens without overflow',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(393, 560));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ScanRecoveryActions(
+                message: List.filled(
+                  10,
+                  'Failed to detect product. Please try again.',
+                ).join(' '),
+                onRetry: () {},
+                onSearch: () {},
+                onManualInput: () {},
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(SingleChildScrollView), findsOneWidget);
+        expect(find.text('Enter manually'), findsOneWidget);
+      },
+    );
   });
 
   group('FinalPriceScreen layout', () {

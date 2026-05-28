@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 24),
               const Text(
-                'Burası True Price',
+                'Price Lens',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,

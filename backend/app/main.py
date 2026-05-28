@@ -1,4 +1,4 @@
-"""FastAPI entrypoint for the TruePrice MVP backend."""
+"""FastAPI entrypoint for the Price Lens MVP backend."""
 
 import logging
 from contextlib import asynccontextmanager
@@ -52,7 +52,7 @@ def _optional_env_value(name: str) -> str | None:
     return value or None
 
 
-app = FastAPI(title="TruePrice API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Price Lens API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

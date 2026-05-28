@@ -1,6 +1,6 @@
 {
-    "name": "TruePrice Cairo",
-    "short_name": "TruePrice",
+    "name": "Price Lens",
+    "short_name": "Price Lens",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F5F5F5",

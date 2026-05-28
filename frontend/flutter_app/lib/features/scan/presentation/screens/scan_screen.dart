@@ -336,7 +336,7 @@ class _ScanViewState extends State<_ScanView> {
                       child: Row(
                         children: [
                           const Text(
-                            'Burası True Price',
+                            'Price Lens',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -446,6 +446,7 @@ class _ScanViewState extends State<_ScanView> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) => ScanRecoveryActions(
         message: message,
         onRetry: () {
@@ -667,53 +668,63 @@ class ScanRecoveryActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
+
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.search_off, color: AppColors.warning),
-                SizedBox(width: 8),
-                Text(
-                  'Product not recognized',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.search_off, color: AppColors.warning),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Product not recognized',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: const TextStyle(
+                  color: AppColors.onSurfaceLight,
+                  height: 1.35,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: const TextStyle(
-                color: AppColors.onSurfaceLight,
-                height: 1.35,
               ),
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton.icon(
-              onPressed: onSearch,
-              icon: const Icon(Icons.search),
-              label: const Text('Search product'),
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: onManualInput,
-              icon: const Icon(Icons.edit),
-              label: const Text('Enter manually'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: onSearch,
+                icon: const Icon(Icons.search),
+                label: const Text('Search product'),
               ),
-            ),
-            const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
-            ),
-          ],
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: onManualInput,
+                icon: const Icon(Icons.edit),
+                label: const Text('Enter manually'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try again'),
+              ),
+            ],
+          ),
         ),
       ),
     );
