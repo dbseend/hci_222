@@ -1,8 +1,0 @@
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
-reasoning_effort = "medium"
-
-[profiles.mvp]
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
-reasoning_effort = "medium"

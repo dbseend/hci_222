@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../core/constants/api_endpoints.dart';
 import '../../../../../core/services/location_service.dart';
 import '../../data/models/detection_result.dart';
 import '../../data/repositories/scan_repository.dart';
@@ -72,18 +73,32 @@ class ScanBloc extends Bloc<ScanEvent, ScanState> {
   String _scanErrorMessage(Object error) {
     if (error is DioException) {
       final statusCode = error.response?.statusCode;
+      final detail = _responseDetail(error.response?.data);
       if (statusCode == 404) {
-        return 'No supported product was detected. Try a clearer photo or choose the product manually.';
+        return detail ??
+            'No supported product was detected. Try a clearer photo or choose the product manually.';
       }
       if (statusCode == 503) {
-        return 'Detection server is not ready. Check the local backend and try again.';
+        return detail ??
+            'Detection server is not ready. Check the local backend and try again.';
       }
       if (statusCode != null) {
-        return 'Detection request failed with status $statusCode. Please try again.';
+        return detail ??
+            'Detection request failed with status $statusCode. Please try again.';
       }
-      return 'Could not reach the detection server. Check the backend URL and network.';
+      return 'Could not reach the detection server at ${ApiEndpoints.baseUrl}. Check the local backend URL and phone Wi-Fi.';
     }
 
     return 'Failed to detect product. Please try again.';
+  }
+
+  String? _responseDetail(Object? data) {
+    if (data is Map<String, dynamic>) {
+      final detail = data['detail'];
+      if (detail is String && detail.trim().isNotEmpty) {
+        return detail;
+      }
+    }
+    return null;
   }
 }

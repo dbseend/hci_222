@@ -137,9 +137,12 @@ Use one project env file as the source of truth.
 Required keys:
 ```bash
 TRUEPRICE_API_BASE_URL=http://YOUR_BACKEND_HOST:8000
+TRUEPRICE_EXCHANGE_RATE_API_URL=https://YOUR_EXCHANGE_RATE_HOST/v1/latest
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
+TRUEPRICE_DETECTOR_MODE=yolo
 TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
+TRUEPRICE_WARM_UP_DETECTOR=true
 ```
 
 2. Generate Flutter-only env constants:
@@ -152,6 +155,11 @@ cd frontend/flutter_app
 3. Run Flutter normally:
 ```bash
 flutter run
+```
+
+You can also override the generated API URL without regenerating:
+```bash
+flutter run --dart-define=TRUEPRICE_API_BASE_URL=http://<mac-lan-ip>:8000
 ```
 
 4. In VS Code, select launch config:
@@ -172,17 +180,19 @@ flutter build ios --no-codesign
 ## Mock vs Real Backend
 | Feature | Current State | Needed for production |
 |---|---|---|
-| Live scan detection | Captures real image, returns mock Grapes result | YOLO/FastAPI `/scan/detect-object` |
-| Price stats | `RegionStats.mock()` | `/prices/stats` backed by DB |
-| Price submission | Simulated delay | `/prices/submit` DB write |
-| Camel ride stats | Mock `camel_ride` per-minute baseline | Service-price dataset |
-| Community feed | Hardcoded entries | Paginated `/community/feed` |
+| Live scan detection | Captures real image and calls YOLO/FastAPI `/scan/detect-object` | Larger product catalog and model QA |
+| Price stats | FastAPI first, local fallback if backend fails | Live DB coverage for all products |
+| Price comparison | FastAPI first, local fallback if backend fails | Server-side rule/version tracking |
+| Scan history | Local cache with optional FastAPI/Supabase sync | Account-based history |
+| Community feed | FastAPI first, demo-safe local fallback | Pagination/moderation |
 | Market map | Hardcoded Cairo markers | `/markets/nearby` |
 | OCR | Removed | Backend OCR or future on-device OCR decision |
 
 ## iOS Notes
 - `Info.plist` includes camera, location, and photo library usage descriptions.
+- `Info.plist` includes local network usage for physical iPhone -> Mac backend testing.
 - `Podfile` forces iOS deployment target and Swift settings for plugin compatibility.
+- For physical iPhone YOLO testing, set `TRUEPRICE_API_BASE_URL` to the Mac LAN IP, not `127.0.0.1`.
 - If Xcode shows stale MLKit warnings, clean caches:
 ```bash
 flutter clean

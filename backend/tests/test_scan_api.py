@@ -400,6 +400,7 @@ def test_yolo_detector_uses_extra_model_when_it_has_best_detection(tmp_path) -> 
         model_path=fruit_model_path,
         extra_model_paths=[camel_model_path],
         model_loader=lambda path: models[path],
+        image_loader=lambda image_bytes: "decoded-image",
     )
 
     result = detector.detect(
@@ -410,6 +411,47 @@ def test_yolo_detector_uses_extra_model_when_it_has_best_detection(tmp_path) -> 
     assert result.product_id == "camel_doll"
     assert result.name_kr == "Camel Doll"
     assert result.confidence == 0.89
+
+
+def test_yolo_detector_loads_image_once_and_reuses_it_for_all_models(tmp_path) -> None:
+    first_model_path = tmp_path / "first.pt"
+    second_model_path = tmp_path / "second.pt"
+    first_model_path.write_bytes(b"first-model")
+    second_model_path.write_bytes(b"second-model")
+    calls = []
+
+    def fake_image_loader(image_bytes):
+        calls.append(("load", image_bytes))
+        return "decoded-image"
+
+    first_model = FakeYoloModel(
+        names={0: "tomato"},
+        classes=[0],
+        confidences=[0.51],
+    )
+    second_model = FakeYoloModel(
+        names={0: "mango"},
+        classes=[0],
+        confidences=[0.77],
+    )
+
+    def fake_model_loader(path):
+        return {
+            first_model_path: first_model,
+            second_model_path: second_model,
+        }[path]
+
+    detector = YoloObjectDetector(
+        model_path=first_model_path,
+        extra_model_paths=[second_model_path],
+        model_loader=fake_model_loader,
+        image_loader=fake_image_loader,
+    )
+
+    result = detector.detect(image_bytes=b"fake-image", filename="scan.jpg")
+
+    assert result.product_id == "mango"
+    assert calls == [("load", b"fake-image")]
 
 
 def test_yolo_detector_does_not_load_extra_models_by_default(monkeypatch) -> None:

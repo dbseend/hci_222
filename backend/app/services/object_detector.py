@@ -1,4 +1,3 @@
-import tempfile
 from collections.abc import Callable
 from io import BytesIO
 from functools import lru_cache
@@ -236,6 +235,7 @@ class YoloObjectDetector:
         model_path: Path | None = None,
         extra_model_paths: list[Path] | tuple[Path, ...] | None = None,
         model_loader: Callable[[Path], Any] | None = None,
+        image_loader: Callable[[bytes], Any] | None = None,
     ) -> None:
         self.model_path = model_path or _model_path_from_env()
         self.extra_model_paths = (
@@ -244,6 +244,7 @@ class YoloObjectDetector:
             else _extra_model_paths_from_env()
         )
         self._model_loader = model_loader
+        self._image_loader = image_loader or _load_pil_image
         self._model = None
         self._models = None
 
@@ -257,19 +258,16 @@ class YoloObjectDetector:
         confidence_threshold: float = 0.25,
     ) -> DetectionResponse:
         models = self._load_models()
-        suffix = _safe_suffix(filename)
         best_detection: tuple[float, str] | None = None
+        image = self._image_loader(image_bytes)
 
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as image_file:
-            image_file.write(image_bytes)
-            image_file.flush()
-            for _, model in models:
-                results = model(str(image_file.name), conf=confidence_threshold, verbose=False)
-                candidate = _best_yolo_detection(results, model)
-                if candidate is None:
-                    continue
-                if best_detection is None or candidate[0] > best_detection[0]:
-                    best_detection = candidate
+        for _, model in models:
+            results = model(image, conf=confidence_threshold, verbose=False)
+            candidate = _best_yolo_detection(results, model)
+            if candidate is None:
+                continue
+            if best_detection is None or candidate[0] > best_detection[0]:
+                best_detection = candidate
 
         if best_detection is None:
             raise ObjectNotDetected("No object detected")
@@ -364,13 +362,6 @@ def _mock_product_id(filename: str) -> str:
         if class_name in normalized:
             return product_id
     return "tomato"
-
-
-def _safe_suffix(filename: str) -> str:
-    suffix = Path(filename or "").suffix.lower()
-    if suffix in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
-        return suffix
-    return ".jpg"
 
 
 def _load_pil_image(image_bytes: bytes):

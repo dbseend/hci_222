@@ -10,6 +10,14 @@ from app.api import community, price, products, scan
 from app.core.env import env_value
 from app.services.object_detector import ObjectDetectorUnavailable, warm_up_detector
 
+DEFAULT_CORS_ALLOW_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+    "https://web-one-gold-53.vercel.app",
+]
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s:%(message)s",
@@ -44,6 +52,10 @@ def _env_csv_values(name: str) -> list[str]:
     return [value.strip() for value in raw_value.split(",") if value.strip()]
 
 
+def _cors_allow_origins() -> list[str]:
+    return _env_csv_values("TRUEPRICE_CORS_ALLOW_ORIGINS") or DEFAULT_CORS_ALLOW_ORIGINS
+
+
 def _optional_env_value(name: str) -> str | None:
     value = env_value(name)
     if value is None:
@@ -56,7 +68,7 @@ app = FastAPI(title="Price Lens API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_env_csv_values("TRUEPRICE_CORS_ALLOW_ORIGINS"),
+    allow_origins=_cors_allow_origins(),
     allow_origin_regex=_optional_env_value("TRUEPRICE_CORS_ALLOW_ORIGIN_REGEX"),
     allow_methods=["*"],
     allow_headers=["*"],

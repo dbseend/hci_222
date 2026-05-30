@@ -42,6 +42,7 @@ this flow.
 # ../.env
 TRUEPRICE_DETECTOR_MODE=yolo
 TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
+TRUEPRICE_WARM_UP_DETECTOR=true
 # Optional only when running separate fallback models.
 TRUEPRICE_YOLO_EXTRA_MODEL_PATHS=
 ```
@@ -96,11 +97,18 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 Then run Flutter with the Mac's local IP address:
 
 ```bash
-# Edit ../.env:
+# Edit .env at the repository root:
 # TRUEPRICE_API_BASE_URL=http://<mac-lan-ip>:8000
-python3 ../scripts/generate_flutter_defines.py
-cd ../frontend/flutter_app
-flutter run --dart-define-from-file=.dart_tool/trueprice_dart_defines.json
+python3 scripts/generate_flutter_defines.py
+cd frontend/flutter_app
+flutter run
+```
+
+Or override only the Flutter API URL for a one-off run:
+
+```bash
+cd frontend/flutter_app
+flutter run --dart-define=TRUEPRICE_API_BASE_URL=http://<mac-lan-ip>:8000
 ```
 
 ## Supabase Server-Side Integration

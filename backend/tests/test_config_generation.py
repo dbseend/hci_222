@@ -33,6 +33,9 @@ def test_render_dart_env_uses_configured_api_base_url() -> None:
 
     assert "api-base-from-env" in rendered
     assert "exchange-rate-url-from-env" in rendered
+    assert "String.fromEnvironment(" in rendered
+    assert "'TRUEPRICE_API_BASE_URL'" in rendered
+    assert "defaultValue: 'api-base-from-env'" in rendered
     assert "192.168.0.24" not in rendered
 
 

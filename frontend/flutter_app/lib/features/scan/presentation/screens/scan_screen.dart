@@ -32,6 +32,8 @@ class _ScanView extends StatefulWidget {
 
 class _ScanViewState extends State<_ScanView> {
   static const Duration _cameraInitTimeout = Duration(seconds: 8);
+  static const double _maxUploadDimension = 1280;
+  static const int _uploadImageQuality = 88;
   final _picker = ImagePicker();
   final _historyRepo = ScanHistoryRepositoryImpl();
   CameraController? _cameraController;
@@ -59,7 +61,10 @@ class _ScanViewState extends State<_ScanView> {
     });
 
     if (!kIsWeb) {
-      final status = await Permission.camera.status;
+      var status = await Permission.camera.status;
+      if (status.isDenied) {
+        status = await Permission.camera.request();
+      }
       if (!status.isGranted) {
         if (!mounted) return;
         setState(() {
@@ -86,7 +91,7 @@ class _ScanViewState extends State<_ScanView> {
 
       final controller = CameraController(
         backCamera,
-        ResolutionPreset.medium,
+        ResolutionPreset.high,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
@@ -260,7 +265,12 @@ class _ScanViewState extends State<_ScanView> {
 
   Future<void> _pickAndScan(ImageSource source) async {
     _latestCapturedImagePath = null;
-    final picked = await _picker.pickImage(source: source);
+    final picked = await _picker.pickImage(
+      source: source,
+      maxWidth: _maxUploadDimension,
+      maxHeight: _maxUploadDimension,
+      imageQuality: _uploadImageQuality,
+    );
     if (picked == null || !mounted) return;
 
     if (kIsWeb) {

@@ -3,6 +3,8 @@
 
 # IDE local state
 .idea/
+.vscode/
+.codex/
 *.iml
 .idea/caches/
 .idea/deviceManager.xml
