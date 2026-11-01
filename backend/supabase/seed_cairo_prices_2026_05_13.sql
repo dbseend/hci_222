@@ -1,8 +1,27 @@
--- Cairo base price seed for TruePrice MVP
--- Generated from scripts/generate_price_seed_sql.py
--- Target schema: products, price_sources, price_observations, price_reference_stats, exchange_rates.
--- Region: cairo; reference window: 30 days; seed batch: cairo_mvp_augmented_2026_05_13.
+-- Cairo price seed for TruePrice MVP
+-- Generated from scripts/generate_cairo_price_seed.py
+-- Assumes the reviewed schema exists: price_sources, product_aliases, price_observations, daily_price_stats.
 begin;
+
+with source_rows (name, source_type, url, reliability_score) as (
+  values
+  ('Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'https://akhbarelyom.com/news/VideoDisplay/4820176/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A-', 0.78),
+  ('Akhbarelyom Obour vegetable wholesale 2026-05-13', 'web_scrape', 'https://akhbarelyom.com/news/VideoDisplay/4820173/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%AE%D8%B6%D8%B1%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A', 0.78),
+  ('Masrawy Obour market 2026-05-13', 'web_scrape', 'https://www.masrawy.com/news/news_economy/details/2026/5/13/2987317/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%AE%D8%B6%D8%B1%D9%88%D8%A7%D8%AA-%D9%88%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D9%81%D9%8A-%D8%B3%D9%88%D9%82-%D8%A7%D9%84%D8%B9%D8%A8%D9%88%D8%B1-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-%D8%A7%D8%B1%D8%AA%D9%81%D8%A7%D8%B9-%D8%A7%D9%84%D8%B7%D9%85%D8%A7%D8%B7%D9%85', 0.82),
+  ('Cairo retail adjustment from Obour wholesale', 'manual_seed', null, 0.66),
+  ('Carrefour Egypt online retail', 'web_scrape', 'https://www.carrefouregypt.com/mafegy/en/c/FEGY1660000', 0.84),
+  ('Talabat Mart Egypt online retail', 'web_scrape', 'https://www.talabat.com/egypt/talabat-mart', 0.76),
+  ('Noon Egypt souvenir retail', 'web_scrape', 'https://www.noon.com/egypt-en/', 0.72),
+  ('Diwan Egypt / PAF Dolls camel retail', 'web_scrape', 'https://diwanegypt.com/product/camel-doll/', 0.74),
+  ('CAPMAS April 2026 CPI context', 'government', 'https://www.cbe.org.eg/en/news-publications/news/2026/04/09/14/47/cpi-press-release-march-2026', 0.9),
+  ('MVP sparse-price completion', 'manual_seed', null, 0.45)
+)
+insert into price_sources (name, source_type, url, reliability_score)
+select sr.name, sr.source_type, sr.url, sr.reliability_score
+from source_rows sr
+where not exists (
+  select 1 from price_sources ps where ps.name = sr.name
+);
 
 insert into products (code, name, default_unit, is_active)
 values
@@ -31,283 +50,314 @@ values
   ('tomato', 'Tomato', 'kg', true),
   ('watermelon', 'Watermelon', 'kg', true),
   ('camel_doll', 'Camel Doll', 'pcs', true)
-on conflict (code) do update set
-  name = excluded.name,
-  default_unit = excluded.default_unit,
-  is_active = excluded.is_active,
-  updated_at = now();
+on conflict (code) do update set name = excluded.name, default_unit = excluded.default_unit, is_active = true, updated_at = now();
 
+with alias_rows (product_code, alias, locale, source) as (
+  values
+  ('apple', 'apple', 'en', 'product_catalog'),
+  ('apple', 'apples', 'en', 'product_catalog'),
+  ('apple', 'golden apple', 'en', 'product_catalog'),
+  ('apple', 'green apple', 'en', 'product_catalog'),
+  ('apple', 'red apple', 'en', 'product_catalog'),
+  ('apple', 'royal gala apple', 'en', 'product_catalog'),
+  ('apple', 'تفاح', 'ar', 'seed_2026_05_13'),
+  ('apple', 'تفاح مصري', 'ar', 'seed_2026_05_13'),
+  ('apple', 'تفاح مستورد', 'ar', 'seed_2026_05_13'),
+  ('avocado', 'avocado', 'en', 'product_catalog'),
+  ('avocado', 'avocados', 'en', 'product_catalog'),
+  ('avocado', 'imported avocado', 'en', 'product_catalog'),
+  ('avocado', 'أفوكادو', 'ar', 'seed_2026_05_13'),
+  ('banana', 'banana', 'en', 'product_catalog'),
+  ('banana', 'bananas', 'en', 'product_catalog'),
+  ('banana', 'balady banana', 'en', 'product_catalog'),
+  ('banana', 'imported banana', 'en', 'product_catalog'),
+  ('banana', 'موز', 'ar', 'seed_2026_05_13'),
+  ('banana', 'موز بلدي', 'ar', 'seed_2026_05_13'),
+  ('banana', 'موز مستورد', 'ar', 'seed_2026_05_13'),
+  ('blueberry', 'blueberry', 'en', 'product_catalog'),
+  ('blueberry', 'blueberries', 'en', 'product_catalog'),
+  ('blueberry', 'blueberry punnet', 'en', 'product_catalog'),
+  ('blueberry', 'توت أزرق', 'ar', 'seed_2026_05_13'),
+  ('blueberry', 'بلوبيري', 'ar', 'seed_2026_05_13'),
+  ('cherry', 'cherry', 'en', 'product_catalog'),
+  ('cherry', 'cherries', 'en', 'product_catalog'),
+  ('cherry_tomato', 'cherry tomato', 'en', 'product_catalog'),
+  ('cherry_tomato', 'cherry tomatoes', 'en', 'product_catalog'),
+  ('cherry_tomato', 'grape tomato', 'en', 'product_catalog'),
+  ('cherry_tomato', 'grape tomatoes', 'en', 'product_catalog'),
+  ('cherry_tomato', 'طماطم شيري', 'ar', 'seed_2026_05_13'),
+  ('dates', 'dates', 'en', 'product_catalog'),
+  ('dates', 'fresh dates', 'en', 'product_catalog'),
+  ('dates', 'zaghloul dates', 'en', 'product_catalog'),
+  ('dates', 'medjool dates', 'en', 'product_catalog'),
+  ('dates', 'بلح', 'ar', 'seed_2026_05_13'),
+  ('dates', 'تمر', 'ar', 'seed_2026_05_13'),
+  ('fruit', 'fruit', 'en', 'product_catalog'),
+  ('fruit', 'fruits', 'en', 'product_catalog'),
+  ('fruit', 'mixed fruit', 'en', 'product_catalog'),
+  ('grape', 'grape', 'en', 'product_catalog'),
+  ('grape', 'grapes', 'en', 'product_catalog'),
+  ('grape', 'red grape', 'en', 'product_catalog'),
+  ('grape', 'red grapes', 'en', 'product_catalog'),
+  ('grape', 'white grape', 'en', 'product_catalog'),
+  ('grape', 'white grapes', 'en', 'product_catalog'),
+  ('grape', 'black grape', 'en', 'product_catalog'),
+  ('grape', 'black grapes', 'en', 'product_catalog'),
+  ('grape', 'عنب', 'ar', 'seed_2026_05_13'),
+  ('grape', 'عنب أحمر', 'ar', 'seed_2026_05_13'),
+  ('grape', 'عنب بناتي', 'ar', 'seed_2026_05_13'),
+  ('grapefruit', 'grapefruit', 'en', 'product_catalog'),
+  ('grapefruit', 'grapefruits', 'en', 'product_catalog'),
+  ('grapefruit', 'pink grapefruit', 'en', 'product_catalog'),
+  ('grapefruit', 'جريب فروت', 'ar', 'seed_2026_05_13'),
+  ('guava', 'guava', 'en', 'product_catalog'),
+  ('guava', 'guavas', 'en', 'product_catalog'),
+  ('guava', 'جوافة', 'ar', 'seed_2026_05_13'),
+  ('kiwi', 'kiwi', 'en', 'product_catalog'),
+  ('kiwi', 'kiwis', 'en', 'product_catalog'),
+  ('kiwi', 'kiwi fruit', 'en', 'product_catalog'),
+  ('kiwi', 'كيوي', 'ar', 'seed_2026_05_13'),
+  ('lemon', 'lemon', 'en', 'product_catalog'),
+  ('lemon', 'lemons', 'en', 'product_catalog'),
+  ('lemon', 'balady lemon', 'en', 'product_catalog'),
+  ('lemon', 'adalia lemon', 'en', 'product_catalog'),
+  ('lemon', 'ليمون', 'ar', 'seed_2026_05_13'),
+  ('lemon', 'ليمون بلدي', 'ar', 'seed_2026_05_13'),
+  ('mandarin', 'mandarin', 'en', 'product_catalog'),
+  ('mandarin', 'mandarins', 'en', 'product_catalog'),
+  ('mandarin', 'tangerine', 'en', 'product_catalog'),
+  ('mandarin', 'tangerines', 'en', 'product_catalog'),
+  ('mandarin', 'clementine', 'en', 'product_catalog'),
+  ('mandarin', 'clementines', 'en', 'product_catalog'),
+  ('mandarin', 'يوسفي', 'ar', 'seed_2026_05_13'),
+  ('mango', 'mango', 'en', 'product_catalog'),
+  ('mango', 'mangoes', 'en', 'product_catalog'),
+  ('mango', 'zebda mango', 'en', 'product_catalog'),
+  ('mango', 'balady mango', 'en', 'product_catalog'),
+  ('mango', 'sedika mango', 'en', 'product_catalog'),
+  ('mango', 'مانجو', 'ar', 'seed_2026_05_13'),
+  ('mango', 'مانجو بلدي', 'ar', 'seed_2026_05_13'),
+  ('mango', 'مانجو زبدية', 'ar', 'seed_2026_05_13'),
+  ('orange', 'orange', 'en', 'product_catalog'),
+  ('orange', 'oranges', 'en', 'product_catalog'),
+  ('orange', 'navel orange', 'en', 'product_catalog'),
+  ('orange', 'summer orange', 'en', 'product_catalog'),
+  ('orange', 'juice orange', 'en', 'product_catalog'),
+  ('orange', 'برتقال', 'ar', 'seed_2026_05_13'),
+  ('orange', 'برتقال صيفي', 'ar', 'seed_2026_05_13'),
+  ('orange', 'برتقال أبو سرة', 'ar', 'seed_2026_05_13'),
+  ('peach', 'peach', 'en', 'product_catalog'),
+  ('peach', 'peaches', 'en', 'product_catalog'),
+  ('peach', 'balady peach', 'en', 'product_catalog'),
+  ('peach', 'sokari peach', 'en', 'product_catalog'),
+  ('peach', 'خوخ', 'ar', 'seed_2026_05_13'),
+  ('pineapple', 'pineapple', 'en', 'product_catalog'),
+  ('pineapple', 'pineapples', 'en', 'product_catalog'),
+  ('pineapple', 'whole pineapple', 'en', 'product_catalog'),
+  ('pineapple', 'أناناس', 'ar', 'seed_2026_05_13'),
+  ('plum', 'plum', 'en', 'product_catalog'),
+  ('plum', 'plums', 'en', 'product_catalog'),
+  ('plum', 'red plum', 'en', 'product_catalog'),
+  ('plum', 'hollywood plum', 'en', 'product_catalog'),
+  ('pomegranate', 'pomegranate', 'en', 'product_catalog'),
+  ('pomegranate', 'pomegranates', 'en', 'product_catalog'),
+  ('pomegranate', 'رمان', 'ar', 'seed_2026_05_13'),
+  ('rockmelon', 'rockmelon', 'en', 'product_catalog'),
+  ('rockmelon', 'melon', 'en', 'product_catalog'),
+  ('rockmelon', 'cantaloupe', 'en', 'product_catalog'),
+  ('rockmelon', 'sweet melon', 'en', 'product_catalog'),
+  ('rockmelon', 'كنتالوب', 'ar', 'seed_2026_05_13'),
+  ('rockmelon', 'شمام', 'ar', 'seed_2026_05_13'),
+  ('strawberry', 'strawberry', 'en', 'product_catalog'),
+  ('strawberry', 'strawberries', 'en', 'product_catalog'),
+  ('strawberry', 'فراولة', 'ar', 'seed_2026_05_13'),
+  ('tomato', 'tomato', 'en', 'product_catalog'),
+  ('tomato', 'tomatoes', 'en', 'product_catalog'),
+  ('tomato', 'tomatoes_single', 'en', 'product_catalog'),
+  ('tomato', 'balady tomato', 'en', 'product_catalog'),
+  ('tomato', 'طماطم', 'ar', 'seed_2026_05_13'),
+  ('tomato', 'بندورة', 'ar', 'seed_2026_05_13'),
+  ('watermelon', 'watermelon', 'en', 'product_catalog'),
+  ('watermelon', 'watermelons', 'en', 'product_catalog'),
+  ('watermelon', 'بطيخ', 'ar', 'seed_2026_05_13'),
+  ('camel_doll', 'camel doll', 'en', 'product_catalog'),
+  ('camel_doll', 'camel souvenir', 'en', 'product_catalog'),
+  ('camel_doll', 'camel ornament', 'en', 'product_catalog'),
+  ('camel_doll', 'جمل لعبة', 'ar', 'seed_2026_05_13'),
+  ('camel_doll', 'دمية جمل', 'ar', 'seed_2026_05_13'),
+  ('camel_doll', 'تذكار جمل', 'ar', 'seed_2026_05_13')
+)
+insert into product_aliases (product_id, alias, locale, source)
+select p.id, ar.alias, ar.locale, ar.source
+from alias_rows ar
+join products p on p.code = ar.product_code
+on conflict (product_id, alias) do nothing;
 
-insert into price_sources (source_type, name, url, weight, is_active)
+insert into markets (name, company_name, country_code, city, district, lat, lng, is_active)
 values
-  ('web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'https://akhbarelyom.com/news/VideoDisplay/4820176/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A-', 0.5, true),
-  ('web', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'https://akhbarelyom.com/news/VideoDisplay/4820173/1/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%AE%D8%B6%D8%B1%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-13-%D9%85%D8%A7%D9%8A%D9%88-%D9%81%D9%8A', 0.5, true),
-  ('web', 'Masrawy Obour market 2026-05-13', 'https://www.masrawy.com/news/news_economy/details/2026/5/13/2987317/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D8%A7%D9%84%D8%AE%D8%B6%D8%B1%D9%88%D8%A7%D8%AA-%D9%88%D8%A7%D9%84%D9%81%D8%A7%D9%83%D9%87%D8%A9-%D9%81%D9%8A-%D8%B3%D9%88%D9%82-%D8%A7%D9%84%D8%B9%D8%A8%D9%88%D8%B1-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%A3%D8%B1%D8%A8%D8%B9%D8%A7%D8%A1-%D8%A7%D8%B1%D8%AA%D9%81%D8%A7%D8%B9-%D8%A7%D9%84%D8%B7%D9%85%D8%A7%D8%B7%D9%85', 0.5, true),
-  ('manual_seed', 'Cairo retail adjustment from Obour wholesale', null, 0.3, true),
-  ('web', 'Carrefour Egypt online retail', 'https://www.carrefouregypt.com/mafegy/en/c/FEGY1660000', 0.5, true),
-  ('web', 'Talabat Mart Egypt online retail', 'https://www.talabat.com/egypt/talabat-mart', 0.5, true),
-  ('web', 'Noon Egypt souvenir retail', 'https://www.noon.com/egypt-en/', 0.5, true),
-  ('web', 'Diwan Egypt / PAF Dolls camel retail', 'https://diwanegypt.com/product/camel-doll/', 0.5, true),
-  ('government', 'CAPMAS April 2026 CPI context', 'https://www.cbe.org.eg/en/news-publications/news/2026/04/09/14/47/cpi-press-release-march-2026', 0.8, true),
-  ('manual_seed', 'MVP sparse-price completion', null, 0.3, true)
-on conflict (source_type, name) do update set
-  url = excluded.url,
-  weight = excluded.weight,
-  is_active = excluded.is_active;
+  ('Obour Wholesale Market', 'Obour Market', 'EG', 'Cairo', 'Obour', 30.229, 31.476, true),
+  ('Downtown Cairo Retail Market', null, 'EG', 'Cairo', 'Downtown Cairo', 30.0444, 31.2357, true),
+  ('Maadi Online Grocery', 'Online Grocery', 'EG', 'Cairo', 'Maadi', 29.9602, 31.2569, true),
+  ('Nasr City Online Grocery', 'Online Grocery', 'EG', 'Cairo', 'Nasr City', 30.0561, 31.33, true),
+  ('Khan el-Khalili Souvenir Market', null, 'EG', 'Cairo', 'Khan el-Khalili', 30.0478, 31.2625, true),
+  ('Giza Pyramid Souvenir Market', null, 'EG', 'Cairo', 'Giza/Pyramids', 29.9792, 31.1342, true)
+on conflict (name) do update set company_name = excluded.company_name, country_code = excluded.country_code, city = excluded.city, district = excluded.district, lat = excluded.lat, lng = excluded.lng, is_active = true, updated_at = now();
 
-
-insert into price_observations (
-  id,
-  product_id,
-  source_id,
-  region_code,
-  currency,
-  unit,
-  quantity,
-  total_price_egp,
-  unit_price_egp,
-  observed_at,
-  status,
-  confidence_score,
-  raw_payload
-)
-select
-  seed_rows.id,
-  products.id,
-  price_sources.id,
-  seed_rows.region_code,
-  seed_rows.currency,
-  seed_rows.unit,
-  seed_rows.quantity,
-  seed_rows.total_price_egp,
-  seed_rows.unit_price_egp,
-  seed_rows.observed_at,
-  seed_rows.status,
-  seed_rows.confidence_score,
-  seed_rows.raw_payload
-from (
+with observation_rows (product_code, market_name, source_name, source_type, city, district, unit, quantity, total_price_egp, observed_at, verification_status, confidence_score, raw_product_name, raw_payload) as (
   values
-  ('63fcf840-f303-549e-9b09-8519f3a247ed'::uuid, 'tomato', 'web', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 12.5, 12.5, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الطماطم wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('55b610ea-4e9c-528b-9994-d99774370d98'::uuid, 'tomato', 'web', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 22.5, 22.5, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الطماطم wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('275684dc-4072-50c5-9c0a-b88e48d678ec'::uuid, 'tomato', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 18.5, 18.5, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "tomato retail-adjusted low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('fad34cf3-33c1-55b3-8446-bc7e5486169c'::uuid, 'tomato', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 25.0, 25.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.82, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "tomato Masrawy high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('32cc9e75-396d-53db-8b81-3ba41c05993d'::uuid, 'tomato', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 18.75, 37.5, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Balady Tomatoes 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('0f22e5a9-a094-5e64-b47b-311ecfd041b9'::uuid, 'tomato', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 1, 99.99, 99.99, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Grade A Tomato 1 kg", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('259369d4-642f-5c00-97c4-9d26746579cd'::uuid, 'tomato', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 1, 19.95, 19.95, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Khodar.Com Tomato 1kg", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('2c5b2961-266c-5c27-9729-02aca4a0ce24'::uuid, 'cherry_tomato', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.25, 71.95, 287.8, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Mafa Cherry Tomato 250g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('5b08faa5-d1a3-5859-8f96-4e795dc44ee0'::uuid, 'cherry_tomato', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 60.99, 121.98, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Cherry Tomato 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('b08a1a43-a131-5358-b41e-4833328a6f35'::uuid, 'cherry_tomato', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 70.0, 70.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.45, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "local cherry tomato manual retail seed", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('6eeee654-cc9a-5aa5-ae1b-5a903d374f81'::uuid, 'orange', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 10.0, 10.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "برتقال صيفي wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('3f030ee6-4304-5358-9f3d-4d633df815b5'::uuid, 'orange', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 20.0, 20.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "برتقال أبوسرة wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('96c3ba3a-dabd-5127-9c5e-7cd0f64113a2'::uuid, 'orange', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 17.0, 17.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "orange retail-adjusted mid", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('20bae1fd-3ecd-5483-928a-7b56d307dfaf'::uuid, 'orange', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 25.0, 25.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "orange retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('e389863d-f712-52d0-ac10-4b1f8c9fdf32'::uuid, 'lemon', 'web', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 17.0, 17.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الليمون wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('bc162751-5fe8-51bd-a7c0-04b9cee60254'::uuid, 'lemon', 'web', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 33.0, 33.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الليمون wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour vegetable wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('0f39d8ca-2157-510e-942c-4ced62ba682e'::uuid, 'lemon', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 38.0, 38.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "lemon retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('74204426-94b3-5e54-b240-35d376586447'::uuid, 'lemon', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 28.75, 57.5, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Fresh Source Lemon 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('a047ada2-ed85-5d54-890b-5a5181095e66'::uuid, 'banana', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 25.0, 25.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.82, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "موز بلدي wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('a22af3f3-8de7-5108-90a0-c04933af22c9'::uuid, 'banana', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 35.0, 35.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "banana retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('ce81fa56-57ab-5c5b-ab2d-6f730a0cb28a'::uuid, 'banana', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 27.5, 55.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Balady Bananas 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('56d51d19-0291-5d0c-ab58-3b97b14978e8'::uuid, 'banana', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 1, 45.95, 45.95, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Fresh Source Local Banana 1kg", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('33eda375-b9f2-5add-8555-1c5bec9d869d'::uuid, 'banana', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 1, 130.95, 130.95, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Khodar.Com Imported Banana 1kg", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('08b5173b-e974-5657-b308-6b1b02505fb6'::uuid, 'apple', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 15.0, 15.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "تفاح مصرى wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('744c1c19-dcf7-5f4d-9803-43b79fd8665b'::uuid, 'apple', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 43.0, 43.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "تفاح مصرى wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('a86b0a03-1253-5639-af8a-fa7e385b9cf0'::uuid, 'apple', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 55.0, 110.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Royal Gala Apples 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('ab04e1e7-33ee-543a-913f-dbc8563c0e56'::uuid, 'apple', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 50.0, 100.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Golden Apple Medium 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('ee33cb78-83a9-5ed0-aeb0-416bf550eeda'::uuid, 'apple', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 1, 110.75, 110.75, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Fresh Source Red Apple Imported 1kg", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('74c85922-d081-5af9-b6af-3cf7623fc812'::uuid, 'grape', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 40.0, 40.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "العنب wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('5c54a7ca-5ebc-5a69-add6-d7e00e9e50e3'::uuid, 'grape', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 60.0, 60.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "العنب wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('0d664840-09b6-569a-983c-b908c78a2bec'::uuid, 'grape', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 65.0, 65.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "grape retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('1834b498-2173-5844-adb7-8a46e21418cc'::uuid, 'grape', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 35.0, 35.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.82, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "grape Masrawy low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('f5c62dfd-1bad-5c31-872b-5b282471e5ff'::uuid, 'guava', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 12.0, 12.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الجوافة wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('ba1148fd-850f-57d8-9a2b-41552588e409'::uuid, 'guava', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 34.0, 34.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الجوافة wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('f2ea619e-e360-5302-ae58-2d24982ecffd'::uuid, 'guava', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 39.0, 39.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "guava retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('1b02432a-4a47-5297-b124-6a99e27f7c93'::uuid, 'pomegranate', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 15.0, 15.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الرمان wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('2699d494-da9e-5385-b4c3-3e457414bc6b'::uuid, 'pomegranate', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 35.0, 35.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الرمان wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('cf30d121-a4bc-5a23-8f04-a6f9b4b2af55'::uuid, 'pomegranate', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 40.0, 40.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "pomegranate retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('97bc801e-1e2c-5caa-860a-0be0337a8baa'::uuid, 'strawberry', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 15.0, 15.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الفراولة wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('14f1bc9a-f68d-5130-bdab-f5eb57444045'::uuid, 'strawberry', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 25.0, 25.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الفراولة wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('e07352e0-916e-5197-9eca-2ace527bde7a'::uuid, 'strawberry', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 30.0, 30.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "strawberry retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('406c38df-e252-58a3-81da-df6260035e9a'::uuid, 'strawberry', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.45, 119.95, 266.56, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "My Very Strawberries 450g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('0ffe73f5-951e-5911-9a06-b11c145beda1'::uuid, 'rockmelon', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 9.0, 9.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الكانتلوب wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('f80778a3-bb94-5f2c-b7b1-9e8a21d23de1'::uuid, 'rockmelon', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 18.0, 18.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.82, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "cantaloupe Masrawy high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('9c941c09-1bb4-5344-b4ca-bfa6c898635e'::uuid, 'rockmelon', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 23.0, 23.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "cantaloupe retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('e3390ff6-d89d-5b0a-ae7c-2d7a5e3d3894'::uuid, 'rockmelon', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 2, 74.95, 37.48, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Fresh Source Cantaloupe 2kg", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('b5c957d1-186f-5e7d-a854-7c3e901106a5'::uuid, 'mango', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 20.0, 20.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "مانجو بلدية wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('a9fb0de5-aca1-58fb-8584-097f86cc1f8d'::uuid, 'mango', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 50.0, 50.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "مانجو زبدية wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('5464e369-3c2f-51e9-ab28-58f4bf7df712'::uuid, 'mango', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 55.0, 55.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "mango retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('59d6f081-cd0c-5778-928b-6ec6e4a7c91b'::uuid, 'peach', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 20.0, 20.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.82, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "خوخ بلدي wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('4c0c6505-d2fd-5ca4-9e26-8c637d99c483'::uuid, 'peach', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 40.0, 40.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.82, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "خوخ بلدي wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('0d672060-eff9-5631-acd3-c4ff8d309d39'::uuid, 'peach', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 22.5, 45.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Peach 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('4b03cf24-038c-51ed-acf6-9c504dbde7af'::uuid, 'watermelon', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 7.0, 7.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.68, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "watermelon normalized low from whole fruit", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('01362808-5e74-544f-85f2-82fcc5d8b043'::uuid, 'watermelon', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 10.0, 10.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.68, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "watermelon normalized mid from whole fruit", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('9d3c4717-2944-5c6d-821e-cd3e0b82b988'::uuid, 'watermelon', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 20.0, 20.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.62, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "watermelon retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('09c90854-bf68-5d27-bf87-b6f0ce66112f'::uuid, 'dates', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 24.0, 24.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.72, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "بلح ثلاجة wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('3fe04141-13f3-5fcb-92bc-fd4477a13d1e'::uuid, 'dates', 'web', 'Masrawy Obour market 2026-05-13', 'cairo', 'EGP', 'kg', 1, 30.0, 30.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.72, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "بلح ثلاجة wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Masrawy Obour market 2026-05-13", "source_type": "web"}'::jsonb),
-  ('5d145326-789a-5ff0-9f26-3546b33733e3'::uuid, 'dates', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 35.0, 35.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.62, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "dates retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('7a820918-0740-5405-84fc-c3dee9bce22f'::uuid, 'grapefruit', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 9.0, 9.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الجريب فروت wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('585b5676-fda7-5f8e-8715-71a852193028'::uuid, 'grapefruit', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 15.0, 15.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "الجريب فروت wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('9598e771-f30b-5222-8b34-24836977545d'::uuid, 'grapefruit', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 20.0, 20.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "grapefruit retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('4719f114-123b-59d1-a841-b2da60942f4d'::uuid, 'mandarin', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 12.0, 12.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "اليوسفي wholesale low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('5d319afa-b10f-569f-b2c9-a205bc14761c'::uuid, 'mandarin', 'web', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'cairo', 'EGP', 'kg', 1, 22.0, 22.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.78, '{"city": "Cairo", "district": "Obour", "market_name": "Obour Wholesale Market", "original_status": "approved", "raw_product_name": "اليوسفي wholesale high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Akhbarelyom Obour fruit wholesale 2026-05-13", "source_type": "web"}'::jsonb),
-  ('a0e71429-0160-50b5-9fc3-148cd2d9a948'::uuid, 'mandarin', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'kg', 1, 27.0, 27.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.66, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "mandarin retail-adjusted high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb),
-  ('dd39d36d-dd4b-536c-8827-292222aaa33f'::uuid, 'avocado', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 99.95, 199.9, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Pico Avocado Ripe 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('153f2511-551d-56e8-8de2-dbc3f9b90c66'::uuid, 'avocado', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 124.95, 249.9, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Fresh Source Imported Avocado 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('7db5ab87-3fc0-506b-9f93-243bb91e5520'::uuid, 'avocado', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 115.0, 230.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Imported Avocado 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('138bc889-64d1-54ac-843a-ef7be0e44877'::uuid, 'kiwi', 'web', 'Carrefour Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 84.98, 169.96, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.84, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "Kiwi 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Carrefour Egypt online retail", "source_type": "web"}'::jsonb),
-  ('8ec53c42-2fbe-531a-8eaa-98c79c083c11'::uuid, 'kiwi', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.25, 45.95, 183.8, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Khodar.Com Imported Kiwi 250g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('02b8aaca-1777-5f2d-865e-7d5f4d7148b3'::uuid, 'kiwi', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.5, 97.95, 195.9, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Fresh Source Imported Kiwi 500g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('b73dc921-cd37-5084-a457-356cdcf9812f'::uuid, 'blueberry', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.125, 144.95, 1159.6, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "My Very Blueberries 125g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('192b00d7-b528-593d-8eb8-01cf618103e9'::uuid, 'blueberry', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'kg', 0.125, 129.95, 1039.6, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.72, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Hygiene Blueberries 125g", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('a53262fa-8526-5a19-a87f-31b00be35853'::uuid, 'blueberry', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 0.125, 49.99, 399.92, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "legacy Carrefour blueberry punnet 125g seed", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('866c6d4c-9af3-552a-a2e8-6fd1ffd2d41d'::uuid, 'pineapple', 'web', 'Talabat Mart Egypt online retail', 'cairo', 'EGP', 'pcs', 1, 254.95, 254.95, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.76, '{"city": "Cairo", "district": "Nasr City", "market_name": "Nasr City Online Grocery", "original_status": "approved", "raw_product_name": "Khodar.Com Sweet Pineapple Pc", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Talabat Mart Egypt online retail", "source_type": "web"}'::jsonb),
-  ('b651e44e-9391-5c0d-947b-1696b53ece98'::uuid, 'pineapple', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'pcs', 1, 180.0, 180.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.45, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "whole pineapple manual retail seed", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('138351af-6c7c-5642-a73c-4f3a403c6b54'::uuid, 'pineapple', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'pcs', 1, 220.0, 220.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.45, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "whole pineapple manual retail seed high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('570a0ab9-21a5-5ff7-9dcb-5e9e3b879209'::uuid, 'cherry', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 180.0, 180.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "imported cherry sparse retail seed low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('8227cb15-dd05-5645-9a31-c0a500ac68c1'::uuid, 'cherry', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 220.0, 220.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "imported cherry sparse retail seed mid", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('c02d98c0-453d-5dad-b8d4-56228f400ec6'::uuid, 'cherry', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 260.0, 260.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Maadi", "market_name": "Maadi Online Grocery", "original_status": "approved", "raw_product_name": "imported cherry sparse retail seed high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('beb26e05-0488-5f26-bcee-393cbd082ce3'::uuid, 'plum', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 180.0, 180.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "plum sparse retail seed low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('57663b54-857d-5455-944b-b2aad1911caa'::uuid, 'plum', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 190.0, 190.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "plum sparse retail seed mid", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('1e2fb190-a9c6-5895-93f1-f45a748be615'::uuid, 'plum', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 200.0, 200.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.42, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "plum sparse retail seed high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('c6617fcc-76ab-5f6d-bf74-8564e30c610c'::uuid, 'fruit', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 25.0, 25.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.4, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "generic fruit basket sparse seed low", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('5ac0d88e-7ac1-50f0-93a8-1593547e7d69'::uuid, 'fruit', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 55.0, 55.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.4, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "generic fruit basket sparse seed mid", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('0b6ef8a8-a0c7-5173-b967-96f071db707e'::uuid, 'fruit', 'manual_seed', 'MVP sparse-price completion', 'cairo', 'EGP', 'kg', 1, 90.0, 90.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.4, '{"city": "Cairo", "district": "Downtown Cairo", "market_name": "Downtown Cairo Retail Market", "original_status": "approved", "raw_product_name": "generic fruit basket sparse seed high", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "MVP sparse-price completion", "source_type": "manual_seed"}'::jsonb),
-  ('c4fab931-8307-55fa-8855-e8eb676aba17'::uuid, 'camel_doll', 'web', 'Noon Egypt souvenir retail', 'cairo', 'EGP', 'pcs', 1, 684.0, 684.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.72, '{"city": "Cairo", "district": "Giza/Pyramids", "market_name": "Giza Pyramid Souvenir Market", "original_status": "approved", "raw_product_name": "Camel Fur Plush Toy souvenir", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Noon Egypt souvenir retail", "source_type": "web"}'::jsonb),
-  ('05c84684-ceb3-59f7-bcc2-fc075d5248ef'::uuid, 'camel_doll', 'web', 'Diwan Egypt / PAF Dolls camel retail', 'cairo', 'EGP', 'pcs', 1, 1100.0, 1100.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.74, '{"city": "Cairo", "district": "Khan el-Khalili", "market_name": "Khan el-Khalili Souvenir Market", "original_status": "approved", "raw_product_name": "Camel Doll PAF Dolls", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Diwan Egypt / PAF Dolls camel retail", "source_type": "web"}'::jsonb),
-  ('0439ce5f-b0b6-5d62-ae91-197d57118873'::uuid, 'camel_doll', 'web', 'Noon Egypt souvenir retail', 'cairo', 'EGP', 'pcs', 1, 319.0, 319.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.7, '{"city": "Cairo", "district": "Giza/Pyramids", "market_name": "Giza Pyramid Souvenir Market", "original_status": "approved", "raw_product_name": "Collecta Dromedary Camel figure", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Noon Egypt souvenir retail", "source_type": "web"}'::jsonb),
-  ('08f6e0e5-e60e-55dd-8afe-dd95e8eb8177'::uuid, 'camel_doll', 'manual_seed', 'Cairo retail adjustment from Obour wholesale', 'cairo', 'EGP', 'pcs', 1, 250.0, 250.0, '2026-05-13T09:00:00+00:00'::timestamptz, 'accepted', 0.5, '{"city": "Cairo", "district": "Khan el-Khalili", "market_name": "Khan el-Khalili Souvenir Market", "original_status": "approved", "raw_product_name": "small bazaar camel souvenir manual seed", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_name": "Cairo retail adjustment from Obour wholesale", "source_type": "manual_seed"}'::jsonb)
-) as seed_rows (
-  id,
-  product_code,
-  source_type,
-  source_name,
-  region_code,
-  currency,
-  unit,
-  quantity,
-  total_price_egp,
-  unit_price_egp,
-  observed_at,
-  status,
-  confidence_score,
-  raw_payload
+  ('tomato', 'Obour Wholesale Market', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 12.5, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الطماطم wholesale low', '{}'::jsonb),
+  ('tomato', 'Obour Wholesale Market', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 22.5, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الطماطم wholesale high', '{}'::jsonb),
+  ('tomato', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 18.5, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'tomato retail-adjusted low', '{}'::jsonb),
+  ('tomato', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 25.0, '2026-05-13T09:00:00+00:00', 'approved', 0.82, 'tomato Masrawy high', '{}'::jsonb),
+  ('tomato', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 18.75, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Balady Tomatoes 500g', '{}'::jsonb),
+  ('tomato', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 1, 99.99, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Grade A Tomato 1 kg', '{}'::jsonb),
+  ('tomato', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 1, 19.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Khodar.Com Tomato 1kg', '{}'::jsonb),
+  ('cherry_tomato', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.25, 71.95, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Mafa Cherry Tomato 250g', '{}'::jsonb),
+  ('cherry_tomato', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 60.99, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Cherry Tomato 500g', '{}'::jsonb),
+  ('cherry_tomato', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 70.0, '2026-05-13T09:00:00+00:00', 'approved', 0.45, 'local cherry tomato manual retail seed', '{}'::jsonb),
+  ('orange', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 10.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'برتقال صيفي wholesale low', '{}'::jsonb),
+  ('orange', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 20.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'برتقال أبوسرة wholesale high', '{}'::jsonb),
+  ('orange', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 17.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'orange retail-adjusted mid', '{}'::jsonb),
+  ('orange', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 25.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'orange retail-adjusted high', '{}'::jsonb),
+  ('lemon', 'Obour Wholesale Market', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 17.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الليمون wholesale low', '{}'::jsonb),
+  ('lemon', 'Obour Wholesale Market', 'Akhbarelyom Obour vegetable wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 33.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الليمون wholesale high', '{}'::jsonb),
+  ('lemon', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 38.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'lemon retail-adjusted high', '{}'::jsonb),
+  ('lemon', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.5, 28.75, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Fresh Source Lemon 500g', '{}'::jsonb),
+  ('banana', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 25.0, '2026-05-13T09:00:00+00:00', 'approved', 0.82, 'موز بلدي wholesale low', '{}'::jsonb),
+  ('banana', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 35.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'banana retail-adjusted high', '{}'::jsonb),
+  ('banana', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 27.5, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Balady Bananas 500g', '{}'::jsonb),
+  ('banana', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 1, 45.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Fresh Source Local Banana 1kg', '{}'::jsonb),
+  ('banana', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 1, 130.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Khodar.Com Imported Banana 1kg', '{}'::jsonb),
+  ('apple', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 15.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'تفاح مصرى wholesale low', '{}'::jsonb),
+  ('apple', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 43.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'تفاح مصرى wholesale high', '{}'::jsonb),
+  ('apple', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 55.0, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Royal Gala Apples 500g', '{}'::jsonb),
+  ('apple', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 50.0, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Golden Apple Medium 500g', '{}'::jsonb),
+  ('apple', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 1, 110.75, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Fresh Source Red Apple Imported 1kg', '{}'::jsonb),
+  ('grape', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 40.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'العنب wholesale low', '{}'::jsonb),
+  ('grape', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 60.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'العنب wholesale high', '{}'::jsonb),
+  ('grape', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 65.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'grape retail-adjusted high', '{}'::jsonb),
+  ('grape', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 35.0, '2026-05-13T09:00:00+00:00', 'approved', 0.82, 'grape Masrawy low', '{}'::jsonb),
+  ('guava', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 12.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الجوافة wholesale low', '{}'::jsonb),
+  ('guava', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 34.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الجوافة wholesale high', '{}'::jsonb),
+  ('guava', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 39.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'guava retail-adjusted high', '{}'::jsonb),
+  ('pomegranate', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 15.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الرمان wholesale low', '{}'::jsonb),
+  ('pomegranate', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 35.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الرمان wholesale high', '{}'::jsonb),
+  ('pomegranate', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 40.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'pomegranate retail-adjusted high', '{}'::jsonb),
+  ('strawberry', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 15.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الفراولة wholesale low', '{}'::jsonb),
+  ('strawberry', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 25.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الفراولة wholesale high', '{}'::jsonb),
+  ('strawberry', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 30.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'strawberry retail-adjusted high', '{}'::jsonb),
+  ('strawberry', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.45, 119.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'My Very Strawberries 450g', '{}'::jsonb),
+  ('rockmelon', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 9.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الكانتلوب wholesale low', '{}'::jsonb),
+  ('rockmelon', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 18.0, '2026-05-13T09:00:00+00:00', 'approved', 0.82, 'cantaloupe Masrawy high', '{}'::jsonb),
+  ('rockmelon', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 23.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'cantaloupe retail-adjusted high', '{}'::jsonb),
+  ('rockmelon', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 2, 74.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Fresh Source Cantaloupe 2kg', '{}'::jsonb),
+  ('mango', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 20.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'مانجو بلدية wholesale low', '{}'::jsonb),
+  ('mango', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 50.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'مانجو زبدية wholesale high', '{}'::jsonb),
+  ('mango', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 55.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'mango retail-adjusted high', '{}'::jsonb),
+  ('peach', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 20.0, '2026-05-13T09:00:00+00:00', 'approved', 0.82, 'خوخ بلدي wholesale low', '{}'::jsonb),
+  ('peach', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 40.0, '2026-05-13T09:00:00+00:00', 'approved', 0.82, 'خوخ بلدي wholesale high', '{}'::jsonb),
+  ('peach', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 22.5, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Peach 500g', '{}'::jsonb),
+  ('watermelon', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 7.0, '2026-05-13T09:00:00+00:00', 'approved', 0.68, 'watermelon normalized low from whole fruit', '{}'::jsonb),
+  ('watermelon', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 10.0, '2026-05-13T09:00:00+00:00', 'approved', 0.68, 'watermelon normalized mid from whole fruit', '{}'::jsonb),
+  ('watermelon', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 20.0, '2026-05-13T09:00:00+00:00', 'approved', 0.62, 'watermelon retail-adjusted high', '{}'::jsonb),
+  ('dates', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 24.0, '2026-05-13T09:00:00+00:00', 'approved', 0.72, 'بلح ثلاجة wholesale low', '{}'::jsonb),
+  ('dates', 'Obour Wholesale Market', 'Masrawy Obour market 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 30.0, '2026-05-13T09:00:00+00:00', 'approved', 0.72, 'بلح ثلاجة wholesale high', '{}'::jsonb),
+  ('dates', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 35.0, '2026-05-13T09:00:00+00:00', 'approved', 0.62, 'dates retail-adjusted high', '{}'::jsonb),
+  ('grapefruit', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 9.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الجريب فروت wholesale low', '{}'::jsonb),
+  ('grapefruit', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 15.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'الجريب فروت wholesale high', '{}'::jsonb),
+  ('grapefruit', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 20.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'grapefruit retail-adjusted high', '{}'::jsonb),
+  ('mandarin', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 12.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'اليوسفي wholesale low', '{}'::jsonb),
+  ('mandarin', 'Obour Wholesale Market', 'Akhbarelyom Obour fruit wholesale 2026-05-13', 'web_scrape', 'Cairo', 'Obour', 'kg', 1, 22.0, '2026-05-13T09:00:00+00:00', 'approved', 0.78, 'اليوسفي wholesale high', '{}'::jsonb),
+  ('mandarin', 'Downtown Cairo Retail Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 27.0, '2026-05-13T09:00:00+00:00', 'approved', 0.66, 'mandarin retail-adjusted high', '{}'::jsonb),
+  ('avocado', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.5, 99.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Pico Avocado Ripe 500g', '{}'::jsonb),
+  ('avocado', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.5, 124.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Fresh Source Imported Avocado 500g', '{}'::jsonb),
+  ('avocado', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 115.0, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Imported Avocado 500g', '{}'::jsonb),
+  ('kiwi', 'Maadi Online Grocery', 'Carrefour Egypt online retail', 'web_scrape', 'Cairo', 'Maadi', 'kg', 0.5, 84.98, '2026-05-13T09:00:00+00:00', 'approved', 0.84, 'Kiwi 500g', '{}'::jsonb),
+  ('kiwi', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.25, 45.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Khodar.Com Imported Kiwi 250g', '{}'::jsonb),
+  ('kiwi', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.5, 97.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Fresh Source Imported Kiwi 500g', '{}'::jsonb),
+  ('blueberry', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.125, 144.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'My Very Blueberries 125g', '{}'::jsonb),
+  ('blueberry', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'kg', 0.125, 129.95, '2026-05-13T09:00:00+00:00', 'approved', 0.72, 'Hygiene Blueberries 125g', '{}'::jsonb),
+  ('blueberry', 'Maadi Online Grocery', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Maadi', 'kg', 0.125, 49.99, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'legacy Carrefour blueberry punnet 125g seed', '{}'::jsonb),
+  ('pineapple', 'Nasr City Online Grocery', 'Talabat Mart Egypt online retail', 'web_scrape', 'Cairo', 'Nasr City', 'pcs', 1, 254.95, '2026-05-13T09:00:00+00:00', 'approved', 0.76, 'Khodar.Com Sweet Pineapple Pc', '{}'::jsonb),
+  ('pineapple', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'pcs', 1, 180.0, '2026-05-13T09:00:00+00:00', 'approved', 0.45, 'whole pineapple manual retail seed', '{}'::jsonb),
+  ('pineapple', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'pcs', 1, 220.0, '2026-05-13T09:00:00+00:00', 'approved', 0.45, 'whole pineapple manual retail seed high', '{}'::jsonb),
+  ('cherry', 'Maadi Online Grocery', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Maadi', 'kg', 1, 180.0, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'imported cherry sparse retail seed low', '{}'::jsonb),
+  ('cherry', 'Maadi Online Grocery', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Maadi', 'kg', 1, 220.0, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'imported cherry sparse retail seed mid', '{}'::jsonb),
+  ('cherry', 'Maadi Online Grocery', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Maadi', 'kg', 1, 260.0, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'imported cherry sparse retail seed high', '{}'::jsonb),
+  ('plum', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 180.0, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'plum sparse retail seed low', '{}'::jsonb),
+  ('plum', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 190.0, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'plum sparse retail seed mid', '{}'::jsonb),
+  ('plum', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 200.0, '2026-05-13T09:00:00+00:00', 'approved', 0.42, 'plum sparse retail seed high', '{}'::jsonb),
+  ('fruit', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 25.0, '2026-05-13T09:00:00+00:00', 'approved', 0.4, 'generic fruit basket sparse seed low', '{}'::jsonb),
+  ('fruit', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 55.0, '2026-05-13T09:00:00+00:00', 'approved', 0.4, 'generic fruit basket sparse seed mid', '{}'::jsonb),
+  ('fruit', 'Downtown Cairo Retail Market', 'MVP sparse-price completion', 'manual_seed', 'Cairo', 'Downtown Cairo', 'kg', 1, 90.0, '2026-05-13T09:00:00+00:00', 'approved', 0.4, 'generic fruit basket sparse seed high', '{}'::jsonb),
+  ('camel_doll', 'Giza Pyramid Souvenir Market', 'Noon Egypt souvenir retail', 'web_scrape', 'Cairo', 'Giza/Pyramids', 'pcs', 1, 684.0, '2026-05-13T09:00:00+00:00', 'approved', 0.72, 'Camel Fur Plush Toy souvenir', '{}'::jsonb),
+  ('camel_doll', 'Khan el-Khalili Souvenir Market', 'Diwan Egypt / PAF Dolls camel retail', 'web_scrape', 'Cairo', 'Khan el-Khalili', 'pcs', 1, 1100.0, '2026-05-13T09:00:00+00:00', 'approved', 0.74, 'Camel Doll PAF Dolls', '{}'::jsonb),
+  ('camel_doll', 'Giza Pyramid Souvenir Market', 'Noon Egypt souvenir retail', 'web_scrape', 'Cairo', 'Giza/Pyramids', 'pcs', 1, 319.0, '2026-05-13T09:00:00+00:00', 'approved', 0.7, 'Collecta Dromedary Camel figure', '{}'::jsonb),
+  ('camel_doll', 'Khan el-Khalili Souvenir Market', 'Cairo retail adjustment from Obour wholesale', 'manual_seed', 'Cairo', 'Khan el-Khalili', 'pcs', 1, 250.0, '2026-05-13T09:00:00+00:00', 'approved', 0.5, 'small bazaar camel souvenir manual seed', '{}'::jsonb)
 )
-join products on products.code = seed_rows.product_code
-join price_sources
-  on price_sources.source_type = seed_rows.source_type
- and price_sources.name = seed_rows.source_name
-on conflict (id) do update set
-  product_id = excluded.product_id,
-  source_id = excluded.source_id,
-  region_code = excluded.region_code,
-  currency = excluded.currency,
-  unit = excluded.unit,
-  quantity = excluded.quantity,
-  total_price_egp = excluded.total_price_egp,
-  unit_price_egp = excluded.unit_price_egp,
-  observed_at = excluded.observed_at,
-  status = excluded.status,
-  confidence_score = excluded.confidence_score,
-  raw_payload = excluded.raw_payload;
+insert into price_observations (product_id, market_id, source_id, source_type, city, district, unit, quantity, total_price_egp, observed_at, verification_status, confidence_score, raw_product_name, raw_payload)
+select p.id, m.id, s.id, r.source_type, r.city, r.district, r.unit, r.quantity, r.total_price_egp, r.observed_at::timestamptz, r.verification_status, r.confidence_score, r.raw_product_name, r.raw_payload
+from observation_rows r
+join products p on p.code = r.product_code
+left join markets m on m.name = r.market_name
+left join (select distinct on (name) id, name from price_sources order by name, created_at asc) s on s.name = r.source_name
+where not exists (
+  select 1 from price_observations po
+  where po.product_id = p.id
+    and coalesce(po.market_id, '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(m.id, '00000000-0000-0000-0000-000000000000'::uuid)
+    and po.source_id = s.id
+    and po.unit = r.unit
+    and po.quantity = r.quantity
+    and po.total_price_egp = r.total_price_egp
+    and po.observed_at = r.observed_at::timestamptz
+);
 
-
-insert into price_reference_stats (
-  id,
-  product_id,
-  region_code,
-  unit,
-  window_days,
-  stat_date,
-  sample_count,
-  weighted_avg_price_egp,
-  median_price_egp,
-  min_price_egp,
-  max_price_egp,
-  p25_price_egp,
-  p75_price_egp,
-  stddev_price_egp,
-  source_mix
-)
-select
-  seed_rows.id,
-  products.id,
-  seed_rows.region_code,
-  seed_rows.unit,
-  seed_rows.window_days,
-  seed_rows.stat_date,
-  seed_rows.sample_count,
-  seed_rows.weighted_avg_price_egp,
-  seed_rows.median_price_egp,
-  seed_rows.min_price_egp,
-  seed_rows.max_price_egp,
-  seed_rows.p25_price_egp,
-  seed_rows.p75_price_egp,
-  seed_rows.stddev_price_egp,
-  seed_rows.source_mix
-from (
+with stat_rows (stat_date, product_code, city, district, unit, currency, avg_price, median_price, min_price, max_price, stddev_price, p10_price, p90_price, sample_count, distribution) as (
   values
-  ('76769d90-01f5-5f76-aa4e-ce8da584796a'::uuid, 'tomato', 'cairo', 'kg', 30, '2026-05-13'::date, 7, 35.62, 22.5, 12.5, 99.99, 19.23, 31.25, 27.98, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 6}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('f0442f2c-0a94-5063-9cc2-ff0f01e8853a'::uuid, 'cherry_tomato', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 186.21, 121.98, 70.0, 287.8, 95.99, 204.89, 92.88, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('3b92dfc3-6d67-533a-a6f6-1ea8d3b3cfe3'::uuid, 'orange', 'cairo', 'kg', 30, '2026-05-13'::date, 4, 17.02, 18.5, 10.0, 25.0, 15.25, 21.25, 5.43, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 2, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('1d22b470-2efe-5e54-b5f2-69d4d1ef0b45'::uuid, 'lemon', 'cairo', 'kg', 30, '2026-05-13'::date, 4, 35.99, 35.5, 17.0, 57.5, 29.0, 42.88, 14.45, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('6e58c774-864f-5342-918e-d2a9bdc03331'::uuid, 'banana', 'cairo', 'kg', 30, '2026-05-13'::date, 5, 60.12, 45.95, 25.0, 130.95, 35.0, 55.0, 37.66, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 4}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('a8d34920-98c8-52d6-91b8-2c9c7e4dbef2'::uuid, 'apple', 'cairo', 'kg', 30, '2026-05-13'::date, 5, 76.45, 100.0, 15.0, 110.75, 43.0, 110.0, 39.37, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"web": 5}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('d3262fb8-c009-57ac-8b36-c0b317462d3f'::uuid, 'grape', 'cairo', 'kg', 30, '2026-05-13'::date, 4, 47.71, 50.0, 35.0, 65.0, 38.75, 61.25, 12.75, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('1aadda86-60e3-51c2-853b-9bf731c5ce16'::uuid, 'guava', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 26.24, 34.0, 12.0, 39.0, 23.0, 36.5, 11.73, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('49029cd5-d7f6-51dc-a6ad-1d1485a28d36'::uuid, 'pomegranate', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 28.04, 35.0, 15.0, 40.0, 25.0, 37.5, 10.8, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('2075bda3-a81a-5837-8a85-3306ae3d07c0'::uuid, 'strawberry', 'cairo', 'kg', 30, '2026-05-13'::date, 4, 90.45, 27.5, 15.0, 266.56, 22.5, 89.14, 105.46, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('58f9e96b-8856-5c81-ab7c-6648d0fd08fc'::uuid, 'rockmelon', 'cairo', 'kg', 30, '2026-05-13'::date, 4, 21.54, 20.5, 9.0, 37.48, 15.75, 26.62, 10.31, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('7a85fee4-90f4-53fd-85a8-c7d30b590124'::uuid, 'mango', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 39.05, 50.0, 20.0, 55.0, 35.0, 52.5, 15.46, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('7517ce32-f15d-56fd-b97f-cdab51bf7618'::uuid, 'peach', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 35.08, 40.0, 20.0, 45.0, 30.0, 42.5, 10.8, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('4ace94b8-c04b-538b-abb0-ffb18dc4153d'::uuid, 'watermelon', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 10.97, 10.0, 7.0, 20.0, 8.5, 15.0, 5.56, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('0d867c71-ab4e-57f5-93c7-65c777467a6b'::uuid, 'dates', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 28.64, 30.0, 24.0, 35.0, 27.0, 32.5, 4.5, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('10bc9e9d-31f2-5685-bb69-4df72d6fac58'::uuid, 'grapefruit', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 13.62, 15.0, 9.0, 20.0, 12.0, 17.5, 4.5, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('5ab70059-c6c1-5416-b4b7-4606b51694f1'::uuid, 'mandarin', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 19.02, 22.0, 12.0, 27.0, 17.0, 24.5, 6.24, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('58c53877-0748-5c82-ac8f-bfa86598856d'::uuid, 'avocado', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 226.72, 230.0, 199.9, 249.9, 214.95, 239.95, 20.55, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('d6f15345-8fe4-5e6d-a3d6-57e40f7df7d1'::uuid, 'kiwi', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 182.77, 183.8, 169.96, 195.9, 176.88, 189.85, 10.6, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('7e87575d-eee0-579b-88e2-d57bfbfa3919'::uuid, 'blueberry', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 999.18, 1039.6, 399.92, 1159.6, 719.76, 1099.6, 333.45, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 2}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('a58933a7-c09c-5f6c-a53c-ac39918e5d0a'::uuid, 'pineapple', 'cairo', 'pcs', 30, '2026-05-13'::date, 3, 232.12, 220.0, 180.0, 254.95, 200.0, 237.47, 30.62, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 2, "web": 1}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('6ef327df-5fa8-542e-aa91-30436f684145'::uuid, 'cherry', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 220.0, 220.0, 180.0, 260.0, 200.0, 240.0, 32.66, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('0b1abc90-f062-5166-a014-db19572ccbd5'::uuid, 'plum', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 190.0, 190.0, 180.0, 200.0, 185.0, 195.0, 8.16, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('bc16a798-311b-51f8-bcd9-f7613e7ee8da'::uuid, 'fruit', 'cairo', 'kg', 30, '2026-05-13'::date, 3, 56.67, 55.0, 25.0, 90.0, 40.0, 72.5, 26.56, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb),
-  ('6885cb34-f67b-57d2-9cb1-ed400ff7b073'::uuid, 'camel_doll', 'cairo', 'pcs', 30, '2026-05-13'::date, 4, 652.35, 501.5, 250.0, 1100.0, 301.75, 788.0, 338.37, '{"scope": "cairo_overall", "seed_batch": "cairo_mvp_augmented_2026_05_13", "source_counts": {"manual_seed": 1, "web": 3}, "weight_policy": "source_weight * confidence_score"}'::jsonb)
-) as seed_rows (
-  id,
-  product_code,
-  region_code,
-  unit,
-  window_days,
-  stat_date,
-  sample_count,
-  weighted_avg_price_egp,
-  median_price_egp,
-  min_price_egp,
-  max_price_egp,
-  p25_price_egp,
-  p75_price_egp,
-  stddev_price_egp,
-  source_mix
+  ('2026-05-13', 'apple', 'Cairo', null, 'kg', 'EGP', 75.75, 100.0, 15.0, 110.75, 39.37, 15.0, 110.75, 5, '[{"bucket_end": 26.97, "bucket_start": 15.0, "count": 1}, {"bucket_end": 38.94, "bucket_start": 26.97, "count": 0}, {"bucket_end": 50.91, "bucket_start": 38.94, "count": 1}, {"bucket_end": 62.88, "bucket_start": 50.91, "count": 0}, {"bucket_end": 74.84, "bucket_start": 62.88, "count": 0}, {"bucket_end": 86.81, "bucket_start": 74.84, "count": 0}, {"bucket_end": 98.78, "bucket_start": 86.81, "count": 0}, {"bucket_end": 110.75, "bucket_start": 98.78, "count": 3}]'::jsonb),
+  ('2026-05-13', 'avocado', 'Cairo', null, 'kg', 'EGP', 226.6, 230.0, 199.9, 249.9, 20.55, 199.9, 249.9, 3, '[{"bucket_end": 206.15, "bucket_start": 199.9, "count": 1}, {"bucket_end": 212.4, "bucket_start": 206.15, "count": 0}, {"bucket_end": 218.65, "bucket_start": 212.4, "count": 0}, {"bucket_end": 224.9, "bucket_start": 218.65, "count": 0}, {"bucket_end": 231.15, "bucket_start": 224.9, "count": 1}, {"bucket_end": 237.4, "bucket_start": 231.15, "count": 0}, {"bucket_end": 243.65, "bucket_start": 237.4, "count": 0}, {"bucket_end": 249.9, "bucket_start": 243.65, "count": 1}]'::jsonb),
+  ('2026-05-13', 'banana', 'Cairo', null, 'kg', 'EGP', 58.38, 45.95, 25.0, 130.95, 37.66, 25.0, 130.95, 5, '[{"bucket_end": 38.24, "bucket_start": 25.0, "count": 2}, {"bucket_end": 51.49, "bucket_start": 38.24, "count": 1}, {"bucket_end": 64.73, "bucket_start": 51.49, "count": 1}, {"bucket_end": 77.97, "bucket_start": 64.73, "count": 0}, {"bucket_end": 91.22, "bucket_start": 77.97, "count": 0}, {"bucket_end": 104.46, "bucket_start": 91.22, "count": 0}, {"bucket_end": 117.71, "bucket_start": 104.46, "count": 0}, {"bucket_end": 130.95, "bucket_start": 117.71, "count": 1}]'::jsonb),
+  ('2026-05-13', 'blueberry', 'Cairo', null, 'kg', 'EGP', 866.37, 1039.6, 399.92, 1159.6, 333.45, 399.92, 1159.6, 3, '[{"bucket_end": 494.88, "bucket_start": 399.92, "count": 1}, {"bucket_end": 589.84, "bucket_start": 494.88, "count": 0}, {"bucket_end": 684.8, "bucket_start": 589.84, "count": 0}, {"bucket_end": 779.76, "bucket_start": 684.8, "count": 0}, {"bucket_end": 874.72, "bucket_start": 779.76, "count": 0}, {"bucket_end": 969.68, "bucket_start": 874.72, "count": 0}, {"bucket_end": 1064.64, "bucket_start": 969.68, "count": 1}, {"bucket_end": 1159.6, "bucket_start": 1064.64, "count": 1}]'::jsonb),
+  ('2026-05-13', 'camel_doll', 'Cairo', null, 'pcs', 'EGP', 588.25, 501.5, 250.0, 1100.0, 338.37, 250.0, 1100.0, 4, '[{"bucket_end": 356.25, "bucket_start": 250.0, "count": 2}, {"bucket_end": 462.5, "bucket_start": 356.25, "count": 0}, {"bucket_end": 568.75, "bucket_start": 462.5, "count": 0}, {"bucket_end": 675.0, "bucket_start": 568.75, "count": 0}, {"bucket_end": 781.25, "bucket_start": 675.0, "count": 1}, {"bucket_end": 887.5, "bucket_start": 781.25, "count": 0}, {"bucket_end": 993.75, "bucket_start": 887.5, "count": 0}, {"bucket_end": 1100.0, "bucket_start": 993.75, "count": 1}]'::jsonb),
+  ('2026-05-13', 'cherry', 'Cairo', null, 'kg', 'EGP', 220.0, 220.0, 180.0, 260.0, 32.66, 180.0, 260.0, 3, '[{"bucket_end": 190.0, "bucket_start": 180.0, "count": 1}, {"bucket_end": 200.0, "bucket_start": 190.0, "count": 0}, {"bucket_end": 210.0, "bucket_start": 200.0, "count": 0}, {"bucket_end": 220.0, "bucket_start": 210.0, "count": 0}, {"bucket_end": 230.0, "bucket_start": 220.0, "count": 1}, {"bucket_end": 240.0, "bucket_start": 230.0, "count": 0}, {"bucket_end": 250.0, "bucket_start": 240.0, "count": 0}, {"bucket_end": 260.0, "bucket_start": 250.0, "count": 1}]'::jsonb),
+  ('2026-05-13', 'cherry_tomato', 'Cairo', null, 'kg', 'EGP', 159.93, 121.98, 70.0, 287.8, 92.88, 70.0, 287.8, 3, '[{"bucket_end": 97.22, "bucket_start": 70.0, "count": 1}, {"bucket_end": 124.45, "bucket_start": 97.22, "count": 1}, {"bucket_end": 151.68, "bucket_start": 124.45, "count": 0}, {"bucket_end": 178.9, "bucket_start": 151.68, "count": 0}, {"bucket_end": 206.12, "bucket_start": 178.9, "count": 0}, {"bucket_end": 233.35, "bucket_start": 206.12, "count": 0}, {"bucket_end": 260.58, "bucket_start": 233.35, "count": 0}, {"bucket_end": 287.8, "bucket_start": 260.58, "count": 1}]'::jsonb),
+  ('2026-05-13', 'dates', 'Cairo', null, 'kg', 'EGP', 29.67, 30.0, 24.0, 35.0, 4.5, 24.0, 35.0, 3, '[{"bucket_end": 25.38, "bucket_start": 24.0, "count": 1}, {"bucket_end": 26.75, "bucket_start": 25.38, "count": 0}, {"bucket_end": 28.12, "bucket_start": 26.75, "count": 0}, {"bucket_end": 29.5, "bucket_start": 28.12, "count": 0}, {"bucket_end": 30.88, "bucket_start": 29.5, "count": 1}, {"bucket_end": 32.25, "bucket_start": 30.88, "count": 0}, {"bucket_end": 33.62, "bucket_start": 32.25, "count": 0}, {"bucket_end": 35.0, "bucket_start": 33.62, "count": 1}]'::jsonb),
+  ('2026-05-13', 'fruit', 'Cairo', null, 'kg', 'EGP', 56.67, 55.0, 25.0, 90.0, 26.56, 25.0, 90.0, 3, '[{"bucket_end": 33.12, "bucket_start": 25.0, "count": 1}, {"bucket_end": 41.25, "bucket_start": 33.12, "count": 0}, {"bucket_end": 49.38, "bucket_start": 41.25, "count": 0}, {"bucket_end": 57.5, "bucket_start": 49.38, "count": 1}, {"bucket_end": 65.62, "bucket_start": 57.5, "count": 0}, {"bucket_end": 73.75, "bucket_start": 65.62, "count": 0}, {"bucket_end": 81.88, "bucket_start": 73.75, "count": 0}, {"bucket_end": 90.0, "bucket_start": 81.88, "count": 1}]'::jsonb),
+  ('2026-05-13', 'grape', 'Cairo', null, 'kg', 'EGP', 50.0, 50.0, 35.0, 65.0, 12.75, 35.0, 65.0, 4, '[{"bucket_end": 38.75, "bucket_start": 35.0, "count": 1}, {"bucket_end": 42.5, "bucket_start": 38.75, "count": 1}, {"bucket_end": 46.25, "bucket_start": 42.5, "count": 0}, {"bucket_end": 50.0, "bucket_start": 46.25, "count": 0}, {"bucket_end": 53.75, "bucket_start": 50.0, "count": 0}, {"bucket_end": 57.5, "bucket_start": 53.75, "count": 0}, {"bucket_end": 61.25, "bucket_start": 57.5, "count": 1}, {"bucket_end": 65.0, "bucket_start": 61.25, "count": 1}]'::jsonb),
+  ('2026-05-13', 'grapefruit', 'Cairo', null, 'kg', 'EGP', 14.67, 15.0, 9.0, 20.0, 4.5, 9.0, 20.0, 3, '[{"bucket_end": 10.38, "bucket_start": 9.0, "count": 1}, {"bucket_end": 11.75, "bucket_start": 10.38, "count": 0}, {"bucket_end": 13.12, "bucket_start": 11.75, "count": 0}, {"bucket_end": 14.5, "bucket_start": 13.12, "count": 0}, {"bucket_end": 15.88, "bucket_start": 14.5, "count": 1}, {"bucket_end": 17.25, "bucket_start": 15.88, "count": 0}, {"bucket_end": 18.62, "bucket_start": 17.25, "count": 0}, {"bucket_end": 20.0, "bucket_start": 18.62, "count": 1}]'::jsonb),
+  ('2026-05-13', 'guava', 'Cairo', null, 'kg', 'EGP', 28.33, 34.0, 12.0, 39.0, 11.73, 12.0, 39.0, 3, '[{"bucket_end": 15.38, "bucket_start": 12.0, "count": 1}, {"bucket_end": 18.75, "bucket_start": 15.38, "count": 0}, {"bucket_end": 22.12, "bucket_start": 18.75, "count": 0}, {"bucket_end": 25.5, "bucket_start": 22.12, "count": 0}, {"bucket_end": 28.88, "bucket_start": 25.5, "count": 0}, {"bucket_end": 32.25, "bucket_start": 28.88, "count": 0}, {"bucket_end": 35.62, "bucket_start": 32.25, "count": 1}, {"bucket_end": 39.0, "bucket_start": 35.62, "count": 1}]'::jsonb),
+  ('2026-05-13', 'kiwi', 'Cairo', null, 'kg', 'EGP', 183.22, 183.8, 169.96, 195.9, 10.6, 169.96, 195.9, 3, '[{"bucket_end": 173.2, "bucket_start": 169.96, "count": 1}, {"bucket_end": 176.44, "bucket_start": 173.2, "count": 0}, {"bucket_end": 179.69, "bucket_start": 176.44, "count": 0}, {"bucket_end": 182.93, "bucket_start": 179.69, "count": 0}, {"bucket_end": 186.17, "bucket_start": 182.93, "count": 1}, {"bucket_end": 189.42, "bucket_start": 186.17, "count": 0}, {"bucket_end": 192.66, "bucket_start": 189.42, "count": 0}, {"bucket_end": 195.9, "bucket_start": 192.66, "count": 1}]'::jsonb),
+  ('2026-05-13', 'lemon', 'Cairo', null, 'kg', 'EGP', 36.38, 35.5, 17.0, 57.5, 14.45, 17.0, 57.5, 4, '[{"bucket_end": 22.06, "bucket_start": 17.0, "count": 1}, {"bucket_end": 27.12, "bucket_start": 22.06, "count": 0}, {"bucket_end": 32.19, "bucket_start": 27.12, "count": 0}, {"bucket_end": 37.25, "bucket_start": 32.19, "count": 1}, {"bucket_end": 42.31, "bucket_start": 37.25, "count": 1}, {"bucket_end": 47.38, "bucket_start": 42.31, "count": 0}, {"bucket_end": 52.44, "bucket_start": 47.38, "count": 0}, {"bucket_end": 57.5, "bucket_start": 52.44, "count": 1}]'::jsonb),
+  ('2026-05-13', 'mandarin', 'Cairo', null, 'kg', 'EGP', 20.33, 22.0, 12.0, 27.0, 6.24, 12.0, 27.0, 3, '[{"bucket_end": 13.88, "bucket_start": 12.0, "count": 1}, {"bucket_end": 15.75, "bucket_start": 13.88, "count": 0}, {"bucket_end": 17.62, "bucket_start": 15.75, "count": 0}, {"bucket_end": 19.5, "bucket_start": 17.62, "count": 0}, {"bucket_end": 21.38, "bucket_start": 19.5, "count": 0}, {"bucket_end": 23.25, "bucket_start": 21.38, "count": 1}, {"bucket_end": 25.12, "bucket_start": 23.25, "count": 0}, {"bucket_end": 27.0, "bucket_start": 25.12, "count": 1}]'::jsonb),
+  ('2026-05-13', 'mango', 'Cairo', null, 'kg', 'EGP', 41.67, 50.0, 20.0, 55.0, 15.46, 20.0, 55.0, 3, '[{"bucket_end": 24.38, "bucket_start": 20.0, "count": 1}, {"bucket_end": 28.75, "bucket_start": 24.38, "count": 0}, {"bucket_end": 33.12, "bucket_start": 28.75, "count": 0}, {"bucket_end": 37.5, "bucket_start": 33.12, "count": 0}, {"bucket_end": 41.88, "bucket_start": 37.5, "count": 0}, {"bucket_end": 46.25, "bucket_start": 41.88, "count": 0}, {"bucket_end": 50.62, "bucket_start": 46.25, "count": 1}, {"bucket_end": 55.0, "bucket_start": 50.62, "count": 1}]'::jsonb),
+  ('2026-05-13', 'orange', 'Cairo', null, 'kg', 'EGP', 18.0, 18.5, 10.0, 25.0, 5.43, 10.0, 25.0, 4, '[{"bucket_end": 11.88, "bucket_start": 10.0, "count": 1}, {"bucket_end": 13.75, "bucket_start": 11.88, "count": 0}, {"bucket_end": 15.62, "bucket_start": 13.75, "count": 0}, {"bucket_end": 17.5, "bucket_start": 15.62, "count": 1}, {"bucket_end": 19.38, "bucket_start": 17.5, "count": 0}, {"bucket_end": 21.25, "bucket_start": 19.38, "count": 1}, {"bucket_end": 23.12, "bucket_start": 21.25, "count": 0}, {"bucket_end": 25.0, "bucket_start": 23.12, "count": 1}]'::jsonb),
+  ('2026-05-13', 'peach', 'Cairo', null, 'kg', 'EGP', 35.0, 40.0, 20.0, 45.0, 10.8, 20.0, 45.0, 3, '[{"bucket_end": 23.12, "bucket_start": 20.0, "count": 1}, {"bucket_end": 26.25, "bucket_start": 23.12, "count": 0}, {"bucket_end": 29.38, "bucket_start": 26.25, "count": 0}, {"bucket_end": 32.5, "bucket_start": 29.38, "count": 0}, {"bucket_end": 35.62, "bucket_start": 32.5, "count": 0}, {"bucket_end": 38.75, "bucket_start": 35.62, "count": 0}, {"bucket_end": 41.88, "bucket_start": 38.75, "count": 1}, {"bucket_end": 45.0, "bucket_start": 41.88, "count": 1}]'::jsonb),
+  ('2026-05-13', 'pineapple', 'Cairo', null, 'pcs', 'EGP', 218.32, 220.0, 180.0, 254.95, 30.62, 180.0, 254.95, 3, '[{"bucket_end": 189.37, "bucket_start": 180.0, "count": 1}, {"bucket_end": 198.74, "bucket_start": 189.37, "count": 0}, {"bucket_end": 208.11, "bucket_start": 198.74, "count": 0}, {"bucket_end": 217.47, "bucket_start": 208.11, "count": 0}, {"bucket_end": 226.84, "bucket_start": 217.47, "count": 1}, {"bucket_end": 236.21, "bucket_start": 226.84, "count": 0}, {"bucket_end": 245.58, "bucket_start": 236.21, "count": 0}, {"bucket_end": 254.95, "bucket_start": 245.58, "count": 1}]'::jsonb),
+  ('2026-05-13', 'plum', 'Cairo', null, 'kg', 'EGP', 190.0, 190.0, 180.0, 200.0, 8.16, 180.0, 200.0, 3, '[{"bucket_end": 182.5, "bucket_start": 180.0, "count": 1}, {"bucket_end": 185.0, "bucket_start": 182.5, "count": 0}, {"bucket_end": 187.5, "bucket_start": 185.0, "count": 0}, {"bucket_end": 190.0, "bucket_start": 187.5, "count": 0}, {"bucket_end": 192.5, "bucket_start": 190.0, "count": 1}, {"bucket_end": 195.0, "bucket_start": 192.5, "count": 0}, {"bucket_end": 197.5, "bucket_start": 195.0, "count": 0}, {"bucket_end": 200.0, "bucket_start": 197.5, "count": 1}]'::jsonb),
+  ('2026-05-13', 'pomegranate', 'Cairo', null, 'kg', 'EGP', 30.0, 35.0, 15.0, 40.0, 10.8, 15.0, 40.0, 3, '[{"bucket_end": 18.12, "bucket_start": 15.0, "count": 1}, {"bucket_end": 21.25, "bucket_start": 18.12, "count": 0}, {"bucket_end": 24.38, "bucket_start": 21.25, "count": 0}, {"bucket_end": 27.5, "bucket_start": 24.38, "count": 0}, {"bucket_end": 30.62, "bucket_start": 27.5, "count": 0}, {"bucket_end": 33.75, "bucket_start": 30.62, "count": 0}, {"bucket_end": 36.88, "bucket_start": 33.75, "count": 1}, {"bucket_end": 40.0, "bucket_start": 36.88, "count": 1}]'::jsonb),
+  ('2026-05-13', 'rockmelon', 'Cairo', null, 'kg', 'EGP', 21.87, 20.5, 9.0, 37.48, 10.31, 9.0, 37.48, 4, '[{"bucket_end": 12.56, "bucket_start": 9.0, "count": 1}, {"bucket_end": 16.12, "bucket_start": 12.56, "count": 0}, {"bucket_end": 19.68, "bucket_start": 16.12, "count": 1}, {"bucket_end": 23.24, "bucket_start": 19.68, "count": 1}, {"bucket_end": 26.8, "bucket_start": 23.24, "count": 0}, {"bucket_end": 30.36, "bucket_start": 26.8, "count": 0}, {"bucket_end": 33.92, "bucket_start": 30.36, "count": 0}, {"bucket_end": 37.48, "bucket_start": 33.92, "count": 1}]'::jsonb),
+  ('2026-05-13', 'strawberry', 'Cairo', null, 'kg', 'EGP', 84.14, 27.5, 15.0, 266.56, 105.46, 15.0, 266.56, 4, '[{"bucket_end": 46.45, "bucket_start": 15.0, "count": 3}, {"bucket_end": 77.89, "bucket_start": 46.45, "count": 0}, {"bucket_end": 109.34, "bucket_start": 77.89, "count": 0}, {"bucket_end": 140.78, "bucket_start": 109.34, "count": 0}, {"bucket_end": 172.22, "bucket_start": 140.78, "count": 0}, {"bucket_end": 203.67, "bucket_start": 172.22, "count": 0}, {"bucket_end": 235.12, "bucket_start": 203.67, "count": 0}, {"bucket_end": 266.56, "bucket_start": 235.12, "count": 1}]'::jsonb),
+  ('2026-05-13', 'tomato', 'Cairo', null, 'kg', 'EGP', 33.71, 22.5, 12.5, 99.99, 27.98, 12.5, 99.99, 7, '[{"bucket_end": 23.44, "bucket_start": 12.5, "count": 4}, {"bucket_end": 34.37, "bucket_start": 23.44, "count": 1}, {"bucket_end": 45.31, "bucket_start": 34.37, "count": 1}, {"bucket_end": 56.24, "bucket_start": 45.31, "count": 0}, {"bucket_end": 67.18, "bucket_start": 56.24, "count": 0}, {"bucket_end": 78.12, "bucket_start": 67.18, "count": 0}, {"bucket_end": 89.05, "bucket_start": 78.12, "count": 0}, {"bucket_end": 99.99, "bucket_start": 89.05, "count": 1}]'::jsonb),
+  ('2026-05-13', 'watermelon', 'Cairo', null, 'kg', 'EGP', 12.33, 10.0, 7.0, 20.0, 5.56, 7.0, 20.0, 3, '[{"bucket_end": 8.62, "bucket_start": 7.0, "count": 1}, {"bucket_end": 10.25, "bucket_start": 8.62, "count": 1}, {"bucket_end": 11.88, "bucket_start": 10.25, "count": 0}, {"bucket_end": 13.5, "bucket_start": 11.88, "count": 0}, {"bucket_end": 15.12, "bucket_start": 13.5, "count": 0}, {"bucket_end": 16.75, "bucket_start": 15.12, "count": 0}, {"bucket_end": 18.38, "bucket_start": 16.75, "count": 0}, {"bucket_end": 20.0, "bucket_start": 18.38, "count": 1}]'::jsonb)
 )
-join products on products.code = seed_rows.product_code
-on conflict (product_id, region_code, unit, window_days, stat_date) do update set
-  sample_count = excluded.sample_count,
-  weighted_avg_price_egp = excluded.weighted_avg_price_egp,
-  median_price_egp = excluded.median_price_egp,
-  min_price_egp = excluded.min_price_egp,
-  max_price_egp = excluded.max_price_egp,
-  p25_price_egp = excluded.p25_price_egp,
-  p75_price_egp = excluded.p75_price_egp,
-  stddev_price_egp = excluded.stddev_price_egp,
-  source_mix = excluded.source_mix;
-
+insert into daily_price_stats (stat_date, product_id, city, district, unit, currency, avg_price, median_price, min_price, max_price, stddev_price, p10_price, p90_price, sample_count, distribution)
+select sr.stat_date::date, p.id, sr.city, sr.district, sr.unit, sr.currency, sr.avg_price, sr.median_price, sr.min_price, sr.max_price, sr.stddev_price, sr.p10_price, sr.p90_price, sr.sample_count, sr.distribution
+from stat_rows sr
+join products p on p.code = sr.product_code
+where not exists (
+  select 1 from daily_price_stats dps
+  where dps.stat_date = sr.stat_date::date
+    and dps.product_id = p.id
+    and dps.city = sr.city
+    and dps.district is not distinct from sr.district
+    and dps.unit = sr.unit
+);
 
 insert into exchange_rates (base_currency, quote_currency, rate, as_of_date, source)
 select 'EGP', 'KRW', 28.1348, '2026-05-13'::date, 'currencyrate.today EGP/KRW 2026-05-13 07:00 UTC'
 where not exists (
   select 1 from exchange_rates
-  where base_currency = 'EGP'
-    and quote_currency = 'KRW'
-    and as_of_date = '2026-05-13'::date
+  where base_currency = 'EGP' and quote_currency = 'KRW' and as_of_date = '2026-05-13'::date
 );
 
 commit;

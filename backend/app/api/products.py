@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 
+from app.core.config import DEFAULT_REGION
 from app.models.price import PriceStats, Product
 from app.services.catalog_service import get_price_stats, get_product, load_products
 
@@ -23,7 +24,7 @@ def read_product(product_id: str) -> Product:
 @router.get("/{product_id}/price-stats", response_model=PriceStats)
 def read_price_stats(
     product_id: str,
-    region: str = Query(default="cairo"),
+    region: str = Query(default=DEFAULT_REGION, min_length=1, max_length=64),
 ) -> PriceStats:
     if get_product(product_id) is None:
         raise HTTPException(status_code=404, detail="Unknown product_id")

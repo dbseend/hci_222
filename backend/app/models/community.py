@@ -1,13 +1,19 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CommunityPostCreate(BaseModel):
-    product_name: str = Field(min_length=1)
-    price: float = Field(gt=0)
-    product_code: str = "p001"
-    store_name: str = "Traveler Report"
-    location_name: str = "Unknown"
-    client_user_id: str = Field(min_length=1)
+    model_config = ConfigDict(str_strip_whitespace=True, allow_inf_nan=False)
+
+    product_name: str = Field(min_length=1, max_length=120)
+    price: float = Field(gt=0, le=1_000_000)
+    product_code: str = Field(
+        default="tomato",
+        min_length=1,
+        max_length=64,
+        pattern=r"^[a-z0-9_]+$",
+    )
+    store_name: str = Field(default="Traveler Report", min_length=1, max_length=120)
+    location_name: str = Field(default="Unknown", min_length=1, max_length=120)
 
 
 class CommunityPostResponse(BaseModel):

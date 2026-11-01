@@ -112,10 +112,6 @@ def build_product_rows(dataset: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
-def source_lookup_key(source: dict[str, Any]) -> tuple[str, str]:
-    return normalize_source_type(source.get("source_type", "manual_seed")), source["name"]
-
-
 def observation_identity(observation: dict[str, Any], index: int) -> str:
     raw_payload = observation.get("raw_payload") or {}
     synthetic_id = raw_payload.get("synthetic_id")

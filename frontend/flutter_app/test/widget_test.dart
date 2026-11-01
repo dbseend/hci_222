@@ -320,6 +320,26 @@ void main() {
       expect(find.text('bunch'), findsNothing);
       expect(find.text('bundle'), findsNothing);
     });
+
+    testWidgets('enables analysis only for a positive valid price', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: PriceInputScreen(productName: 'Tomato')),
+      );
+
+      ElevatedButton analyzeButton() => tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'Analyze Price'),
+      );
+
+      expect(analyzeButton().onPressed, isNull);
+      await tester.enterText(find.byType(TextField), '0');
+      await tester.pump();
+      expect(analyzeButton().onPressed, isNull);
+      await tester.enterText(find.byType(TextField), '20.50');
+      await tester.pump();
+      expect(analyzeButton().onPressed, isNotNull);
+    });
   });
 
   group('ProductSearchSheet', () {
@@ -458,6 +478,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Purchase complete!'), findsOneWidget);
+      expect(find.text('Automatically posted to Community.'), findsOneWidget);
+      expect(find.text('Share price'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });

@@ -7,10 +7,9 @@ Object Detection 기반 상품 인식 + 가격 비교 MVP 저장소입니다.
 ```text
 hci_222/
 ├── frontend/flutter_app/  # Flutter iPhone-first MVP app
-├── backend/               # FastAPI price/catalog API
-├── db/                    # SQL migrations, seeds, views, RPC
-├── supabase/              # Supabase local/linked project config
+├── backend/               # FastAPI API, tests, Supabase SQL
 ├── ml/                    # Dataset scripts, audit tools, Colab notebooks
+├── scripts/               # Config/code generation helpers
 └── docs/                  # Architecture, guidelines, project notes
 ```
 
@@ -30,7 +29,9 @@ Local-only data and generated artifacts are intentionally ignored:
 - Scan 메뉴는 `Live Scan`과 `Camel Ride` 탭으로 분리되어 있습니다.
 - `Live Scan`은 iPhone 실기기에서 앱 내부 `CameraPreview`로 촬영합니다.
 - `Camel Ride`는 카메라 없이 `분 + 제안 총액`을 입력해 분당 가격으로 분석합니다.
-- 가격 통계/커뮤니티/지도 데이터는 MVP mock 데이터입니다.
+- 상품 인식은 FastAPI의 YOLO, 가격/히스토리/커뮤니티는 FastAPI를 통한
+  Supabase 연동이 기본입니다. 로컬 데모 fallback은 명시적으로 켠 경우에만
+  동작합니다.
 - ML 학습/데이터 준비 코드는 `ml/` 아래로 분리했고, 실제 데이터셋은 Git에 올리지 않습니다.
 
 ## Quick Start
@@ -49,9 +50,12 @@ Xcode에서는 `Runner.xcworkspace`를 열고 실제 iPhone을 선택해 실행�
 
 ### Backend
 
+Python 3.11 이상을 사용합니다.
+
 ```bash
+cp .env.example .env  # 실제 개발 값으로 교체
 cd backend
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements-dev.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -86,7 +90,14 @@ Backend:
 
 ```bash
 cd backend
+python3 -m compileall -q app tests
 python3 -m pytest
+```
+
+ML utility tests:
+
+```bash
+python3 -m pytest -q ml/tests
 ```
 
 ## Important Notes
@@ -96,3 +107,7 @@ python3 -m pytest
 - 문서 기준 파일은 `docs/TruePrice-Guidelines.md`입니다.
 - GitHub 업로드/제외 기준은 `docs/GITHUB_REPOSITORY_GUIDE.md`입니다.
 - 데이터/모델 산출물은 로컬 재생성 대상으로 관리하고 Git에는 코드, 설정, 문서만 올립니다.
+- 프로덕션 배포 전 필수 환경 변수, Supabase migration, YOLO artifact 및
+  fail-closed 설정은
+  [`docs/refactoring_backlog.md`](docs/refactoring_backlog.md)의
+  `Required deployment gates`를 따릅니다.

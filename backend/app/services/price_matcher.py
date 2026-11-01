@@ -24,7 +24,7 @@ def compare_price(
         sample_count=stats.sample_count,
         percent_diff=percent_diff,
         verdict=verdict,
-        message=_message(verdict, percent_diff),
+        message=_message(verdict, percent_diff, stats.region),
     )
 
 
@@ -46,9 +46,16 @@ def _verdict(user_price: float, stats: PriceStats) -> Verdict:
     return "safe"
 
 
-def _message(verdict: Verdict, percent_diff: float) -> str:
+def _message(verdict: Verdict, percent_diff: float, region: str) -> str:
+    region_label = region.replace("_", " ").strip().title()
     if verdict == "safe":
-        return "At or below the Cairo reference. Use it as a negotiation guide."
+        return f"At or below the {region_label} reference. Use it as a negotiation guide."
     if verdict == "negotiable":
-        return f"Slightly above the Cairo reference ({percent_diff:+.1f}%). Try negotiating."
-    return f"High quote versus the Cairo reference ({percent_diff:+.1f}%). Negotiate strongly."
+        return (
+            f"Slightly above the {region_label} reference "
+            f"({percent_diff:+.1f}%). Try negotiating."
+        )
+    return (
+        f"High quote versus the {region_label} reference "
+        f"({percent_diff:+.1f}%). Negotiate strongly."
+    )

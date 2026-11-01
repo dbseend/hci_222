@@ -196,6 +196,25 @@ void main() {
       expect(await file.readAsBytes(), [1, 2, 3]);
       expect(file.path, contains('scan_history/history-1_remote.jpg'));
     });
+
+    test('reports remote sync failures instead of swallowing them', () async {
+      final tempRoot = await Directory.systemTemp.createTemp(
+        'scan-history-errors',
+      );
+      addTearDown(() async => tempRoot.delete(recursive: true));
+      final failures = <String>[];
+      final prefs = await SharedPreferences.getInstance();
+      final repo = ScanHistoryRepositoryImpl(
+        prefsProvider: () async => prefs,
+        directoryProvider: () async => tempRoot,
+        dio: _dioThatCannotConnect(),
+        onSyncError: (operation, _, _) => failures.add(operation),
+      );
+
+      await repo.getHistory();
+
+      expect(failures, contains('fetch_remote_history'));
+    });
   });
 }
 

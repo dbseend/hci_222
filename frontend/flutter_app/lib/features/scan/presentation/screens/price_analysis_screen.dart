@@ -9,6 +9,7 @@ import '../../../../core/utils/price_result_speech.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/price_badge.dart';
 import '../../../community/data/repositories/community_post_repository.dart';
+import '../../../community/presentation/cubit/purchase_submission_cubit.dart';
 import '../../data/models/price_comparison.dart';
 import '../../data/models/region_stats.dart';
 import '../models/scan_route_data.dart';
@@ -24,6 +25,7 @@ class PriceAnalysisScreen extends StatelessWidget {
   final double? detectedPrice;
   final String? capturedImagePath;
   final String? historyId;
+  final CommunityPostRepository? communityRepository;
 
   const PriceAnalysisScreen({
     super.key,
@@ -33,20 +35,30 @@ class PriceAnalysisScreen extends StatelessWidget {
     this.detectedPrice,
     this.capturedImagePath,
     this.historyId,
+    this.communityRepository,
   });
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => PriceBloc()
-        ..add(
-          PriceStatsRequested(
-            productId: productId,
-            lat: 0,
-            lon: 0,
-            userPrice: inputPrice,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => PriceBloc()
+            ..add(
+              PriceStatsRequested(
+                productId: productId,
+                lat: 0,
+                lon: 0,
+                userPrice: inputPrice,
+              ),
+            ),
+        ),
+        BlocProvider(
+          create: (_) => PurchaseSubmissionCubit(
+            repository: communityRepository ?? CommunityPostRepositoryImpl(),
           ),
         ),
+      ],
       child: _PriceAnalysisView(
         productName: productName,
         productId: productId,
@@ -78,42 +90,68 @@ class _PriceAnalysisView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Price Analysis'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go(
-            '/scan/input',
+    return BlocListener<PurchaseSubmissionCubit, PurchaseSubmissionState>(
+      listener: (context, state) {
+        if (state.status == PurchaseSubmissionStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not share this purchase. Please try again.'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+          return;
+        }
+        if (state.status == PurchaseSubmissionStatus.success) {
+          context.go(
+            '/scan/final',
             extra: ScanRouteData(
               productName: productName,
               productId: productId,
               detectedPrice: detectedPrice,
-              inputPrice: inputPrice,
+              finalPrice: inputPrice,
               capturedImagePath: capturedImagePath,
               historyId: historyId,
             ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Price Analysis'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go(
+              '/scan/input',
+              extra: ScanRouteData(
+                productName: productName,
+                productId: productId,
+                detectedPrice: detectedPrice,
+                inputPrice: inputPrice,
+                capturedImagePath: capturedImagePath,
+                historyId: historyId,
+              ),
+            ),
           ),
         ),
-      ),
-      body: BlocBuilder<PriceBloc, PriceState>(
-        builder: (context, state) {
-          if (state is PriceLoading || state is PriceInitial) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is PriceError) {
-            return AppErrorWidget(
-              message: state.message,
-              onRetry: () => context.read<PriceBloc>().add(
-                PriceStatsRequested(productId: productId, lat: 0, lon: 0),
-              ),
-            );
-          }
-          if (state is PriceLoaded) {
-            return _buildContent(context, state.stats, state.comparison);
-          }
-          return const SizedBox();
-        },
+        body: BlocBuilder<PriceBloc, PriceState>(
+          builder: (context, state) {
+            if (state is PriceLoading || state is PriceInitial) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is PriceError) {
+              return AppErrorWidget(
+                message: state.message,
+                onRetry: () => context.read<PriceBloc>().add(
+                  PriceStatsRequested(productId: productId, lat: 0, lon: 0),
+                ),
+              );
+            }
+            if (state is PriceLoaded) {
+              return _buildContent(context, state.stats, state.comparison);
+            }
+            return const SizedBox();
+          },
+        ),
       ),
     );
   }
@@ -254,31 +292,27 @@ class _PriceAnalysisView extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          ElevatedButton(
-            onPressed: () async {
-              final repo = CommunityPostRepositoryImpl();
-              await repo.addPurchasePost(
-                productName: productName,
-                price: inputPrice,
-                imagePath: capturedImagePath,
-                productCode: productId,
-                storeName: 'Traveler Report',
-                locationName: 'Unknown',
-              );
-              if (!context.mounted) return;
-              context.go(
-                '/scan/final',
-                extra: ScanRouteData(
-                  productName: productName,
-                  productId: productId,
-                  detectedPrice: detectedPrice,
-                  finalPrice: inputPrice,
-                  capturedImagePath: capturedImagePath,
-                  historyId: historyId,
+          BlocBuilder<PurchaseSubmissionCubit, PurchaseSubmissionState>(
+            buildWhen: (previous, current) => previous.status != current.status,
+            builder: (context, submissionState) {
+              final isSubmitting =
+                  submissionState.status == PurchaseSubmissionStatus.submitting;
+              return ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () => context.read<PurchaseSubmissionCubit>().submit(
+                        productName: productName,
+                        price: inputPrice,
+                        imagePath: capturedImagePath,
+                        productCode: productId,
+                      ),
+                child: Text(
+                  isSubmitting
+                      ? 'Sharing purchase...'
+                      : 'I bought at this price',
                 ),
               );
             },
-            child: const Text('I bought at this price'),
           ),
           const SizedBox(height: 12),
           OutlinedButton(

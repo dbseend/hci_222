@@ -121,7 +121,8 @@ class _ScanViewState extends State<_ScanView> {
         _currentZoom = initialZoom;
         _zoomAtGestureStart = initialZoom;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[ScanScreen] Camera initialization failed: $e\n$stackTrace');
       if (!mounted) return;
       setState(() {
         final timedOut = e is TimeoutException;
@@ -135,7 +136,7 @@ class _ScanViewState extends State<_ScanView> {
             ? 'Camera startup timed out. Use Gallery/Manual mode or retry.'
             : permissionDenied
             ? 'Browser camera access was denied. Allow camera access from the address bar and retry.'
-            : 'Failed to start camera. Please try again. ($e)';
+            : 'Failed to start camera. Please try again.';
         _isInitializingCamera = false;
       });
     }
@@ -147,7 +148,8 @@ class _ScanViewState extends State<_ScanView> {
       final minZoom = await controller.getMinZoomLevel();
       final maxZoom = await controller.getMaxZoomLevel();
       return (minZoom, maxZoom);
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[ScanScreen] Camera zoom bounds unavailable: $error');
       return (1.0, 1.0);
     }
   }
@@ -159,8 +161,8 @@ class _ScanViewState extends State<_ScanView> {
     if (kIsWeb) return;
     try {
       await controller.setZoomLevel(initialZoom);
-    } catch (_) {
-      // Some camera backends do not expose zoom; scanning still works.
+    } catch (error) {
+      debugPrint('[ScanScreen] Initial zoom unavailable: $error');
     }
   }
 
@@ -191,18 +193,19 @@ class _ScanViewState extends State<_ScanView> {
           _latestCapturedImagePath = await _historyRepo.addCapturedImage(
             File(image.path),
           );
-        } catch (_) {
-          // Do not block scan flow if history save fails.
+        } catch (error) {
+          debugPrint('[ScanScreen] History save failed: $error');
           _latestCapturedImagePath = null;
         }
         if (!mounted) return;
         context.read<ScanBloc>().add(ScanImageCaptured(File(image.path)));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[ScanScreen] Image capture failed: $e\n$stackTrace');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to capture image. ($e)'),
+          content: const Text('Failed to capture image. Please try again.'),
           backgroundColor: AppColors.warning,
         ),
       );

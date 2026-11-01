@@ -1,7 +1,9 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import catalog_service
+from app.services.supabase_backend import SupabaseBackendUnavailable
 
 
 client = TestClient(app)
@@ -121,8 +123,7 @@ def test_unknown_product_returns_404() -> None:
 
 
 def test_catalog_service_maps_supabase_rows(monkeypatch) -> None:
-    catalog_service.load_products.cache_clear()
-    catalog_service.load_price_stats.cache_clear()
+    catalog_service.clear_catalog_cache()
 
     fake_client = _FakeSupabaseClient(
         {
@@ -159,9 +160,57 @@ def test_catalog_service_maps_supabase_rows(monkeypatch) -> None:
     assert stats[0].avg_price == 25.04
     assert stats[0].sample_count == 151
 
-    catalog_service.load_products.cache_clear()
-    catalog_service.load_price_stats.cache_clear()
+    catalog_service.clear_catalog_cache()
 
+
+def test_catalog_does_not_use_local_fallback_in_production(monkeypatch) -> None:
+    catalog_service.clear_catalog_cache()
+    monkeypatch.setenv("TRUEPRICE_APP_ENV", "production")
+    monkeypatch.setattr(
+        catalog_service,
+        "_load_products_from_supabase",
+        lambda: (_ for _ in ()).throw(SupabaseBackendUnavailable("offline")),
+    )
+    monkeypatch.setattr(
+        catalog_service,
+        "_load_products_from_json",
+        lambda: pytest.fail("production must not use local fallback data"),
+    )
+
+    try:
+        with pytest.raises(SupabaseBackendUnavailable):
+            catalog_service.load_products()
+    finally:
+        catalog_service.clear_catalog_cache()
+
+
+def test_catalog_cache_refreshes_after_ttl(monkeypatch) -> None:
+    catalog_service.clear_catalog_cache()
+    calls = []
+    clock = {"now": 0.0}
+    monkeypatch.setattr(catalog_service, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(catalog_service, "_catalog_cache_ttl_seconds", lambda: 10.0)
+    monkeypatch.setattr(
+        catalog_service,
+        "_load_products_from_supabase",
+        lambda: calls.append(clock["now"])
+        or [
+            catalog_service.Product(
+                product_id="tomato",
+                display_name="Tomato",
+                unit="kg",
+            )
+        ],
+    )
+
+    catalog_service.load_products()
+    clock["now"] = 5
+    catalog_service.load_products()
+    clock["now"] = 11
+    catalog_service.load_products()
+
+    assert calls == [0.0, 11]
+    catalog_service.clear_catalog_cache()
 
 class _FakeSupabaseClient:
     def __init__(self, rows_by_table: dict[str, list[dict]]) -> None:

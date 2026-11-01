@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../../core/constants/api_endpoints.dart';
+import '../../../../../core/constants/generated_env.dart';
 import '../../../../../core/network/dio_client.dart';
 import '../../../../../core/utils/price_classifier.dart';
 import '../models/price_comparison.dart';
@@ -17,24 +18,24 @@ abstract class PriceRepository {
   Future<PriceComparison> comparePrice({
     required String productId,
     required double price,
-    String region = 'cairo',
+    String? region,
     String currency = 'EGP',
-  });
-
-  Future<void> submitPrice({
-    required String productId,
-    required double price,
-    required String unit,
-    required double lat,
-    required double lon,
-    required String userId,
   });
 }
 
 class PriceRepositoryImpl implements PriceRepository {
   final Dio _dio;
+  final bool _allowDemoFallbacks;
+  final String _defaultRegion;
 
-  PriceRepositoryImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
+  PriceRepositoryImpl({
+    Dio? dio,
+    bool? allowDemoFallbacks,
+    String? defaultRegion,
+  }) : _dio = dio ?? DioClient.instance,
+       _allowDemoFallbacks =
+           allowDemoFallbacks ?? GeneratedEnv.enableDemoFallbacks,
+       _defaultRegion = defaultRegion ?? GeneratedEnv.defaultRegion;
 
   static final Map<String, RegionStats> _cache = {};
 
@@ -44,8 +45,8 @@ class PriceRepositoryImpl implements PriceRepository {
     required double lat,
     required double lon,
   }) async {
-    const region = 'cairo';
-    final cacheKey = '$productId:$region';
+    final region = _defaultRegion;
+    final cacheKey = _cacheKey(productId, region);
     if (_cache.containsKey(cacheKey)) {
       return _cache[cacheKey]!;
     }
@@ -59,6 +60,7 @@ class PriceRepositoryImpl implements PriceRepository {
       _cache[cacheKey] = stats;
       return stats;
     } on DioException catch (e) {
+      if (!_allowDemoFallbacks) rethrow;
       debugPrint(
         '[PriceRepository] Failed to load price stats from API: $e. '
         'Using local MVP fallback.',
@@ -73,21 +75,23 @@ class PriceRepositoryImpl implements PriceRepository {
   Future<PriceComparison> comparePrice({
     required String productId,
     required double price,
-    String region = 'cairo',
+    String? region,
     String currency = 'EGP',
   }) async {
+    final selectedRegion = region ?? _defaultRegion;
     try {
       final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.priceCompare,
         data: {
           'product_id': productId,
-          'region': region,
+          'region': selectedRegion,
           'user_price': price,
           'currency': currency,
         },
       );
       return PriceComparison.fromJson(res.data!);
     } on DioException catch (e) {
+      if (!_allowDemoFallbacks) rethrow;
       debugPrint(
         '[PriceRepository] Failed to compare price from API: $e. '
         'Using local MVP fallback.',
@@ -95,22 +99,10 @@ class PriceRepositoryImpl implements PriceRepository {
       return _localComparison(
         productId: productId,
         price: price,
-        region: region,
+        region: selectedRegion,
         currency: currency,
       );
     }
-  }
-
-  @override
-  Future<void> submitPrice({
-    required String productId,
-    required double price,
-    required String unit,
-    required double lat,
-    required double lon,
-    required String userId,
-  }) async {
-    _cache.removeWhere((key, _) => key.startsWith('$productId:'));
   }
 
   /// Clears the in-memory cache — useful in tests to force a fresh fetch.
@@ -122,7 +114,7 @@ class PriceRepositoryImpl implements PriceRepository {
     required String region,
     required String currency,
   }) {
-    final cacheKey = '$productId:$region';
+    final cacheKey = _cacheKey(productId, region);
     final stats = _cache[cacheKey] ?? RegionStats.mock(productId);
     final sampleCount = stats.sampleCount > 0
         ? stats.sampleCount
@@ -159,4 +151,7 @@ class PriceRepositoryImpl implements PriceRepository {
           '${PriceClassifier.priceDeltaLabel(percentDiff)}.',
     );
   }
+
+  String _cacheKey(String productId, String region) =>
+      '${_allowDemoFallbacks ? 'demo' : 'live'}:$productId:$region';
 }

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/constants/api_endpoints.dart';
+import '../../../../../core/constants/generated_env.dart';
 import '../../../../../core/services/location_service.dart';
 import '../../data/models/detection_result.dart';
 import '../../data/repositories/scan_repository.dart';
@@ -9,9 +10,12 @@ import 'scan_state.dart';
 
 class ScanBloc extends Bloc<ScanEvent, ScanState> {
   final ScanRepository _repo;
+  final bool _allowDemoFallbacks;
 
-  ScanBloc({ScanRepository? repo})
+  ScanBloc({ScanRepository? repo, bool? allowDemoFallbacks})
     : _repo = repo ?? ScanRepositoryImpl(),
+      _allowDemoFallbacks =
+          allowDemoFallbacks ?? GeneratedEnv.enableDemoFallbacks,
       super(const ScanInitial()) {
     on<ScanImageCaptured>(_onImageCaptured);
     on<ScanImageBytesCaptured>(_onImageBytesCaptured);
@@ -62,6 +66,14 @@ class ScanBloc extends Bloc<ScanEvent, ScanState> {
     Emitter<ScanState> emit,
   ) async {
     emit(const ScanProcessing());
+    if (!_allowDemoFallbacks) {
+      emit(
+        const ScanError(
+          'Demo detection is disabled. Upload the image to the backend instead.',
+        ),
+      );
+      return;
+    }
     await Future.delayed(const Duration(seconds: 1));
     emit(ScanDetected(DetectionResult.mock()));
   }

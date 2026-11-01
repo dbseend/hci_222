@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../constants/generated_env.dart';
 import '../utils/currency_display.dart';
@@ -34,8 +35,8 @@ class ExchangeRateService {
       if (rate != null) {
         CurrencyDisplay.setEgpToKrwRate(rate);
       }
-    } catch (_) {
-      // Keep fallback rate.
+    } catch (error) {
+      debugPrint('[ExchangeRateService] Using fallback rate: $error');
     }
   }
 

@@ -85,11 +85,14 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
           historyId: item.id,
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[ScanHistoryScreen] Detection failed: $e\n$stackTrace');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to detect product from history. ($e)'),
+          content: const Text(
+            'Failed to detect product from history. Please try again.',
+          ),
           backgroundColor: AppColors.warning,
         ),
       );

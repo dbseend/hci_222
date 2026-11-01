@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m compileall -q app tests
+      - run: python -m pytest -q
+
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate public Flutter configuration
+        run: |
+          cp .env.example .env
+          python3 scripts/generate_flutter_defines.py
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test
+        working-directory: frontend/flutter_app
+      - run: flutter pub get
+        working-directory: frontend/flutter_app
+      - run: flutter analyze
+        working-directory: frontend/flutter_app
+      - run: flutter test
+        working-directory: frontend/flutter_app
+
+  ml-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install pytest
+      - run: python -m pytest -q ml/tests

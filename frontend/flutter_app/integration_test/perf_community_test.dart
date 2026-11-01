@@ -4,15 +4,20 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trueprice/features/community/data/models/community_post.dart';
+import 'package:trueprice/features/community/data/repositories/community_post_repository.dart';
 import 'package:trueprice/features/community/presentation/screens/community_screen.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('Community frame performance on real device', (tester) async {
-    await _seedCommunityPosts(postCount: 300);
-    await tester.pumpWidget(const MaterialApp(home: CommunityScreen()));
+    final posts = await _buildCommunityPosts(postCount: 300);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CommunityScreen(repository: _SeededCommunityRepository(posts)),
+      ),
+    );
     await tester.pumpAndSettle(const Duration(milliseconds: 700));
 
     await _pumpUntilFound(tester, find.text('Filters'), timeoutSec: 15);
@@ -68,23 +73,21 @@ Finder _textFieldWithLabel(String label) {
   );
 }
 
-Future<void> _seedCommunityPosts({required int postCount}) async {
+Future<List<CommunityPost>> _buildCommunityPosts({
+  required int postCount,
+}) async {
   final now = DateTime.now();
-  final rows = List<Map<String, dynamic>>.generate(postCount, (index) {
+  final posts = List<CommunityPost>.generate(postCount, (index) {
     final price = 10 + (index % 90) + (index % 5) * 0.4;
-    return {
-      'id': 'post_$index',
-      'product_name': 'Product $index',
-      'price': price,
-      'store_name': 'Store ${index % 15}',
-      'location_name': index % 2 == 0 ? 'Downtown Cairo' : 'Old Cairo',
-      'image_path': null,
-      'created_at': now.subtract(Duration(minutes: index)).toIso8601String(),
-    };
+    return CommunityPost(
+      id: 'post_$index',
+      productName: 'Product $index',
+      price: price,
+      storeName: 'Store ${index % 15}',
+      locationName: index.isEven ? 'Downtown Cairo' : 'Old Cairo',
+      createdAt: now.subtract(Duration(minutes: index)),
+    );
   });
-
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('community_user_posts', jsonEncode(rows));
 
   final projectRoot = Directory.current.path;
   final warmupFile = File('$projectRoot/build/perf_seed_summary.json');
@@ -95,4 +98,24 @@ Future<void> _seedCommunityPosts({required int postCount}) async {
       'seed_time': DateTime.now().toIso8601String(),
     }),
   );
+  return posts;
+}
+
+class _SeededCommunityRepository implements CommunityPostRepository {
+  final List<CommunityPost> posts;
+
+  _SeededCommunityRepository(this.posts);
+
+  @override
+  Future<List<CommunityPost>> getUserPosts() async => posts;
+
+  @override
+  Future<void> addPurchasePost({
+    required String productName,
+    required double price,
+    String? imagePath,
+    String productCode = 'tomato',
+    String storeName = 'Traveler Report',
+    String locationName = 'Unknown',
+  }) async {}
 }

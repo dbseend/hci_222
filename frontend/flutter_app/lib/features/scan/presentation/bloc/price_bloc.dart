@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/services/location_service.dart';
 import '../../data/repositories/price_repository.dart';
@@ -13,7 +14,6 @@ class PriceBloc extends Bloc<PriceEvent, PriceState> {
       _location = location ?? LocationService(),
       super(const PriceInitial()) {
     on<PriceStatsRequested>(_onStatsRequested);
-    on<PriceSubmitted>(_onSubmitted);
   }
 
   Future<void> _onStatsRequested(
@@ -46,32 +46,9 @@ class PriceBloc extends Bloc<PriceEvent, PriceState> {
         return;
       }
       emit(PriceLoaded(stats: stats));
-    } catch (e) {
-      emit(PriceError('Failed to load price data. Please try again. ($e)'));
-    }
-  }
-
-  Future<void> _onSubmitted(
-    PriceSubmitted event,
-    Emitter<PriceState> emit,
-  ) async {
-    final current = state;
-    if (current is! PriceLoaded) return;
-
-    emit(PriceSubmitting(stats: current.stats, userPrice: event.price));
-    try {
-      final pos = await _location.getCurrentLocation();
-      await _repo.submitPrice(
-        productId: event.productId,
-        price: event.price,
-        unit: event.unit,
-        lat: pos.lat,
-        lon: pos.lon,
-        userId: event.userId,
-      );
-      emit(const PriceSubmitSuccess());
-    } catch (e) {
-      emit(PriceError('Failed to submit price. Please try again. ($e)'));
+    } catch (error, stackTrace) {
+      debugPrint('[PriceBloc] Failed to load price data: $error\n$stackTrace');
+      emit(const PriceError('Failed to load price data. Please try again.'));
     }
   }
 }

@@ -40,9 +40,6 @@ dependencies:
   shared_preferences: ^2.2.3
   path_provider: ^2.1.5
 
-  # UUID (익명 사용자)
-  uuid: ^4.3.3
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

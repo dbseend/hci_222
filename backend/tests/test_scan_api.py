@@ -1,8 +1,10 @@
 import logging
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.api import scan
+from app.core.auth import get_current_user
 from app.core.env import load_env_file
 from app.main import app
 from app.models.detection import DetectionResponse
@@ -16,9 +18,13 @@ from app.services.object_detector import (
     YoloObjectDetector,
     ZeroShotObjectDetector,
 )
+from app.services.supabase_backend import SupabaseBackendUnavailable
+from tests.image_fixtures import jpeg_bytes
 
 
 client = TestClient(app)
+TEST_USER_ID = "11111111-1111-4111-8111-111111111111"
+FAKE_JPEG = jpeg_bytes()
 
 
 class FakeDetector:
@@ -29,7 +35,7 @@ class FakeDetector:
     def detect(self, image_bytes: bytes, filename: str, confidence_threshold: float = 0.25) -> DetectionResponse:
         if self.error is not None:
             raise self.error
-        assert image_bytes == b"fake-image"
+        assert image_bytes == FAKE_JPEG
         assert filename == "scan.jpg"
         return self.response or DetectionResponse(
             product_id="tomato",
@@ -88,7 +94,7 @@ def test_detect_object_returns_detection(monkeypatch) -> None:
 
     response = client.post(
         "/scan/detect-object",
-        files={"image": ("scan.jpg", b"fake-image", "image/jpeg")},
+        files={"image": ("scan.jpg", FAKE_JPEG, "image/jpeg")},
         data={"lat": "30.0444", "lon": "31.2357"},
     )
 
@@ -100,6 +106,27 @@ def test_detect_object_returns_detection(monkeypatch) -> None:
         "confidence": 0.91,
         "detected_price": None,
     }
+
+
+def test_detect_object_runs_in_worker_thread(monkeypatch) -> None:
+    calls = []
+    detector = FakeDetector()
+
+    async def fake_run_in_threadpool(function, *args, **kwargs):
+        calls.append(function)
+        return function(*args, **kwargs)
+
+    monkeypatch.setattr(scan, "get_detector", lambda: detector)
+    monkeypatch.setattr(scan, "run_in_threadpool", fake_run_in_threadpool)
+
+    response = client.post(
+        "/scan/detect-object",
+        files={"image": ("scan.jpg", FAKE_JPEG, "image/jpeg")},
+        data={"lat": "30.0444", "lon": "31.2357"},
+    )
+
+    assert response.status_code == 200
+    assert calls == [detector.detect]
 
 
 def test_detect_object_allows_web_cors_preflight() -> None:
@@ -138,6 +165,7 @@ def test_mock_detector_returns_mock_without_model(monkeypatch) -> None:
 
 def test_force_mock_detector_overrides_yolo_mode(monkeypatch) -> None:
     monkeypatch.setenv("TRUEPRICE_FORCE_MOCK_DETECTOR", "true")
+    monkeypatch.setenv("TRUEPRICE_ALLOW_MOCK_DETECTOR", "true")
     monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "yolo")
     object_detector.get_detector.cache_clear()
 
@@ -149,7 +177,7 @@ def test_force_mock_detector_overrides_yolo_mode(monkeypatch) -> None:
     assert isinstance(detector, MockObjectDetector)
 
 
-def test_mock_mode_without_explicit_allowance_still_uses_mock(monkeypatch, tmp_path) -> None:
+def test_mock_mode_requires_explicit_allowance(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "mock")
     monkeypatch.delenv("TRUEPRICE_ALLOW_MOCK_DETECTOR", raising=False)
     monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
@@ -157,12 +185,25 @@ def test_mock_mode_without_explicit_allowance_still_uses_mock(monkeypatch, tmp_p
     object_detector.get_detector.cache_clear()
 
     try:
-        detector = object_detector.get_detector()
+        with pytest.raises(ObjectDetectorUnavailable):
+            object_detector.get_detector()
     finally:
         load_env_file.cache_clear()
         object_detector.get_detector.cache_clear()
 
-    assert isinstance(detector, MockObjectDetector)
+
+
+def test_production_rejects_mock_detector_even_when_allowed(monkeypatch) -> None:
+    monkeypatch.setenv("TRUEPRICE_APP_ENV", "production")
+    monkeypatch.setenv("TRUEPRICE_DETECTOR_MODE", "mock")
+    monkeypatch.setenv("TRUEPRICE_ALLOW_MOCK_DETECTOR", "true")
+    object_detector.get_detector.cache_clear()
+
+    try:
+        with pytest.raises(ObjectDetectorUnavailable):
+            object_detector.get_detector()
+    finally:
+        object_detector.get_detector.cache_clear()
 
 
 def test_detector_defaults_to_yolo(monkeypatch, tmp_path) -> None:
@@ -188,7 +229,7 @@ def test_detect_object_logs_detection_result(monkeypatch, caplog) -> None:
 
     response = client.post(
         "/scan/detect-object",
-        files={"image": ("scan.jpg", b"fake-image", "image/jpeg")},
+        files={"image": ("scan.jpg", FAKE_JPEG, "image/jpeg")},
         data={"lat": "30.0444", "lon": "31.2357"},
     )
 
@@ -220,7 +261,7 @@ def test_save_scan_history_uploads_image(monkeypatch) -> None:
         calls.update(kwargs)
         return ScanHistoryUploadResponse(
             id="history-1",
-            image_path="client-1/capture.jpg",
+            image_path=f"{TEST_USER_ID}/capture.jpg",
             image_url="https://example.test/signed/capture.jpg",
             created_at="2026-05-13T00:00:00Z",
         )
@@ -229,16 +270,65 @@ def test_save_scan_history_uploads_image(monkeypatch) -> None:
 
     response = client.post(
         "/scan/history",
-        files={"image": ("capture.jpg", b"fake-image", "image/jpeg")},
-        data={"client_user_id": "client-1"},
+        files={"image": ("capture.jpg", FAKE_JPEG, "image/jpeg")},
     )
 
     assert response.status_code == 200
-    assert response.json()["image_path"] == "client-1/capture.jpg"
+    assert response.json()["image_path"] == f"{TEST_USER_ID}/capture.jpg"
     assert response.json()["image_url"] == "https://example.test/signed/capture.jpg"
-    assert calls["image_bytes"] == b"fake-image"
+    assert calls["image_bytes"] == FAKE_JPEG
     assert calls["filename"] == "capture.jpg"
-    assert calls["client_user_id"] == "client-1"
+    assert calls["client_user_id"] == TEST_USER_ID
+
+
+def test_supabase_failure_returns_sanitized_service_error(monkeypatch) -> None:
+    def fake_save_scan_history_image(**_kwargs):
+        raise SupabaseBackendUnavailable(
+            "SUPABASE_SERVICE_ROLE_KEY=secret must never reach clients"
+        )
+
+    monkeypatch.setattr(scan, "save_scan_history_image", fake_save_scan_history_image)
+
+    response = client.post(
+        "/scan/history",
+        files={"image": ("capture.jpg", FAKE_JPEG, "image/jpeg")},
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Data service is unavailable."}
+    assert "secret" not in response.text
+
+
+def test_scan_history_requires_authentication() -> None:
+    override = app.dependency_overrides.pop(get_current_user)
+    try:
+        response = client.get("/scan/history")
+    finally:
+        app.dependency_overrides[get_current_user] = override
+
+    assert response.status_code == 401
+
+
+def test_detect_object_rejects_oversized_image(monkeypatch) -> None:
+    monkeypatch.setattr(scan, "MAX_IMAGE_UPLOAD_BYTES", 8)
+
+    response = client.post(
+        "/scan/detect-object",
+        files={"image": ("large.jpg", FAKE_JPEG, "image/jpeg")},
+        data={"lat": "30.0444", "lon": "31.2357"},
+    )
+
+    assert response.status_code == 413
+
+
+def test_detect_object_rejects_spoofed_image_content_type() -> None:
+    response = client.post(
+        "/scan/detect-object",
+        files={"image": ("payload.jpg", b"not-an-image", "image/jpeg")},
+        data={"lat": "30.0444", "lon": "31.2357"},
+    )
+
+    assert response.status_code == 415
 
 
 def test_list_scan_history_returns_signed_urls(monkeypatch) -> None:
@@ -249,7 +339,7 @@ def test_list_scan_history_returns_signed_urls(monkeypatch) -> None:
         return [
             ScanHistoryUploadResponse(
                 id="history-1",
-                image_path="client-1/capture.jpg",
+                image_path=f"{TEST_USER_ID}/capture.jpg",
                 image_url="https://example.test/signed/capture.jpg",
                 created_at="2026-05-13T00:00:00Z",
             )
@@ -257,18 +347,24 @@ def test_list_scan_history_returns_signed_urls(monkeypatch) -> None:
 
     monkeypatch.setattr(scan, "list_scan_history_images", fake_list_scan_history_images)
 
-    response = client.get("/scan/history", params={"client_user_id": "client-1"})
+    response = client.get("/scan/history")
 
     assert response.status_code == 200
     assert response.json() == [
         {
             "id": "history-1",
-            "image_path": "client-1/capture.jpg",
+            "image_path": f"{TEST_USER_ID}/capture.jpg",
             "image_url": "https://example.test/signed/capture.jpg",
             "created_at": "2026-05-13T00:00:00Z",
         }
     ]
-    assert calls == {"client_user_id": "client-1", "limit": 50}
+    assert calls == {"client_user_id": TEST_USER_ID, "limit": 50}
+
+
+def test_list_scan_history_rejects_excessive_limit() -> None:
+    response = client.get("/scan/history?limit=101")
+
+    assert response.status_code == 422
 
 
 def test_update_scan_history_detection(monkeypatch) -> None:
@@ -278,7 +374,7 @@ def test_update_scan_history_detection(monkeypatch) -> None:
         calls.update(kwargs)
         return ScanHistoryUploadResponse(
             id="history-1",
-            image_path="client-1/capture.jpg",
+            image_path=f"{TEST_USER_ID}/capture.jpg",
             image_url="https://example.test/signed/capture.jpg",
             created_at="2026-05-13T00:00:00Z",
             detected_product_code="tomato",
@@ -304,6 +400,7 @@ def test_update_scan_history_detection(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json()["detected_product_code"] == "tomato"
     assert calls["history_id"] == "history-1"
+    assert calls["client_user_id"] == TEST_USER_ID
     assert calls["payload"].product_id == "tomato"
 
 
@@ -314,7 +411,7 @@ def test_update_scan_history_price(monkeypatch) -> None:
         calls.update(kwargs)
         return ScanHistoryUploadResponse(
             id="history-1",
-            image_path="client-1/capture.jpg",
+            image_path=f"{TEST_USER_ID}/capture.jpg",
             image_url="https://example.test/signed/capture.jpg",
             created_at="2026-05-13T00:00:00Z",
             detected_product_code="tomato",
@@ -343,6 +440,7 @@ def test_update_scan_history_price(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json()["quoted_unit_price_egp"] == 65
     assert calls["history_id"] == "history-1"
+    assert calls["client_user_id"] == TEST_USER_ID
     assert calls["payload"].quoted_unit_price_egp == 65
 
 
@@ -351,7 +449,7 @@ def test_detect_object_returns_404_when_no_object(monkeypatch) -> None:
 
     response = client.post(
         "/scan/detect-object",
-        files={"image": ("scan.jpg", b"fake-image", "image/jpeg")},
+        files={"image": ("scan.jpg", FAKE_JPEG, "image/jpeg")},
         data={"lat": "30.0444", "lon": "31.2357"},
     )
 
@@ -367,7 +465,7 @@ def test_detect_object_returns_503_when_detector_unavailable(monkeypatch) -> Non
 
     response = client.post(
         "/scan/detect-object",
-        files={"image": ("scan.jpg", b"fake-image", "image/jpeg")},
+        files={"image": ("scan.jpg", FAKE_JPEG, "image/jpeg")},
         data={"lat": "30.0444", "lon": "31.2357"},
     )
 

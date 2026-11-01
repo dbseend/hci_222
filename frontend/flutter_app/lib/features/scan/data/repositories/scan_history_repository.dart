@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/services/user_id_service.dart';
 import '../models/detection_result.dart';
 import '../models/scan_history_item.dart';
 
@@ -38,17 +38,23 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
   final Future<SharedPreferences> Function() _prefsProvider;
   final Future<Directory> Function() _directoryProvider;
   final Dio _dio;
+  final void Function(String operation, Object error, StackTrace stackTrace)?
+  _onSyncError;
+  final Set<String> _uploadsInFlight = <String>{};
   final int maxItems;
 
   ScanHistoryRepositoryImpl({
     Future<SharedPreferences> Function()? prefsProvider,
     Future<Directory> Function()? directoryProvider,
     Dio? dio,
+    void Function(String operation, Object error, StackTrace stackTrace)?
+    onSyncError,
     this.maxItems = 50,
   }) : _prefsProvider = prefsProvider ?? SharedPreferences.getInstance,
        _directoryProvider =
            directoryProvider ?? getApplicationDocumentsDirectory,
-       _dio = dio ?? DioClient.instance;
+       _dio = dio ?? DioClient.instance,
+       _onSyncError = onSyncError;
 
   @override
   Future<String?> addCapturedImage(File image) async {
@@ -82,13 +88,7 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
 
     await _save(trimmed);
 
-    unawaited(
-      _syncUploadedHistoryItem(
-        localId: id,
-        localImagePath: copied.path,
-        image: copied,
-      ),
-    );
+    _scheduleUpload(localId: id, localImagePath: copied.path, image: copied);
 
     return copied.path;
   }
@@ -98,8 +98,9 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
     required String localImagePath,
     required File image,
   }) async {
-    final uploaded = await _uploadHistoryImage(image);
-    if (uploaded != null) {
+    try {
+      final uploaded = await _uploadHistoryImage(image);
+      if (uploaded == null) return;
       final current = await _findHistoryItem(
         historyId: localId,
         imagePath: localImagePath,
@@ -132,12 +133,41 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
           ),
         );
       }
+    } catch (error, stackTrace) {
+      _reportSyncError('sync_uploaded_history', error, stackTrace);
     }
+  }
+
+  void _scheduleUpload({
+    required String localId,
+    required String localImagePath,
+    required File image,
+  }) {
+    if (!_uploadsInFlight.add(localImagePath)) return;
+    unawaited(
+      _syncUploadedHistoryItem(
+        localId: localId,
+        localImagePath: localImagePath,
+        image: image,
+      ).whenComplete(() => _uploadsInFlight.remove(localImagePath)),
+    );
   }
 
   @override
   Future<List<ScanHistoryItem>> getHistory() async {
     final localItems = await _getLocalHistory();
+    for (final item in localItems) {
+      if (item.remoteImagePath?.isNotEmpty ?? false) continue;
+      if (item.imagePath.isEmpty) continue;
+      final image = File(item.imagePath);
+      if (await image.exists()) {
+        _scheduleUpload(
+          localId: item.id,
+          localImagePath: item.imagePath,
+          image: image,
+        );
+      }
+    }
     final remoteItems = await _fetchRemoteHistory();
     if (remoteItems.isEmpty) return localItems;
     return _mergeHistory(localItems, remoteItems);
@@ -207,8 +237,8 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
           ).copyWith(imagePath: updated.imagePath),
         );
       }
-    } catch (_) {
-      // Local history remains usable if backend cache update fails.
+    } catch (error, stackTrace) {
+      _reportSyncError('update_detection', error, stackTrace);
     }
   }
 
@@ -261,8 +291,8 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
           ).copyWith(imagePath: updated.imagePath),
         );
       }
-    } catch (_) {
-      // Local history remains usable if backend cache update fails.
+    } catch (error, stackTrace) {
+      _reportSyncError('update_quoted_price', error, stackTrace);
     }
   }
 
@@ -294,7 +324,10 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
               .toList()
             ..sort((a, b) => b.capturedAt.compareTo(a.capturedAt));
       return items;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _reportSyncError('read_local_history', error, stackTrace);
+      final prefs = await _prefsProvider();
+      await prefs.remove(_storageKey);
       return const [];
     }
   }
@@ -352,9 +385,7 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
 
   Future<ScanHistoryItem?> _uploadHistoryImage(File image) async {
     try {
-      final clientUserId = await UserIdService.getOrCreate();
       final formData = FormData.fromMap({
-        'client_user_id': clientUserId,
         'image': await MultipartFile.fromFile(
           image.path,
           filename: image.uri.pathSegments.isNotEmpty
@@ -369,25 +400,25 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
       final data = response.data;
       if (data == null) return null;
       return ScanHistoryItem.fromApiJson(data);
-    } catch (_) {
-      // Keep local history even if remote history sync is unavailable.
+    } catch (error, stackTrace) {
+      _reportSyncError('upload_history_image', error, stackTrace);
       return null;
     }
   }
 
   Future<List<ScanHistoryItem>> _fetchRemoteHistory() async {
     try {
-      final clientUserId = await UserIdService.getOrCreate();
       final response = await _dio.get<List<dynamic>>(
         ApiEndpoints.scanHistory,
-        queryParameters: {'client_user_id': clientUserId, 'limit': maxItems},
+        queryParameters: {'limit': maxItems},
       );
       final data = response.data ?? const [];
       return data
           .map((e) => ScanHistoryItem.fromApiJson(e as Map<String, dynamic>))
           .where((item) => item.canDisplay)
           .toList();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _reportSyncError('fetch_remote_history', error, stackTrace);
       return const [];
     }
   }
@@ -424,5 +455,10 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
     final dot = path.lastIndexOf('.');
     if (dot == -1 || dot == path.length - 1) return '.jpg';
     return path.substring(dot);
+  }
+
+  void _reportSyncError(String operation, Object error, StackTrace stackTrace) {
+    debugPrint('[ScanHistoryRepository] $operation failed: $error');
+    _onSyncError?.call(operation, error, stackTrace);
   }
 }

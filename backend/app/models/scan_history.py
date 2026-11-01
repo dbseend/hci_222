@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.detection import DetectionResponse
 
@@ -24,7 +26,9 @@ class ScanHistoryDetectionUpdate(DetectionResponse):
 
 
 class ScanHistoryPriceUpdate(BaseModel):
-    quoted_total_price_egp: float
-    quoted_quantity: float
-    quoted_unit: str = "kg"
-    quoted_unit_price_egp: float
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    quoted_total_price_egp: float = Field(gt=0, le=1_000_000)
+    quoted_quantity: float = Field(gt=0, le=10_000)
+    quoted_unit: Literal["kg", "pcs"] = "kg"
+    quoted_unit_price_egp: float = Field(gt=0, le=1_000_000)

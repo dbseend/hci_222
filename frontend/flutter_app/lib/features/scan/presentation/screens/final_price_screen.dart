@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/services/user_id_service.dart';
 import '../../../../core/utils/currency_display.dart';
 import '../models/scan_route_data.dart';
-import '../bloc/price_bloc.dart';
-import '../bloc/price_event.dart';
-import '../bloc/price_state.dart';
 
 class FinalPriceScreen extends StatelessWidget {
   final String productName;
@@ -29,16 +24,13 @@ class FinalPriceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => PriceBloc(),
-      child: _FinalPriceView(
-        productName: productName,
-        productId: productId,
-        finalPrice: finalPrice,
-        detectedPrice: detectedPrice,
-        capturedImagePath: capturedImagePath,
-        historyId: historyId,
-      ),
+    return _FinalPriceView(
+      productName: productName,
+      productId: productId,
+      finalPrice: finalPrice,
+      detectedPrice: detectedPrice,
+      capturedImagePath: capturedImagePath,
+      historyId: historyId,
     );
   }
 }
@@ -71,7 +63,6 @@ class _FinalPriceViewState extends State<_FinalPriceView>
 
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
-  bool _submitted = false;
 
   @override
   void initState() {
@@ -90,199 +81,155 @@ class _FinalPriceViewState extends State<_FinalPriceView>
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    setState(() => _submitted = true);
-    final userId = await UserIdService.getOrCreate();
-    if (!mounted) return;
-    context.read<PriceBloc>().add(
-      PriceSubmitted(
-        productId: widget.productId,
-        price: widget.finalPrice,
-        unit: 'kg',
-        userId: userId,
-      ),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Thanks for sharing your price! 🙏'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<PriceBloc, PriceState>(
-      listener: (context, state) {
-        if (state is PriceError) {
-          setState(() => _submitted = false); // allow retry on failure
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Purchase Complete'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go(
-              '/scan/analysis',
-              extra: ScanRouteData(
-                productName: widget.productName,
-                productId: widget.productId,
-                detectedPrice: widget.detectedPrice,
-                inputPrice: widget.finalPrice,
-                capturedImagePath: widget.capturedImagePath,
-                historyId: widget.historyId,
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Purchase Complete'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(
+            '/scan/analysis',
+            extra: ScanRouteData(
+              productName: widget.productName,
+              productId: widget.productId,
+              detectedPrice: widget.detectedPrice,
+              inputPrice: widget.finalPrice,
+              capturedImagePath: widget.capturedImagePath,
+              historyId: widget.historyId,
             ),
           ),
         ),
-        body: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight - 48,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  children: [
-                    const Spacer(),
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  const Spacer(),
 
-                    ScaleTransition(
-                      scale: _scaleAnim,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: const BoxDecoration(
-                          color: AppColors.safe,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: 60,
-                        ),
+                  ScaleTransition(
+                    scale: _scaleAnim,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: const BoxDecoration(
+                        color: AppColors.safe,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 60,
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 32),
-                    Text(
-                      widget.productName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: AppColors.onSurfaceLight,
-                      ),
-                      textAlign: TextAlign.center,
+                  const SizedBox(height: 32),
+                  Text(
+                    widget.productName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: AppColors.onSurfaceLight,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      CurrencyDisplay.formatEgp(widget.finalPrice),
-                      style: const TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    CurrencyDisplay.formatEgp(widget.finalPrice),
+                    style: const TextStyle(
+                      fontSize: 42,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Text(
-                      CurrencyDisplay.formatKrw(widget.finalPrice),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.onSurfaceLight,
-                      ),
+                  ),
+                  Text(
+                    CurrencyDisplay.formatKrw(widget.finalPrice),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.onSurfaceLight,
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Purchase complete!',
-                      style: TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Purchase complete!',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Automatically posted to Community.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.onSurfaceLight,
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Automatically posted to Community.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceLight,
-                      ),
-                    ),
+                  ),
 
-                    const SizedBox(height: 40),
+                  const SizedBox(height: 40),
 
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
                       ),
-                      child: const Column(
-                        children: [
-                          Icon(
-                            Icons.people,
-                            color: AppColors.primary,
-                            size: 32,
+                    ),
+                    child: const Column(
+                      children: [
+                        Icon(Icons.people, color: AppColors.primary, size: 32),
+                        SizedBox(height: 12),
+                        Text(
+                          'Help other travelers',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                          SizedBox(height: 12),
-                          Text(
-                            'Help other travelers',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Sharing your price helps other travelers get more accurate price data',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.onSurfaceLight,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-
-                    ElevatedButton(
-                      onPressed: _submitted ? null : _submit,
-                      child: Text(_submitted ? 'Shared!' : 'Share price'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () => context.go(
-                        '/community',
-                        extra: <String, dynamic>{
-                          'itemFilter': widget.productName,
-                          'locationFilter': _communityDefaultLocation,
-                          'storeFilter': _communityDefaultStore,
-                        },
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      child: const Text('Go to Community'),
+                        SizedBox(height: 8),
+                        Text(
+                          'Sharing your price helps other travelers get more accurate price data',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.onSurfaceLight,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () => context.go('/scan'),
-                      child: const Text(
-                        'Go back without sharing',
-                        style: TextStyle(color: AppColors.onSurfaceLight),
+                  ),
+                  const Spacer(),
+
+                  OutlinedButton(
+                    onPressed: () => context.go(
+                      '/community',
+                      extra: <String, dynamic>{
+                        'itemFilter': widget.productName,
+                        'locationFilter': _communityDefaultLocation,
+                        'storeFilter': _communityDefaultStore,
+                      },
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ],
-                ),
+                    child: const Text('Go to Community'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => context.go('/scan'),
+                    child: const Text(
+                      'Start another price check',
+                      style: TextStyle(color: AppColors.onSurfaceLight),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

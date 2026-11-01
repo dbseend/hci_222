@@ -1,15 +1,17 @@
 import json
 import logging
-from functools import lru_cache
 from pathlib import Path
+from threading import RLock
+from time import monotonic
 from typing import Any
 
+from app.core.config import DEFAULT_CURRENCY, DEFAULT_REGION
+from app.core.env import env_value
 from app.models.price import PriceStats, Product
 from app.services.supabase_backend import SupabaseBackendUnavailable, get_supabase_client
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
-DEFAULT_REGION = "cairo"
 logger = logging.getLogger(__name__)
 SUPPORTED_PRODUCT_IDS = {
     "apple",
@@ -25,24 +27,77 @@ SUPPORTED_PRODUCT_IDS = {
     "strawberry",
     "tomato",
 }
+DEFAULT_CATALOG_CACHE_TTL_SECONDS = 300.0
+_products_cache: tuple[float, list[Product]] | None = None
+_price_stats_cache: tuple[float, list[PriceStats]] | None = None
+_products_cache_lock = RLock()
+_price_stats_cache_lock = RLock()
 
 
-@lru_cache(maxsize=1)
 def load_products() -> list[Product]:
-    try:
-        return _load_products_from_supabase()
-    except SupabaseBackendUnavailable as exc:
-        logger.warning("catalog_products_supabase_unavailable reason=%s", exc)
-        return _load_products_from_json()
+    global _products_cache
+    with _products_cache_lock:
+        now = monotonic()
+        if _products_cache is not None and _products_cache[0] > now:
+            return _products_cache[1]
+        try:
+            products = _load_products_from_supabase()
+        except SupabaseBackendUnavailable as exc:
+            if not _local_fallback_allowed():
+                raise
+            logger.warning("catalog_products_supabase_unavailable reason=%s", exc)
+            products = _load_products_from_json()
+        _products_cache = (now + _catalog_cache_ttl_seconds(), products)
+        return products
 
 
-@lru_cache(maxsize=1)
 def load_price_stats() -> list[PriceStats]:
+    global _price_stats_cache
+    with _price_stats_cache_lock:
+        now = monotonic()
+        if _price_stats_cache is not None and _price_stats_cache[0] > now:
+            return _price_stats_cache[1]
+        try:
+            stats = _load_price_stats_from_supabase()
+        except SupabaseBackendUnavailable as exc:
+            if not _local_fallback_allowed():
+                raise
+            logger.warning("catalog_price_stats_supabase_unavailable reason=%s", exc)
+            stats = _load_price_stats_from_json()
+        _price_stats_cache = (now + _catalog_cache_ttl_seconds(), stats)
+        return stats
+
+
+def clear_catalog_cache() -> None:
+    global _products_cache, _price_stats_cache
+    with _products_cache_lock, _price_stats_cache_lock:
+        _products_cache = None
+        _price_stats_cache = None
+
+
+def _catalog_cache_ttl_seconds() -> float:
+    raw_value = env_value("TRUEPRICE_CATALOG_CACHE_TTL_SECONDS")
+    if not raw_value:
+        return DEFAULT_CATALOG_CACHE_TTL_SECONDS
     try:
-        return _load_price_stats_from_supabase()
-    except SupabaseBackendUnavailable as exc:
-        logger.warning("catalog_price_stats_supabase_unavailable reason=%s", exc)
-        return _load_price_stats_from_json()
+        value = float(raw_value)
+    except ValueError as exc:
+        raise RuntimeError(
+            "TRUEPRICE_CATALOG_CACHE_TTL_SECONDS must be a number."
+        ) from exc
+    if value <= 0:
+        raise RuntimeError("TRUEPRICE_CATALOG_CACHE_TTL_SECONDS must be positive.")
+    return value
+
+
+def _local_fallback_allowed() -> bool:
+    app_env = (env_value("TRUEPRICE_APP_ENV", "development") or "development").lower()
+    if app_env == "production":
+        return False
+    configured = env_value("TRUEPRICE_ALLOW_LOCAL_DATA_FALLBACK")
+    if configured is None:
+        return True
+    return configured.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def get_product(product_id: str) -> Product | None:
@@ -161,7 +216,7 @@ def _price_stats_from_db_row(row: dict[str, Any], product_id: str) -> PriceStats
     return PriceStats(
         product_id=product_id,
         region=str(row.get("region_code") or DEFAULT_REGION),
-        currency="EGP",
+        currency=DEFAULT_CURRENCY,
         avg_price=float(row.get("weighted_avg_price_egp") or 0),
         median_price=float(row.get("median_price_egp") or 0),
         min_price=float(row.get("min_price_egp") or 0),

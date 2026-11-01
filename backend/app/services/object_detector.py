@@ -2,6 +2,7 @@ from collections.abc import Callable
 from io import BytesIO
 from functools import lru_cache
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 from app.core.env import PROJECT_ROOT, env_value
@@ -247,6 +248,7 @@ class YoloObjectDetector:
         self._image_loader = image_loader or _load_pil_image
         self._model = None
         self._models = None
+        self._inference_lock = Lock()
 
     def warm_up(self) -> None:
         self._load_models()
@@ -257,17 +259,18 @@ class YoloObjectDetector:
         filename: str,
         confidence_threshold: float = 0.25,
     ) -> DetectionResponse:
-        models = self._load_models()
-        best_detection: tuple[float, str] | None = None
-        image = self._image_loader(image_bytes)
+        with self._inference_lock:
+            models = self._load_models()
+            best_detection: tuple[float, str] | None = None
+            image = self._image_loader(image_bytes)
 
-        for _, model in models:
-            results = model(image, conf=confidence_threshold, verbose=False)
-            candidate = _best_yolo_detection(results, model)
-            if candidate is None:
-                continue
-            if best_detection is None or candidate[0] > best_detection[0]:
-                best_detection = candidate
+            for _, model in models:
+                results = model(image, conf=confidence_threshold, verbose=False)
+                candidate = _best_yolo_detection(results, model)
+                if candidate is None:
+                    continue
+                if best_detection is None or candidate[0] > best_detection[0]:
+                    best_detection = candidate
 
         if best_detection is None:
             raise ObjectNotDetected("No object detected")
@@ -420,10 +423,12 @@ def _normalize_class_name(class_name: str) -> str:
 @lru_cache(maxsize=1)
 def get_detector():
     if _env_flag("TRUEPRICE_FORCE_MOCK_DETECTOR"):
+        _require_mock_detector_allowed()
         return MockObjectDetector()
 
     mode = (env_value("TRUEPRICE_DETECTOR_MODE", "yolo") or "yolo").strip().lower()
     if mode == "mock":
+        _require_mock_detector_allowed()
         return MockObjectDetector()
     if mode == "zero_shot":
         return ZeroShotObjectDetector()
@@ -435,6 +440,16 @@ def get_detector():
 
 def _env_flag(name: str) -> bool:
     return (env_value(name) or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _require_mock_detector_allowed() -> None:
+    app_env = (env_value("TRUEPRICE_APP_ENV", "development") or "development").lower()
+    if app_env == "production":
+        raise ObjectDetectorUnavailable("Mock detector is disabled in production.")
+    if not _env_flag("TRUEPRICE_ALLOW_MOCK_DETECTOR"):
+        raise ObjectDetectorUnavailable(
+            "Mock detector requires TRUEPRICE_ALLOW_MOCK_DETECTOR=true."
+        )
 
 
 def warm_up_detector() -> None:

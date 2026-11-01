@@ -1,7 +1,6 @@
 // price_event.dart
 // Events dispatched to PriceBloc.
 // PriceStatsRequested — fetch regional price statistics for a product.
-// PriceSubmitted      — submit the user's observed purchase price.
 
 import 'package:equatable/equatable.dart';
 
@@ -24,19 +23,4 @@ class PriceStatsRequested extends PriceEvent {
   });
   @override
   List<Object?> get props => [productId, lat, lon, userPrice];
-}
-
-class PriceSubmitted extends PriceEvent {
-  final String productId;
-  final double price;
-  final String unit;
-  final String userId;
-  const PriceSubmitted({
-    required this.productId,
-    required this.price,
-    required this.unit,
-    required this.userId,
-  });
-  @override
-  List<Object?> get props => [productId, price, unit, userId];
 }

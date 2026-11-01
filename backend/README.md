@@ -18,9 +18,11 @@ and price comparison verdicts.
 
 ## Local Run
 
+Python 3.11 or newer is required.
+
 ```bash
 cd backend
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
@@ -56,12 +58,16 @@ tomato, apple, avocado, blueberry, cherry, kiwi, mango, orange, rockmelon, straw
 When `TRUEPRICE_YOLO_EXTRA_MODEL_PATHS` is set, the backend runs all configured
 YOLO models and returns the highest-confidence supported product detection.
 
-`mock` mode remains available for offline UI demos. It returns a catalog product using filename hints when available, otherwise it returns `tomato`.
+`mock` mode is restricted to explicit local UI demos. It returns a catalog
+product using filename hints when available, otherwise it returns `tomato`.
+Production startup rejects this mode even when the allow flag is accidentally
+set.
 
 ```bash
 # ../.env
 TRUEPRICE_DETECTOR_MODE=mock
 TRUEPRICE_ALLOW_MOCK_DETECTOR=true
+TRUEPRICE_APP_ENV=development
 ```
 
 Keep trained model artifacts local-only under:
@@ -114,33 +120,42 @@ flutter run --dart-define=TRUEPRICE_API_BASE_URL=http://<mac-lan-ip>:8000
 ## Supabase Server-Side Integration
 
 Flutter no longer connects to Supabase directly. Database and Storage writes
-are handled by FastAPI. Set backend-only Supabase credentials in the single
-local env file before running endpoints that write scan history or community
-posts, or read the live product/price catalog:
+are handled by FastAPI. Flutter only uses Supabase Auth to obtain an anonymous
+user access token; FastAPI verifies that token and derives record ownership from
+the verified user ID. Set both the public Auth credentials and the backend-only
+service role credential in the single local env file:
 
 ```bash
 # ../.env
 TRUEPRICE_API_BASE_URL=http://YOUR_BACKEND_HOST:8000
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SERVICE_ROLE_KEY
-TRUEPRICE_DETECTOR_MODE=mock
-TRUEPRICE_ALLOW_MOCK_DETECTOR=true
+TRUEPRICE_APP_ENV=development
+TRUEPRICE_DETECTOR_MODE=yolo
+TRUEPRICE_ALLOW_MOCK_DETECTOR=false
+TRUEPRICE_ENABLE_DEMO_FALLBACKS=false
 ```
 
 Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter or any client-side config.
-`scripts/generate_flutter_defines.py` only copies `TRUEPRICE_API_BASE_URL` into
-Flutter's generated `.dart_tool/trueprice_dart_defines.json`.
+`scripts/generate_flutter_defines.py` copies the API URLs plus the public
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; it never copies the service role
+key. Enable anonymous sign-ins in Supabase Auth before running the app.
 
 Server-owned Supabase endpoints:
 
 ```text
 POST /scan/history
-GET  /scan/history?client_user_id=<anonymous-id>
+GET  /scan/history
 PATCH /scan/history/{history_id}/detection
 PATCH /scan/history/{history_id}/price
 GET  /api/v1/community/feed
 POST /api/v1/community/posts
 ```
+
+All history mutations and community post creation require
+`Authorization: Bearer <user-access-token>`. The API ignores client-provided
+owner IDs and always uses the verified token subject.
 
 Product and price endpoints now prefer Supabase as the source of truth:
 
@@ -151,12 +166,48 @@ POST /api/v1/price/compare
 ```
 
 If Supabase is unavailable in local development, the backend falls back to
-`backend/app/data/product_catalog.json` and `backend/app/data/price_stats.json`.
+`backend/app/data/product_catalog.json` and `backend/app/data/price_stats.json`
+only when `TRUEPRICE_ALLOW_LOCAL_DATA_FALLBACK=true`. Production disables this
+fallback and returns a sanitized 503 instead of serving stale demo data.
 
-Before using cached scan detection/price history, apply:
+Before using authenticated history/community writes, apply both migrations:
 
 ```sql
 -- backend/supabase/scan_history_cache.sql
+-- backend/supabase/auth_ownership_hardening.sql
+```
+
+The ownership migration enables RLS, revokes direct `anon`/`authenticated`
+table access, and adds owner/timestamp indexes. Data access remains server-only;
+FastAPI uses the service role and therefore must keep its explicit owner filters.
+
+## Production configuration
+
+The container defaults to fail-closed behavior:
+
+```bash
+TRUEPRICE_APP_ENV=production
+TRUEPRICE_DETECTOR_MODE=yolo
+TRUEPRICE_ALLOW_MOCK_DETECTOR=false
+TRUEPRICE_ALLOW_LOCAL_DATA_FALLBACK=false
+TRUEPRICE_WARM_UP_DETECTOR=true
+TRUEPRICE_CORS_ALLOW_ORIGINS=https://YOUR_APP_ORIGIN
+```
+
+The deployment must inject `backend/models/best.pt`; model files are excluded
+from Git intentionally. A missing or unloadable model aborts production startup.
+Use `requirements-dev.txt` for local tests and `requirements-ml.txt` for a
+runtime that performs YOLO inference.
+
+Before release, apply both Supabase migrations, enable anonymous sign-in, and
+provide real public/client and service-role credentials. Never use the service
+role credential in Flutter.
+
+Verification:
+
+```bash
+python3 -m compileall -q app tests
+python3 -m pytest -q
 ```
 
 ## Example

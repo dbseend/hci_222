@@ -1,6 +1,9 @@
 import importlib.util
 from pathlib import Path
 
+import pytest
+from fastapi.testclient import TestClient
+
 from app import main as app_main
 from app.core.env import load_env_file
 
@@ -39,6 +42,31 @@ def test_render_dart_env_uses_configured_api_base_url() -> None:
     assert "192.168.0.24" not in rendered
 
 
+def test_render_dart_env_includes_only_public_supabase_credentials() -> None:
+    module = _load_generate_flutter_defines_module()
+
+    rendered = module._render_dart_env(
+        {
+            "TRUEPRICE_API_BASE_URL": "https://api.example.test",
+            "TRUEPRICE_EXCHANGE_RATE_API_URL": "https://rates.example.test",
+            "SUPABASE_URL": "https://project.supabase.co",
+            "SUPABASE_PUBLISHABLE_KEY": "public-client-key",
+            "SUPABASE_SERVICE_ROLE_KEY": "must-never-reach-flutter",
+            "TRUEPRICE_ENABLE_DEMO_FALLBACKS": "true",
+            "TRUEPRICE_DEFAULT_REGION": "alexandria",
+        },
+    )
+
+    assert "https://project.supabase.co" in rendered
+    assert "public-client-key" in rendered
+    assert "must-never-reach-flutter" not in rendered
+    assert "SUPABASE_SERVICE_ROLE_KEY" not in rendered
+    assert "enableDemoFallbacks" in rendered
+    assert "defaultValue: true" in rendered
+    assert "defaultRegion" in rendered
+    assert "defaultValue: 'alexandria'" in rendered
+
+
 def test_detector_warm_up_disabled_by_default(monkeypatch, tmp_path) -> None:
     monkeypatch.delenv("TRUEPRICE_WARM_UP_DETECTOR", raising=False)
     monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
@@ -59,5 +87,34 @@ def test_detector_warm_up_can_be_enabled(monkeypatch, tmp_path) -> None:
 
     try:
         assert app_main._should_warm_up_detector() is True
+    finally:
+        load_env_file.cache_clear()
+
+
+def test_production_detector_warm_up_failure_aborts_startup(monkeypatch) -> None:
+    monkeypatch.setenv("TRUEPRICE_APP_ENV", "production")
+    monkeypatch.setattr(app_main, "_should_warm_up_detector", lambda: True)
+    monkeypatch.setattr(
+        app_main,
+        "warm_up_detector",
+        lambda: (_ for _ in ()).throw(
+            app_main.ObjectDetectorUnavailable("model missing")
+        ),
+    )
+
+    with pytest.raises(app_main.ObjectDetectorUnavailable):
+        with TestClient(app_main.app):
+            pass
+
+
+def test_production_requires_explicit_cors_origins(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("TRUEPRICE_APP_ENV", "production")
+    monkeypatch.delenv("TRUEPRICE_CORS_ALLOW_ORIGINS", raising=False)
+    monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
+    load_env_file.cache_clear()
+
+    try:
+        with pytest.raises(RuntimeError, match="CORS"):
+            app_main._cors_allow_origins()
     finally:
         load_env_file.cache_clear()

@@ -386,7 +386,7 @@ def main():
             alias_rows.append((p["code"], alias, "ar", "seed_2026_05_13"))
     lines.append("with alias_rows (product_code, alias, locale, source) as (")
     lines.append("  values")
-    lines.append("  " + ",\n  ".join(f"({sql_str(*row[:1]) if False else sql_str(row[0])}, {sql_str(row[1])}, {sql_str(row[2])}, {sql_str(row[3])})" for row in alias_rows))
+    lines.append("  " + ",\n  ".join(f"({sql_str(row[0])}, {sql_str(row[1])}, {sql_str(row[2])}, {sql_str(row[3])})" for row in alias_rows))
     lines.append(")")
     lines.append("insert into product_aliases (product_id, alias, locale, source)")
     lines.append("select p.id, ar.alias, ar.locale, ar.source")

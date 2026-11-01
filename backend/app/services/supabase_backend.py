@@ -1,4 +1,4 @@
-import tempfile
+import logging
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -16,9 +16,18 @@ from app.models.scan_history import (
 SCAN_HISTORY_BUCKET = "scan-history-images"
 COMMUNITY_IMAGES_BUCKET = "community-images"
 SCAN_HISTORY_SIGNED_URL_SECONDS = 60 * 60
+logger = logging.getLogger(__name__)
 
 
 class SupabaseBackendUnavailable(RuntimeError):
+    pass
+
+
+class SupabaseResourceNotFound(RuntimeError):
+    pass
+
+
+class SupabaseUnknownProduct(RuntimeError):
     pass
 
 
@@ -58,12 +67,17 @@ def save_scan_history_image(
         content_type=content_type,
     )
 
-    response = (
-        client.table("scan_histories")
-        .insert({"client_user_id": client_user_id, "image_path": object_path})
-        .execute()
-    )
-    row = _first_row(response)
+    try:
+        response = _execute(
+            client.table("scan_histories").insert(
+                {"client_user_id": client_user_id, "image_path": object_path}
+            ),
+            "Failed to save scan history.",
+        )
+        row = _first_row(response)
+    except Exception:
+        _delete_object(client=client, bucket=SCAN_HISTORY_BUCKET, path=object_path)
+        raise
     return ScanHistoryUploadResponse(
         id=str(row.get("id", "")),
         image_path=str(row.get("image_path", object_path)),
@@ -82,7 +96,7 @@ def list_scan_history_images(
     limit: int = 50,
 ) -> list[ScanHistoryUploadResponse]:
     client = get_supabase_client()
-    response = (
+    query = (
         client.table("scan_histories")
         .select(
             "id, image_path, created_at, detected_product_code, "
@@ -93,17 +107,23 @@ def list_scan_history_images(
         .eq("client_user_id", client_user_id)
         .order("created_at", desc=True)
         .limit(limit)
-        .execute()
     )
+    response = _execute(query, "Failed to list scan history.")
 
+    rows = _rows(response)
+    signed_urls = _signed_urls(
+        client,
+        SCAN_HISTORY_BUCKET,
+        [str(row.get("image_path", "")) for row in rows],
+    )
     items: list[ScanHistoryUploadResponse] = []
-    for row in _rows(response):
+    for row in rows:
         image_path = str(row.get("image_path", ""))
         items.append(
             ScanHistoryUploadResponse(
                 id=str(row.get("id", "")),
                 image_path=image_path,
-                image_url=_signed_url(client, SCAN_HISTORY_BUCKET, image_path),
+                image_url=signed_urls.get(image_path),
                 created_at=str(row.get("created_at", "")),
                 detected_product_code=_optional_str(row.get("detected_product_code")),
                 detected_product_name=_optional_str(row.get("detected_product_name")),
@@ -122,11 +142,12 @@ def list_scan_history_images(
 def update_scan_history_detection(
     *,
     history_id: str,
+    client_user_id: str,
     payload: ScanHistoryDetectionUpdate,
 ) -> ScanHistoryUploadResponse:
     client = get_supabase_client()
     now = _utc_now()
-    response = (
+    query = (
         client.table("scan_histories")
         .update(
             {
@@ -140,19 +161,21 @@ def update_scan_history_detection(
             }
         )
         .eq("id", history_id)
-        .execute()
+        .eq("client_user_id", client_user_id)
     )
-    return _scan_history_response(client, _first_row(response))
+    response = _execute(query, "Failed to update scan detection.")
+    return _scan_history_response(client, _owned_row(response))
 
 
 def update_scan_history_price(
     *,
     history_id: str,
+    client_user_id: str,
     payload: ScanHistoryPriceUpdate,
 ) -> ScanHistoryUploadResponse:
     client = get_supabase_client()
     now = _utc_now()
-    response = (
+    query = (
         client.table("scan_histories")
         .update(
             {
@@ -165,27 +188,28 @@ def update_scan_history_price(
             }
         )
         .eq("id", history_id)
-        .execute()
+        .eq("client_user_id", client_user_id)
     )
-    return _scan_history_response(client, _first_row(response))
+    response = _execute(query, "Failed to update scan price.")
+    return _scan_history_response(client, _owned_row(response))
 
 
 def create_community_post(
     *,
     payload: CommunityPostCreate,
+    client_user_id: str,
     image_bytes: bytes | None = None,
     filename: str | None = None,
     content_type: str = "image/jpeg",
 ) -> None:
     client = get_supabase_client()
-    product_id = _ensure_product_id(
+    product_id, canonical_product_name = _require_product(
         client=client,
         product_code=payload.product_code,
-        product_name=payload.product_name,
     )
     image_path = None
     if image_bytes:
-        image_path = _object_path(payload.client_user_id, filename or "purchase.jpg")
+        image_path = _object_path(client_user_id, filename or "purchase.jpg")
         _upload_bytes(
             client=client,
             bucket=COMMUNITY_IMAGES_BUCKET,
@@ -194,29 +218,42 @@ def create_community_post(
             content_type=content_type,
         )
 
-    client.table("purchases").insert(
-        {
-            "client_user_id": payload.client_user_id,
-            "product_id": product_id,
-            "product_name_override": payload.product_name,
-            "store_name_override": payload.store_name,
-            "location_override": payload.location_name,
-            "unit": "kg",
-            "quantity": 1,
-            "final_price_egp": payload.price,
-            "image_path": image_path,
-        }
-    ).execute()
+    try:
+        _execute(
+            client.table("purchases").insert(
+                {
+                    "client_user_id": client_user_id,
+                    "product_id": product_id,
+                    "product_name_override": canonical_product_name,
+                    "store_name_override": payload.store_name,
+                    "location_override": payload.location_name,
+                    "unit": "kg",
+                    "quantity": 1,
+                    "final_price_egp": payload.price,
+                    "image_path": image_path,
+                }
+            ),
+            "Failed to create community post.",
+        )
+    except Exception:
+        if image_path:
+            _delete_object(
+                client=client,
+                bucket=COMMUNITY_IMAGES_BUCKET,
+                path=image_path,
+            )
+        raise
 
 
-def list_community_posts() -> list[CommunityPostResponse]:
+def list_community_posts(*, limit: int = 50) -> list[CommunityPostResponse]:
     client = get_supabase_client()
-    response = (
+    query = (
         client.table("community_feed_v1")
         .select("id, product_name, store_name, location_name, price_egp, image_path, created_at")
         .order("created_at", desc=True)
-        .execute()
+        .limit(max(1, min(limit, 100)))
     )
+    response = _execute(query, "Failed to list community posts.")
 
     posts: list[CommunityPostResponse] = []
     for row in _rows(response):
@@ -237,35 +274,49 @@ def list_community_posts() -> list[CommunityPostResponse]:
     return posts
 
 
-def _ensure_product_id(*, client, product_code: str, product_name: str) -> str:
-    response = client.table("products").select("id").eq("code", product_code).limit(1).execute()
+def _require_product(*, client, product_code: str) -> tuple[str, str]:
+    response = _execute(
+        client.table("products")
+        .select("id,name")
+        .eq("code", product_code)
+        .limit(1),
+        "Failed to validate product code.",
+    )
     rows = _rows(response)
     if rows:
-        return str(rows[0]["id"])
-
-    inserted = (
-        client.table("products")
-        .insert({"code": product_code, "name": product_name, "default_unit": "kg"})
-        .execute()
-    )
-    return str(_first_row(inserted)["id"])
+        product_id = str(rows[0].get("id") or "")
+        product_name = str(rows[0].get("name") or "").strip()
+        if product_id and product_name:
+            return product_id, product_name
+        raise SupabaseBackendUnavailable("Product master data is incomplete.")
+    raise SupabaseUnknownProduct(f"Unknown product code: {product_code}")
 
 
 def _upload_bytes(*, client, bucket: str, path: str, image_bytes: bytes, content_type: str) -> None:
-    suffix = Path(path).suffix or ".jpg"
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as tmp:
-        tmp.write(image_bytes)
-        tmp.flush()
-        with open(tmp.name, "rb") as file:
-            client.storage.from_(bucket).upload(
-                path=path,
-                file=file,
-                file_options={
-                    "cache-control": "3600",
-                    "content-type": content_type,
-                    "upsert": "false",
-                },
-            )
+    try:
+        client.storage.from_(bucket).upload(
+            path=path,
+            file=image_bytes,
+            file_options={
+                "cache-control": "3600",
+                "content-type": content_type,
+                "upsert": "false",
+            },
+        )
+    except Exception as exc:
+        raise SupabaseBackendUnavailable("Failed to upload image.") from exc
+
+
+def _delete_object(*, client, bucket: str, path: str) -> None:
+    try:
+        client.storage.from_(bucket).remove([path])
+    except Exception as exc:
+        logger.error(
+            "storage_compensation_failed bucket=%s path=%s reason=%s",
+            bucket,
+            path,
+            exc,
+        )
 
 
 def _object_path(client_user_id: str, filename: str) -> str:
@@ -284,7 +335,13 @@ def _safe_suffix(filename: str) -> str:
 def _public_url(client, bucket: str, path: str) -> str:
     try:
         return str(client.storage.from_(bucket).get_public_url(path))
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            "public_url_generation_failed bucket=%s path=%s reason=%s",
+            bucket,
+            path,
+            exc,
+        )
         return path
 
 
@@ -296,7 +353,13 @@ def _signed_url(client, bucket: str, path: str) -> str | None:
             path,
             SCAN_HISTORY_SIGNED_URL_SECONDS,
         )
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            "signed_url_generation_failed bucket=%s path=%s reason=%s",
+            bucket,
+            path,
+            exc,
+        )
         return None
 
     if isinstance(response, str):
@@ -310,6 +373,47 @@ def _signed_url(client, bucket: str, path: str) -> str | None:
         return str(value) if value else None
     value = getattr(response, "signed_url", None) or getattr(response, "signedURL", None)
     return str(value) if value else None
+
+
+def _signed_urls(
+    client,
+    bucket: str,
+    paths: list[str],
+) -> dict[str, str]:
+    non_empty_paths = [path for path in paths if path]
+    if not non_empty_paths:
+        return {}
+    file_api = client.storage.from_(bucket)
+    create_many = getattr(file_api, "create_signed_urls", None)
+    if not callable(create_many):
+        return {
+            path: value
+            for path in non_empty_paths
+            if (value := _signed_url(client, bucket, path)) is not None
+        }
+    try:
+        responses = create_many(
+            non_empty_paths,
+            SCAN_HISTORY_SIGNED_URL_SECONDS,
+        )
+    except Exception as exc:
+        logger.warning(
+            "batch_signed_url_generation_failed bucket=%s count=%s reason=%s",
+            bucket,
+            len(non_empty_paths),
+            exc,
+        )
+        return {}
+
+    result: dict[str, str] = {}
+    for response in responses or []:
+        if not isinstance(response, dict):
+            continue
+        path = str(response.get("path") or "")
+        value = response.get("signedURL") or response.get("signedUrl")
+        if path and value:
+            result[path] = str(value)
+    return result
 
 
 def _scan_history_response(client, row: dict) -> ScanHistoryUploadResponse:
@@ -362,3 +466,23 @@ def _first_row(response) -> dict:
     if not rows:
         raise SupabaseBackendUnavailable("Supabase returned no rows.")
     return rows[0]
+
+
+def _owned_row(response) -> dict:
+    rows = _rows(response)
+    if not rows:
+        raise SupabaseResourceNotFound("Owned resource was not found.")
+    return rows[0]
+
+
+def _execute(query, error_message: str):
+    try:
+        return query.execute()
+    except (
+        SupabaseBackendUnavailable,
+        SupabaseResourceNotFound,
+        SupabaseUnknownProduct,
+    ):
+        raise
+    except Exception as exc:
+        raise SupabaseBackendUnavailable(error_message) from exc

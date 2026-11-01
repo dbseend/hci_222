@@ -1,12 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/constants/generated_env.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/services/user_id_service.dart';
 import '../models/community_post.dart';
 
 abstract class CommunityPostRepository {
@@ -14,7 +16,7 @@ abstract class CommunityPostRepository {
     required String productName,
     required double price,
     String? imagePath,
-    String productCode = 'p001',
+    String productCode = 'tomato',
     String storeName = 'Traveler Report',
     String locationName = 'Unknown',
   });
@@ -27,17 +29,24 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
   static const _remoteTimeout = Duration(seconds: 5);
 
   final Future<SharedPreferences> Function() _prefsProvider;
+  final Dio _dio;
+  final bool _allowDemoFallbacks;
 
   CommunityPostRepositoryImpl({
     Future<SharedPreferences> Function()? prefsProvider,
-  }) : _prefsProvider = prefsProvider ?? SharedPreferences.getInstance;
+    Dio? dio,
+    bool? allowDemoFallbacks,
+  }) : _prefsProvider = prefsProvider ?? SharedPreferences.getInstance,
+       _dio = dio ?? DioClient.instance,
+       _allowDemoFallbacks =
+           allowDemoFallbacks ?? GeneratedEnv.enableDemoFallbacks;
 
   @override
   Future<void> addPurchasePost({
     required String productName,
     required double price,
     String? imagePath,
-    String productCode = 'p001',
+    String productCode = 'tomato',
     String storeName = 'Traveler Report',
     String locationName = 'Unknown',
   }) async {
@@ -51,8 +60,12 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
         locationName: locationName,
       ).timeout(_remoteTimeout);
       return;
-    } catch (_) {
-      // Fallback to local cache if backend write fails.
+    } on DioException catch (error) {
+      if (!_allowDemoFallbacks) rethrow;
+      debugPrint('[CommunityRepository] Remote write unavailable: $error');
+    } on TimeoutException catch (error) {
+      if (!_allowDemoFallbacks) rethrow;
+      debugPrint('[CommunityRepository] Remote write timed out: $error');
     }
 
     await _addPurchasePostLocal(
@@ -96,9 +109,14 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
   Future<List<CommunityPost>> getUserPosts() async {
     try {
       final remotePosts = await _getUserPostsRemote().timeout(_remoteTimeout);
-      return remotePosts.isEmpty ? _samplePosts() : remotePosts;
-    } catch (_) {
-      // Fallback to local cache if backend read fails.
+      if (remotePosts.isNotEmpty || !_allowDemoFallbacks) return remotePosts;
+      return _samplePosts();
+    } on DioException catch (error) {
+      if (!_allowDemoFallbacks) rethrow;
+      debugPrint('[CommunityRepository] Remote feed unavailable: $error');
+    } on TimeoutException catch (error) {
+      if (!_allowDemoFallbacks) rethrow;
+      debugPrint('[CommunityRepository] Remote feed timed out: $error');
     }
 
     final localPosts = await _getUserPostsLocal();
@@ -118,7 +136,9 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
               .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return posts;
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[CommunityRepository] Ignoring corrupt local cache: $error');
+      await prefs.remove(_storageKey);
       return const [];
     }
   }
@@ -131,14 +151,12 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
     required String storeName,
     required String locationName,
   }) async {
-    final clientUserId = await UserIdService.getOrCreate();
     final payload = {
       'product_name': productName,
       'price': price,
       'product_code': productCode,
       'store_name': storeName,
       'location_name': locationName,
-      'client_user_id': clientUserId,
     };
     final formData = FormData.fromMap({'payload': jsonEncode(payload)});
     if (imagePath != null && imagePath.isNotEmpty) {
@@ -156,13 +174,11 @@ class CommunityPostRepositoryImpl implements CommunityPostRepository {
       }
     }
 
-    await DioClient.instance.post(ApiEndpoints.communityPosts, data: formData);
+    await _dio.post(ApiEndpoints.communityPosts, data: formData);
   }
 
   Future<List<CommunityPost>> _getUserPostsRemote() async {
-    final res = await DioClient.instance.get<List<dynamic>>(
-      ApiEndpoints.communityFeed,
-    );
+    final res = await _dio.get<List<dynamic>>(ApiEndpoints.communityFeed);
     final rows = res.data ?? const [];
     return rows.cast<Map<String, dynamic>>().map((row) {
       return CommunityPost(

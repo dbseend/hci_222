@@ -21,6 +21,7 @@ class PriceInputScreen extends StatefulWidget {
   final double initialInputPrice;
   final String? capturedImagePath;
   final String? historyId;
+  final ScanHistoryRepository? historyRepository;
 
   const PriceInputScreen({
     super.key,
@@ -30,6 +31,7 @@ class PriceInputScreen extends StatefulWidget {
     this.initialInputPrice = 0,
     this.capturedImagePath,
     this.historyId,
+    this.historyRepository,
   });
 
   @override
@@ -39,6 +41,7 @@ class PriceInputScreen extends StatefulWidget {
 class _PriceInputScreenState extends State<PriceInputScreen> {
   // ── Price input ──────────────────────────────────────────────────
   final _priceController = TextEditingController();
+  late final ScanHistoryRepository _historyRepository;
   bool _useSlider = false;
 
   // Slider range in EGP (Cairo traditional market baseline)
@@ -70,11 +73,13 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
   }
 
   bool get _hasInput =>
-      _useSlider ? _totalPrice > 0 : _priceController.text.isNotEmpty;
+      _totalPrice.isFinite && _totalPrice > 0 && _totalPrice <= 1_000_000;
 
   @override
   void initState() {
     super.initState();
+    _historyRepository =
+        widget.historyRepository ?? ScanHistoryRepositoryImpl();
     if (widget.initialInputPrice > 0) {
       _priceController.text = widget.initialInputPrice % 1 == 0
           ? widget.initialInputPrice.toStringAsFixed(0)
@@ -111,7 +116,7 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
   // ── Navigation ───────────────────────────────────────────────────
   Future<void> _analyze() async {
     if (!_hasInput) return;
-    await ScanHistoryRepositoryImpl().updateQuotedPrice(
+    await _historyRepository.updateQuotedPrice(
       historyId: widget.historyId,
       imagePath: widget.capturedImagePath,
       totalPrice: _totalPrice,
@@ -239,9 +244,15 @@ class _PriceInputScreenState extends State<PriceInputScreen> {
                               decimal: true,
                             ),
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.]'),
-                              ),
+                              TextInputFormatter.withFunction((
+                                oldValue,
+                                newValue,
+                              ) {
+                                final isValid = RegExp(
+                                  r'^\d{0,7}(?:\.\d{0,2})?$',
+                                ).hasMatch(newValue.text);
+                                return isValid ? newValue : oldValue;
+                              }),
                             ],
                             style: const TextStyle(
                               fontSize: 32,

@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trueprice/features/scan/presentation/bloc/scan_bloc.dart';
 import 'package:trueprice/features/scan/presentation/bloc/scan_event.dart';
+import 'package:trueprice/features/scan/presentation/bloc/scan_state.dart';
 
 void main() {
   group('ScanImageCaptured', () {
@@ -21,5 +23,17 @@ void main() {
       expect(() => event.props, returnsNormally);
       expect(event.props, [image.path]);
     });
+  });
+
+  test('web mock is rejected when demo fallbacks are disabled', () async {
+    final bloc = ScanBloc(allowDemoFallbacks: false);
+    addTearDown(bloc.close);
+
+    final states = expectLater(
+      bloc.stream,
+      emitsInOrder([isA<ScanProcessing>(), isA<ScanError>()]),
+    );
+    bloc.add(const ScanWebMockRequested());
+    await states;
   });
 }

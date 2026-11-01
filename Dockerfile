@@ -2,10 +2,13 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    TRUEPRICE_DETECTOR_MODE=mock \
-    TRUEPRICE_ALLOW_MOCK_DETECTOR=true \
-    TRUEPRICE_FORCE_MOCK_DETECTOR=true \
-    TRUEPRICE_WARM_UP_DETECTOR=false
+    TRUEPRICE_APP_ENV=production \
+    TRUEPRICE_DETECTOR_MODE=yolo \
+    TRUEPRICE_ALLOW_MOCK_DETECTOR=false \
+    TRUEPRICE_FORCE_MOCK_DETECTOR=false \
+    TRUEPRICE_ALLOW_LOCAL_DATA_FALLBACK=false \
+    TRUEPRICE_WARM_UP_DETECTOR=true \
+    TRUEPRICE_YOLO_MODEL_PATH=backend/models/best.pt
 
 WORKDIR /app
 
@@ -16,8 +19,8 @@ RUN apt-get update \
         libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+COPY backend/requirements.txt backend/requirements-ml.txt ./backend/
+RUN pip install --no-cache-dir -r backend/requirements-ml.txt
 
 COPY backend ./backend
 

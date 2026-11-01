@@ -21,6 +21,10 @@ abstract class ScanRepository {
 }
 
 class ScanRepositoryImpl implements ScanRepository {
+  final Dio _dio;
+
+  ScanRepositoryImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
+
   @override
   Future<DetectionResult> detectObject({
     required File image,
@@ -38,7 +42,7 @@ class ScanRepositoryImpl implements ScanRepository {
       'lon': lon,
     });
 
-    final response = await DioClient.instance.post<Map<String, dynamic>>(
+    final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.detectObject,
       data: formData,
     );
@@ -66,7 +70,7 @@ class ScanRepositoryImpl implements ScanRepository {
       'lon': lon,
     });
 
-    final response = await DioClient.instance.post<Map<String, dynamic>>(
+    final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.detectObject,
       data: formData,
     );

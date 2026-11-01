@@ -33,18 +33,6 @@ class PriceLoaded extends PriceState {
       );
 }
 
-class PriceSubmitting extends PriceState {
-  final RegionStats stats;
-  final double userPrice;
-  const PriceSubmitting({required this.stats, required this.userPrice});
-  @override
-  List<Object?> get props => [stats, userPrice];
-}
-
-class PriceSubmitSuccess extends PriceState {
-  const PriceSubmitSuccess();
-}
-
 class PriceError extends PriceState {
   final String message;
   const PriceError(this.message);
