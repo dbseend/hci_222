@@ -79,3 +79,7 @@ datasets/
 *.npy
 *.npz
 *.parquet
+
+# Demo detector weights are shipped with the Docker image.
+!backend/models/
+!backend/models/best.pt
