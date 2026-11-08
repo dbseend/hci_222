@@ -1,63 +1,32 @@
 # ML Workspace
 
-Object detection dataset preparation, audit, and Colab training assets live here.
-Generated datasets and model artifacts stay outside Git via the root `.gitignore`.
+Dataset building and evaluation for the server detector `backend/models/best.pt`
+(YOLO11n, classes `apple, banana, grape, mango, strawberry, camel_doll`).
+Results and design decisions: [`docs/model_v2_report.md`](../docs/model_v2_report.md).
+
+Downloaded images, generated datasets and training runs live in `datasets/` and
+`runs/` at the repository root and are not committed.
 
 ## Layout
 
-- `scripts/`: dataset collection, conversion, and YOLO export merge scripts
-- `tools/`: local validation tools for dataset structure
-- `notebooks/`: Colab notebooks for training/export handoff
+- `scripts/collect_openverse_images.py`: download CC0/CC BY/CC BY-SA camel toy candidates from Openverse
+- `scripts/build_openimages_fruit_camel_yolo.py`: build the 6-class YOLO dataset
+  (Open Images fruit boxes + hand-picked camel images boxed with YOLO-World)
+- `tools/fetch_commons_eval_set.py`: download the independent Wikimedia Commons eval set
+- `tools/eval_independent.py`: image-level accuracy of a model on that eval set
+- `tests/`: unit tests for the dataset builder
 
-## Local Data Contract
-
-The scripts expect local-only folders at the repository root:
-
-- `dataset_sources/`: downloaded raw sources and intermediate review images
-- `dataset_open_v1/`: generated open-data YOLO dataset and archives
-- `datasets/`: legacy or ad hoc local dataset workspaces
-- `outputs/`, `runs/`, `wandb/`: local run outputs
-
-These folders are intentionally ignored and must not be committed.
-
-## Common Commands
-
-Build the current multi-class fruit YOLO dataset:
+## Reproduce
 
 ```bash
-python3 ml/scripts/build_open_fruit_camel_dataset.py
+python3 -I ml/tools/fetch_commons_eval_set.py datasets/eval_commons 25
+python3 -I ml/scripts/collect_openverse_images.py datasets/openverse_camel "camel toy" "stuffed camel" "camel plush"
+# list the reviewed camel toy images in datasets/camel_curated.txt (manual step)
+.venv/bin/python ml/scripts/build_openimages_fruit_camel_yolo.py
+.venv/bin/yolo detect train model=yolo11n.pt data=datasets/trueprice_oi_v2/data.yaml epochs=50 imgsz=640 batch=16 device=mps
+.venv/bin/python ml/tools/eval_independent.py datasets/eval_commons out.md 0.25 runs/detect/train/weights/best.pt
 ```
-
-Collect a strict-license camel plush/toy review set:
 
 ```bash
-python3 -B ml/scripts/collect_open_camel_plush_dataset.py --target 40 --per-query 80
-```
-
-Build a weak-labeled camel plush YOLO bootstrap dataset from the reviewed seed:
-
-```bash
-python3 -B ml/scripts/build_camel_plush_bootstrap_yolo.py
-```
-
-See `ml/CAMEL_PLUSH_DATA_PIPELINE.md` before labeling or training. The output is
-license-filtered review/bootstrap data. Manual bounding boxes are still required
-for real detector quality.
-
-Audit a YOLO dataset:
-
-```bash
-python3 ml/tools/yolo_dataset_audit.py datasets/trueprice_yolo
-```
-
-Train/export in Colab:
-
-```text
-ml/notebooks/train_trueprice_yolo_colab.ipynb
-```
-
-Upload the local zip when the notebook asks for it:
-
-```text
-dataset_open_v1/yolo_multiclass_fruit.zip
+python3 -m pytest -q ml/tests
 ```

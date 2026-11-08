@@ -44,11 +44,15 @@ class TtsService {
       await _tts.setPitch(1.0);
       await _tts.awaitSpeakCompletion(true);
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-        await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
-          IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
-          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
-        ], IosTextToSpeechAudioMode.spokenAudio);
+        await _tts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.playback,
+          [
+            IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+            IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+            IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+          ],
+          IosTextToSpeechAudioMode.spokenAudio,
+        );
         await _tts.autoStopSharedSession(false);
         await _tts.setSharedInstance(true);
       }

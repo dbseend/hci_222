@@ -194,12 +194,12 @@ MVP 기준 UT 우선순위는 `가격 판정 로직`, `객체 인식 API 계약`
 
 ### 20. ML 데이터셋 생성 script는 camel_doll label을 유지한다
 
-- 대상: `ml/scripts/build_camel_plush_bootstrap_yolo.py`
-- 추천 테스트 파일: `ml/tests/test_build_camel_plush_bootstrap_yolo.py`
+- 대상: `ml/scripts/build_openimages_fruit_camel_yolo.py`
+- 추천 테스트 파일: `ml/tests/test_build_openimages_fruit_camel_yolo.py`
 - 현재 상태: 존재
-- Given: camel plush source image/annotation fixture가 있다.
-- When: YOLO dataset builder를 실행한다.
-- Then: class id와 `camel_doll` label이 유지된다.
+- Given: Open Images 박스 CSV와 camel 이미지 목록 fixture가 있다.
+- When: YOLO label 변환과 train list 작성을 실행한다.
+- Then: class id 순서가 유지되고 mango·`camel_doll`이 오버샘플링된다.
 
 ## 바로 추가하면 좋은 테스트 5개
 

@@ -1,5 +1,24 @@
 # hci_222
 
+## 로컬 데모 (발표용)
+
+시연은 맥북 로컬 백엔드 + iPhone 실기기 앱으로 합니다. 맥북과 iPhone은 같은
+Wi-Fi/핫스팟에 연결하고, Supabase·Google Maps(·선택: 환율 API)는 인터넷으로 사용합니다.
+
+1. **Setup** (최초 1회): `scripts/setup_local_demo.sh` — Python 3.11+ 확인, `.venv` 생성, 의존성 설치.
+   `.env`가 없으면 `cp .env.example .env` 후 실제 값을 채웁니다.
+2. **Preflight**: `.venv/bin/python scripts/demo_preflight.py --image <과일 사진.jpg>` —
+   `.env` 키, Supabase, YOLO 모델(6종), 탐지 플래그, 환율 API(설정 시), LAN IP, `/scan`을 점검합니다.
+   하나라도 FAIL이면 표시된 조치 후 다시 실행합니다.
+3. **Server**: `scripts/run_local_server.sh` — 현재 LAN IP로 `TRUEPRICE_API_BASE_URL`을 맞추고 서버를 띄웁니다.
+   IP가 바뀌었다는 경고가 나오면 4단계를 다시 해야 합니다.
+4. **Flutter 실기기 빌드**: `cd frontend/flutter_app && flutter run --release` (또는 Xcode에서
+   `ios/Runner.xcworkspace`를 열고 iPhone 선택 후 실행).
+
+지연시간 측정(서버 실행 중): `.venv/bin/python scripts/measure_latency.py --image <과일 사진.jpg>`
+
+> Vercel 웹 배포본은 **카메라 인식이 제한된 미리보기**입니다. 실제 인식 시연은 위 로컬 데모로 합니다.
+
 Object Detection 기반 상품 인식 + 가격 비교 MVP 저장소입니다.
 
 ## Project Layout
@@ -8,9 +27,9 @@ Object Detection 기반 상품 인식 + 가격 비교 MVP 저장소입니다.
 hci_222/
 ├── frontend/flutter_app/  # Flutter iPhone-first MVP app
 ├── backend/               # FastAPI API, tests, Supabase SQL
-├── ml/                    # Dataset scripts, audit tools, Colab notebooks
-├── scripts/               # Config/code generation helpers
-└── docs/                  # Architecture, guidelines, project notes
+├── ml/                    # YOLO dataset build / evaluation scripts
+├── scripts/               # Local demo, config generation, price seed helpers
+└── docs/                  # Model report, price stats report, UT scenarios
 ```
 
 Local-only data and generated artifacts are intentionally ignored:
@@ -65,17 +84,10 @@ Open:
 http://127.0.0.1:8000/docs
 ```
 
-### ML / Colab
+### ML
 
-```bash
-python3 ml/scripts/build_open_fruit_camel_dataset.py
-```
-
-Colab 학습 노트북:
-
-```text
-ml/notebooks/train_trueprice_yolo_colab.ipynb
-```
+데이터셋 생성·학습·평가 재현 방법은 [`ml/README.md`](ml/README.md),
+모델 성능과 한계는 [`docs/model_v2_report.md`](docs/model_v2_report.md)를 참고합니다.
 
 ## Verification
 
@@ -104,9 +116,7 @@ python3 -m pytest -q ml/tests
 
 - iOS 실기기 카메라 사용을 전제로 합니다. iOS Simulator는 실제 카메라 preview 테스트에 적합하지 않습니다.
 - MLKit 관련 Xcode 경고를 제거하기 위해 `google_mlkit_text_recognition`을 제거했습니다.
-- 문서 기준 파일은 `docs/TruePrice-Guidelines.md`입니다.
-- GitHub 업로드/제외 기준은 `docs/GITHUB_REPOSITORY_GUIDE.md`입니다.
-- 데이터/모델 산출물은 로컬 재생성 대상으로 관리하고 Git에는 코드, 설정, 문서만 올립니다.
+- 데이터/학습 산출물은 로컬 재생성 대상으로 관리하고 Git에는 코드, 설정, 문서와 시연용 `backend/models/best.pt`만 올립니다.
 - 프로덕션 배포 전 필수 환경 변수, Supabase migration, YOLO artifact 및
   fail-closed 설정은
   [`docs/refactoring_backlog.md`](docs/refactoring_backlog.md)의
