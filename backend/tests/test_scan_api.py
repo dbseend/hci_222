@@ -240,6 +240,7 @@ def test_detect_object_logs_detection_result(monkeypatch, caplog) -> None:
     assert "filename=scan.jpg" in caplog.text
     assert "lat=30.0444" in caplog.text
     assert "lon=31.2357" in caplog.text
+    assert "elapsed_ms=" in caplog.text
 
 
 def test_detect_object_rejects_empty_upload(monkeypatch) -> None:

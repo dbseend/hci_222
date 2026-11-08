@@ -1,4 +1,5 @@
 import logging
+import time
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from starlette.concurrency import run_in_threadpool
@@ -42,6 +43,7 @@ async def detect_object(
 
     filename = image.filename or "scan.jpg"
 
+    started = time.perf_counter()
     try:
         detector = get_detector()
         result = await run_in_threadpool(
@@ -50,22 +52,24 @@ async def detect_object(
             filename=filename,
         )
         logger.info(
-            "object_detection_result product_id=%s name_kr=%s confidence=%s filename=%s lat=%s lon=%s",
+            "object_detection_result product_id=%s name_kr=%s confidence=%s filename=%s lat=%s lon=%s elapsed_ms=%.0f",
             result.product_id,
             result.name_kr,
             result.confidence,
             filename,
             lat,
             lon,
+            _elapsed_ms(started),
         )
         return result
     except ObjectNotDetected as exc:
         logger.warning(
-            "object_detection_not_found filename=%s lat=%s lon=%s reason=%s",
+            "object_detection_not_found filename=%s lat=%s lon=%s reason=%s elapsed_ms=%.0f",
             filename,
             lat,
             lon,
             exc,
+            _elapsed_ms(started),
         )
         raise
     except ObjectDetectorUnavailable as exc:
@@ -77,6 +81,10 @@ async def detect_object(
             exc,
         )
         raise
+
+
+def _elapsed_ms(started: float) -> float:
+    return (time.perf_counter() - started) * 1000
 
 
 @router.post(
