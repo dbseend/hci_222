@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PY="$ROOT/.venv/bin/python"
 [ -x "$PY" ] || { echo "No .venv; run scripts/setup_local_demo.sh first." >&2; exit 1; }
 PORT="${PORT:-8000}"
-IP="${1:-$(ipconfig getifaddr en0 || ipconfig getifaddr en1)}"
+IP="${1:-$(ipconfig getifaddr en0 || ipconfig getifaddr en1 || true)}"
 [ -n "$IP" ] || { echo "No LAN IP; connect to Wi-Fi or a hotspot." >&2; exit 1; }
 
 URL="http://$IP:$PORT"
