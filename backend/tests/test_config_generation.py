@@ -67,6 +67,15 @@ def test_render_dart_env_includes_only_public_supabase_credentials() -> None:
     assert "defaultValue: 'alexandria'" in rendered
 
 
+def test_render_ios_maps_secrets_sets_gms_api_key() -> None:
+    module = _load_generate_flutter_defines_module()
+
+    rendered = module._render_ios_maps_secrets("ios-key-from-env")
+
+    assert "GMS_API_KEY=ios-key-from-env\n" in rendered
+    assert "Do not edit" in rendered
+
+
 def test_detector_warm_up_disabled_by_default(monkeypatch, tmp_path) -> None:
     monkeypatch.delenv("TRUEPRICE_WARM_UP_DETECTOR", raising=False)
     monkeypatch.setenv("TRUEPRICE_ENV_FILE", str(tmp_path / "missing.env"))
