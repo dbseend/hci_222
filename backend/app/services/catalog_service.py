@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 SUPPORTED_PRODUCT_IDS = {
     "apple",
     "avocado",
+    "banana",
     "blueberry",
     "camel_doll",
     "cherry",

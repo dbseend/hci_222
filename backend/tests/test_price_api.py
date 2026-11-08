@@ -17,6 +17,7 @@ def test_list_products_contains_supported_price_reference_classes() -> None:
     assert {
         "apple",
         "avocado",
+        "banana",
         "blueberry",
         "camel_doll",
         "cherry",
@@ -35,7 +36,6 @@ def test_list_products_excludes_products_without_current_reference() -> None:
 
     assert response.status_code == 200
     product_ids = {item["product_id"] for item in response.json()}
-    assert "banana" not in product_ids
     assert "watermelon" not in product_ids
 
 
