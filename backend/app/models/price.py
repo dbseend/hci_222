@@ -28,6 +28,12 @@ class PriceStats(BaseModel):
     window_days: int | None = None
     stat_date: str | None = None
     data_source: str = "Regional reference observations"
+    # Robust-statistics extension (optional; legacy rows leave these as None).
+    mad_price: float | None = None
+    real_sample_count: int | None = None
+    synthetic_sample_count: int | None = None
+    effective_sample_size: float | None = None
+    decay_tau_days: float | None = None
 
 
 class PriceCompareRequest(BaseModel):
@@ -55,3 +61,6 @@ class PriceCompareResponse(BaseModel):
     percent_diff: float
     verdict: Verdict
     message: str
+    method: Literal["robust_mad", "zscore"] = "zscore"
+    robust_z: float | None = None
+    confidence_score: float | None = None

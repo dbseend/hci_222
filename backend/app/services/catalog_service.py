@@ -151,21 +151,33 @@ def _load_products_from_supabase() -> list[Product]:
 
 def _load_price_stats_from_supabase() -> list[PriceStats]:
     client = get_supabase_client()
-    try:
-        response = (
-            client.table("price_reference_stats")
-            .select(
-                "region_code,unit,window_days,stat_date,sample_count,"
-                "weighted_avg_price_egp,median_price_egp,min_price_egp,"
-                "max_price_egp,stddev_price_egp,"
-                "products!inner(code,name,default_unit)"
+    base_columns = (
+        "region_code,unit,window_days,stat_date,sample_count,"
+        "weighted_avg_price_egp,median_price_egp,min_price_egp,"
+        "max_price_egp,stddev_price_egp,"
+    )
+    # Robust-stat columns exist only after backend/supabase/robust_stats_columns.sql
+    # has been applied; fall back to the legacy column set before that.
+    robust_columns = (
+        "mad_price_egp,real_sample_count,synthetic_sample_count,"
+        "effective_sample_size,decay_tau_days,"
+    )
+    response = None
+    last_error: Exception | None = None
+    for columns in (base_columns + robust_columns, base_columns):
+        try:
+            response = (
+                client.table("price_reference_stats")
+                .select(columns + "products!inner(code,name,default_unit)")
+                .eq("region_code", DEFAULT_REGION)
+                .order("stat_date", desc=True)
+                .execute()
             )
-            .eq("region_code", DEFAULT_REGION)
-            .order("stat_date", desc=True)
-            .execute()
-        )
-    except Exception as exc:
-        raise SupabaseBackendUnavailable("Failed to load price stats from Supabase.") from exc
+            break
+        except Exception as exc:
+            last_error = exc
+    if response is None:
+        raise SupabaseBackendUnavailable("Failed to load price stats from Supabase.") from last_error
 
     latest_by_product: dict[str, PriceStats] = {}
     for row in _rows(response):
@@ -226,6 +238,11 @@ def _price_stats_from_db_row(row: dict[str, Any], product_id: str) -> PriceStats
         window_days=_optional_int(row.get("window_days")),
         stat_date=str(row.get("stat_date")) if row.get("stat_date") else None,
         data_source="Talabat + traveler reports",
+        mad_price=_optional_float(row.get("mad_price_egp")),
+        real_sample_count=_optional_int(row.get("real_sample_count")),
+        synthetic_sample_count=_optional_int(row.get("synthetic_sample_count")),
+        effective_sample_size=_optional_float(row.get("effective_sample_size")),
+        decay_tau_days=_optional_float(row.get("decay_tau_days")),
     )
 
 
@@ -236,6 +253,15 @@ def _rows(response) -> list[dict[str, Any]]:
     if data is None:
         return []
     return list(data)
+
+
+def _optional_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _optional_int(value: Any) -> int | None:
